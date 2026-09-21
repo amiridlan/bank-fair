@@ -27,7 +27,7 @@
     <section class="grid-panel" aria-labelledby="grid-heading">
       <div class="grid-panel__head">
         <h2 id="grid-heading">Booths</h2>
-        <span class="fo-caption fo-tabular">
+        <span class="fo-caption fo-tabular font-mono">
           {{ store.assignedCount() }} of {{ store.booths().length }} assigned
         </span>
       </div>
@@ -64,7 +64,12 @@
       @if (store.unassignedEmployers().length === 0) {
         <p class="side__empty fo-caption">All confirmed employers have booths.</p>
       } @else {
-        <ul class="side__list">
+        <!-- cdkDropList, not just a plain list of cdkDrag items. A drag that
+             belongs to no drop list can be picked up and moved but never
+             dropped into one, so cdkDropListDropped on the booth cells never
+             fired and drag-assign silently did nothing. The surrounding
+             cdkDropListGroup connects this list to all 40 cells. -->
+        <ul class="side__list" cdkDropList [cdkDropListData]="store.unassignedEmployers()">
           @for (employer of store.unassignedEmployers(); track employer.id) {
             <li cdkDrag [cdkDragData]="employer">
               <span class="chip">
