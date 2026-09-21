@@ -100,6 +100,18 @@ The button says **Import from LinkedIn**, because that is what the person is doi
 
 ## Facts discovered
 
+### S2
+
+- **`maskForViewer` masked a job seeker from themselves.** Contact details were visible only to an employer who had shortlisted the candidate, so the first render of "My profile" would have starred out the person's own email. A viewer is not a third party to their own record; `viewer.candidateId === candidate.id` now unmasks. Verified both directions in a browser: the job seeker sees `jia.hui@example.com`, an employer who has not shortlisted them sees `a***@example.com`.
+- **Consent is a row, not a boolean.** `Candidate.fairIds` could have carried registration on its own, but PDPA 2010 wants consent that can be shown to have been given, for a stated purpose, at a time. `FairRegistration` records `consentedAt`; the handler keeps `fairIds` in step so the talent-pool filter still reads one field.
+- **The API refuses to default consent.** `POST /fair-registrations` 422s unless `consent === true` — not merely truthy. A payload that can omit consent is a UI that can forget to ask for it, and the test suite asserts both the missing case and a `'yes'` string.
+- **Withdrawing someone else's registration returns 404, not 403.** A 403 would confirm the id exists.
+- **Browse and "my fairs" are one page with a filter.** Two pages would have listed the same fairs in the same cards, differing only by predicate.
+- **The profile page is read-only, deliberately.** Editing belongs with S4, where the import fills a form the person corrects. Building an edit form now and replacing it then would be the same work twice.
+- **A Playwright `getByRole` name is a substring by default**, so `{ name: 'Register' }` also matched the "Registered (2)" filter button and the first test clicked the wrong one. `exact: true` where two controls share a prefix.
+- **Verified:** 13 pages at three viewports, 0 axe violations, 0 CSP violations. In a browser: the job seeker lands on `/me/fairs`, the consent dialog's Register button is disabled until the box is ticked, registering moves the count 2 → 3, withdrawing asks first and moves it back.
+- **Cost:** initial total 638.19 kB → 638.77 kB. The portal is one lazy chunk.
+
 ### S1
 
 - **The rename was the easy half; the ternary was the real bug waiting to happen.** `items()` in the side nav was `isStaff() ? STAFF_NAV : EMPLOYER_NAV`, which is correct with two roles and silently wrong with three — a job seeker would have been handed the employer's menu, every link of which `roleGuard` blocks. It is a `Record<Role, …>` now, so the compiler names a forgotten role instead of picking one. The same change was made to the switcher's labels.

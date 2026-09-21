@@ -12,7 +12,7 @@
 
 | Entity | Count | Notes |
 |---|---|---|
-| Users | 3 | 1 staff, 2 employers (different companies). A job-seeker user arrives with its pages in S2 |
+| Users | 4 | 1 staff, 2 employers (different companies), 1 job seeker mapped onto `cand-001` |
 | Fairs | 5 | See below |
 | Booths | 40 per fair (5 rows × 8 cols; rows A–E) | Row A = platinum, B = premium, C–E = standard |
 | Employers | 60 | Spread across all stages |
@@ -27,6 +27,7 @@
 | `u-staff-1` | Farah Iskandar | staff | null |
 | `u-emp-1` | Daniel Lim | employer | `emp-001` (Paid, has booth in the next fair) |
 | `u-emp-2` | Priya Nair | employer | `emp-002` (Confirmed, no booth yet) |
+| `u-seeker-1` | Ahmad Zaki Abdullah Sani | job_seeker | `cand-001` — the same record employers browse |
 
 ## Fairs
 
@@ -90,7 +91,8 @@ Each open fair deliberately keeps **4 committed employers without a booth**, bec
 | Filtering/sorting/pagination | Done in the handler, same semantics as the API contract |
 | Masking | Candidate `email`/`phone` masked unless shortlisted by the current employer; `isContactVisible` reflects this |
 | Validation | `POST/PATCH /employers` returns 422 in Laravel format for missing required fields / bad email |
-| Conflicts | 409 for double-booked slot, duplicate shortlist, assigning an occupied booth without `force: true` |
+| Fair registrations | One row per (candidate, fair) the candidate seed already paired up | Derived from `Candidate.fairIds`, which stays in step as the handler writes. Consent is backdated to the seed's clock, not to "now" |
+| Conflicts | 409 for double-booked slot, duplicate shortlist, assigning an occupied booth without `force: true`, registering twice for one fair, or registering for a closed fair |
 | Not found | 404 `{ message: "Fair not found." }` |
 | Simulated errors | When enabled, ~20% of requests return 500 `{ message: "Something went wrong on our side." }` |
 | Unknown route | 404 and a `console.warn` in dev so missing handlers are obvious |
