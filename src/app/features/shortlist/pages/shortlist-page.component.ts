@@ -1,3 +1,4 @@
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,6 +40,7 @@ import { ShortlistStore } from '../shortlist.store';
 export default class ShortlistPageComponent {
   private readonly auth = inject(AuthStore);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly announcer = inject(LiveAnnouncer);
 
   protected readonly store = inject(ShortlistStore);
   protected readonly fairContext = inject(FairContextStore);
@@ -55,6 +57,7 @@ export default class ShortlistPageComponent {
     const error = await this.store.remove(entry.id);
     if (error) {
       // The store has already put the entry back.
+      this.announcer.announce(`Could not remove ${entry.candidate.fullName}.`, 'assertive');
       const snack = this.snackBar.open(
         `Couldn't remove ${entry.candidate.fullName}.`,
         'Retry',
@@ -63,6 +66,7 @@ export default class ShortlistPageComponent {
       snack.onAction().subscribe(() => void this.remove(entry));
       return;
     }
+    this.announcer.announce(`${entry.candidate.fullName} removed from your shortlist.`, 'polite');
     this.snackBar.open(`${entry.candidate.fullName} removed.`, 'Dismiss', { duration: 5000 });
   }
 

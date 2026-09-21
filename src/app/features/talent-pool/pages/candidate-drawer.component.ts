@@ -1,3 +1,4 @@
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -43,6 +44,7 @@ export default class CandidateDrawerComponent {
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly auth = inject(AuthStore);
+  private readonly announcer = inject(LiveAnnouncer);
 
   protected readonly store = inject(TalentPoolStore);
   protected readonly shortlist = inject(ShortlistStore);
@@ -105,6 +107,12 @@ export default class CandidateDrawerComponent {
     if (result.candidate) {
       this.store.patchCandidate(result.candidate);
     }
+    // Unmasking contact details is a state change with no visual cue of its
+    // own for a screen-reader user, so say it.
+    this.announcer.announce(
+      `${candidate.fullName} added to your shortlist. Contact details are now visible.`,
+      'polite',
+    );
     this.snackBar.open(`${candidate.fullName} added to your shortlist.`, 'Dismiss', {
       duration: 5000,
     });
@@ -126,6 +134,10 @@ export default class CandidateDrawerComponent {
       return;
     }
 
+    this.announcer.announce(
+      `${candidate.fullName} removed from your shortlist. Contact details are hidden again.`,
+      'polite',
+    );
     // Contact details are masked again, so reload rather than guess.
     void this.store.loadOne(candidate.id);
   }
