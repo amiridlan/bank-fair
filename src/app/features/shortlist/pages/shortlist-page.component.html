@@ -1,0 +1,70 @@
+<app-page-header
+  title="Shortlist"
+  [description]="
+    fairContext.activeFair()
+      ? 'Candidates shortlisted for ' + fairContext.activeFair()!.name + '.'
+      : 'Candidates you have shortlisted.'
+  "
+>
+  <a slot="actions" matButton="outlined" routerLink="/hiring/talent-pool">Browse talent pool</a>
+</app-page-header>
+
+@if (!hasActiveFair()) {
+  <app-empty-state
+    icon="event"
+    heading="Choose a fair first"
+    message="Pick an active fair in the top bar — shortlists are kept per fair."
+  />
+} @else if (store.isLoading()) {
+  <app-skeleton [count]="4" [height]="96" label="Loading shortlist" />
+} @else if (store.hasError()) {
+  <app-error-state heading="Couldn't load your shortlist" [error]="store.error()" (retry)="retry()" />
+} @else if (store.isEmpty()) {
+  <app-empty-state
+    icon="bookmark_border"
+    heading="No one shortlisted yet"
+    message="Browse the talent pool and add the candidates you want to meet."
+    actionLabel="Browse talent pool"
+  />
+} @else {
+  <ul class="list">
+    @for (entry of store.entries(); track entry.id) {
+      <li class="entry">
+        <div class="entry__main">
+          <h2 class="entry__name">
+            <a [routerLink]="['/hiring/talent-pool', entry.candidateId]">
+              {{ entry.candidate.fullName }}
+            </a>
+          </h2>
+          <p class="entry__meta fo-caption">
+            {{ entry.candidate.fieldOfStudy }} · {{ entry.candidate.university }} ·
+            Graduating {{ entry.candidate.graduationYear }}
+          </p>
+
+          <dl class="contact">
+            <div class="contact__item">
+              <dt class="fo-caption">Email</dt>
+              <dd>{{ entry.candidate.email }}</dd>
+            </div>
+            <div class="contact__item">
+              <dt class="fo-caption">Phone</dt>
+              <dd>{{ entry.candidate.phone ?? 'Not supplied' }}</dd>
+            </div>
+          </dl>
+
+          @if (entry.note; as note) {
+            <p class="entry__note fo-caption">
+              <mat-icon class="entry__note-icon" aria-hidden="true">sticky_note_2</mat-icon>
+              {{ note }}
+            </p>
+          }
+        </div>
+
+        <div class="entry__side">
+          <span class="fo-caption">Added {{ entry.createdAt | date: 'dd/MM/yyyy' }}</span>
+          <button matButton type="button" (click)="remove(entry)">Remove</button>
+        </div>
+      </li>
+    }
+  </ul>
+}
