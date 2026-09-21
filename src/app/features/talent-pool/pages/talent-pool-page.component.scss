@@ -1,38 +1,73 @@
-.pool {
-  display: flex;
-  align-items: stretch;
-  gap: var(--fo-space-5);
-}
+@use '@angular/material' as mat;
 
-.pool__main {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--fo-space-3);
+:host {
+  // Row height through Material's own token rather than a utility class, which
+  // would lose to the component's unlayered styles (CLAUDE.md, docs/07 T-D3).
+  //
+  // A fixed height is the fix for docs/07 UX-3: rows ranged from roughly 48px
+  // to 96px depending on how many lines a name, university or skills list
+  // happened to wrap to, so there was no rhythm to scan down.
+  @include mat.table-overrides(
+    (
+      row-item-container-height: 56px,
+      header-container-height: 48px,
+    )
+  );
 }
 
 .filters__search {
   min-width: 260px;
 }
 
+// 140px clipped the labels to "Gradua…" and "Min CG…" (docs/07 UX-5). Measured
+// against the longest label at the current type scale, not guessed.
 .filters__narrow {
-  width: 140px;
+  width: 172px;
 }
 
-.table-wrap {
-  overflow-x: auto;
-  background: var(--fo-surface-raised);
-  border: 1px solid var(--fo-border);
-  border-radius: var(--fo-radius-md);
-}
-
+// Fixed layout is what makes truncation possible at all: in auto layout a cell
+// grows to fit its content and `text-overflow` never triggers.
+//
+// min-width matters as much as the widths themselves. The profile drawer takes
+// half the row, and percentage columns against the remaining ~600px truncated
+// a four-digit year to "2…" and a CGPA to "3…" — worse than useless. Below
+// 960px the wrapper scrolls instead, which is honest.
 table {
   width: 100%;
+  min-width: 960px;
+  table-layout: fixed;
+}
+
+// Material generates .mat-column-<name> on both the header and the body cell.
+// These sum to 100%; at the 960px floor that is 106px for the year and 86px
+// for the CGPA, both comfortably wider than their content.
+.mat-column-fullName {
+  width: 22%;
+}
+.mat-column-university {
+  width: 18%;
+}
+.mat-column-fieldOfStudy {
+  width: 15%;
+}
+.mat-column-graduationYear {
+  width: 11%;
+}
+.mat-column-cgpa {
+  width: 9%;
+}
+.mat-column-skills {
+  width: 15%;
+}
+.mat-column-actions {
+  width: 10%;
+}
+
+// `truncate` needs a block box to measure against; a table cell's anonymous
+// inline content does not give it one.
+.cell {
+  display: block;
+  max-width: 100%;
 }
 
 .row {
@@ -43,38 +78,16 @@ table {
   background: var(--fo-surface);
 }
 
-.cell__name {
-  font-weight: 500;
-  color: var(--fo-ink);
-}
-
-.cell__flag {
-  width: 16px;
-  height: 16px;
-  font-size: 16px;
-  margin-left: var(--fo-space-1);
-  vertical-align: text-bottom;
-  color: var(--fo-primary);
-}
-
-.skills {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: var(--fo-space-1);
-}
-
-.skill {
-  padding: 1px var(--fo-space-2);
-  border: 1px solid var(--fo-border);
-  border-radius: var(--fo-radius-sm);
-  background: var(--fo-surface);
-  font-size: var(--fo-caption-size);
-  line-height: var(--fo-caption-line);
-  white-space: nowrap;
-}
-
-.skill--more {
+.row:hover .chevron {
   color: var(--fo-text-muted);
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  flex: none;
+  color: var(--fo-border-strong);
 }
 
 @media (max-width: 1279px) {

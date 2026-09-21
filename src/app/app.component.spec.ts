@@ -24,6 +24,8 @@ describe('App routing', () => {
   let auth: AuthStore;
 
   beforeEach(async () => {
+    // AuthStore persists to sessionStorage, which outlives a TestBed.
+    sessionStorage.clear();
     TestBed.configureTestingModule({
       providers: [...appConfig.providers],
     });
@@ -107,6 +109,51 @@ describe('App routing', () => {
     expect(text).toContain('University');
     // 300 seeded candidates, 20 per page.
     expect(text).toContain('300');
+  });
+
+  it('shortlists from the table row without opening the drawer', async () => {
+    // Triaging 300 candidates through the drawer was a three-step round trip
+    // each (docs/07 UX-4), so the row carries the action itself.
+    auth.switchUser('u-hm-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/hiring/talent-pool']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const toggle = host.querySelector('tbody button[aria-pressed]') as HTMLButtonElement;
+    const before = toggle.getAttribute('aria-pressed');
+
+    toggle.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(toggle.getAttribute('aria-pressed')).not.toBe(before);
+    // The row itself navigates, so the button must not: without
+    // stopPropagation every shortlist click would also open the profile.
+    expect(router.url).toBe('/hiring/talent-pool');
+  });
+
+  it('keeps every candidate row the same height', async () => {
+    // Ragged rows had no rhythm to scan down (docs/07 UX-3). jsdom does not
+    // lay out, so this asserts the structural cause instead: one line per
+    // cell, every cell truncating rather than wrapping.
+    auth.switchUser('u-hm-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/hiring/talent-pool']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const wrapping = Array.from(host.querySelectorAll('tbody td')).filter(
+      (cell) => (cell.textContent ?? '').trim().includes('\n'),
+    );
+
+    expect(wrapping).toHaveLength(0);
+    // Long values stay reachable through the title attribute.
+    expect(host.querySelector('tbody td .truncate')?.getAttribute('title')).toBeTruthy();
   });
 
   it('applies a filter taken from the URL query string', async () => {

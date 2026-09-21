@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -6,12 +15,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, type PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSortModule, type Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { Router, RouterOutlet } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { AuthStore } from '../../../core/auth/auth.store';
+import type { Candidate } from '../../../core/models';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { ErrorStateComponent } from '../../../shared/ui/error-state.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
@@ -99,6 +110,8 @@ const CGPA_OPTIONS: readonly number[] = [2.5, 3.0, 3.3, 3.5, 3.7];
 export default class TalentPoolPageComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthStore);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly announcer = inject(LiveAnnouncer);
   private readonly searchInput = new Subject<string>();
 
   protected readonly store = inject(TalentPoolStore);
@@ -108,7 +121,18 @@ export default class TalentPoolPageComponent {
   protected readonly fields = FIELDS;
   protected readonly gradYears = graduationYears();
   protected readonly cgpaOptions = CGPA_OPTIONS;
-  protected readonly columns = ['fullName', 'university', 'fieldOfStudy', 'graduationYear', 'cgpa', 'skills'];
+  protected readonly columns = [
+    'fullName',
+    'university',
+    'fieldOfStudy',
+    'graduationYear',
+    'cgpa',
+    'skills',
+    'actions',
+  ];
+
+  /** Shortlists are per fair, so without one there is nothing to add to. */
+  protected readonly canShortlist = computed(() => this.auth.activeFairId() !== null);
 
   /** Local echo of the search box, so typing stays responsive while debounced. */
   protected readonly searchText = signal('');
@@ -205,13 +229,64 @@ export default class TalentPoolPageComponent {
     void this.store.load(this.store.filters());
   }
 
-  /** First three skills; the rest become a "+N" chip. */
-  protected visibleSkills(skills: readonly string[]): readonly string[] {
-    return skills.slice(0, 3);
+  protected shortlistLabel(candidate: Candidate): string {
+    if (!this.canShortlist()) {
+      return 'Choose an active fair before shortlisting';
+    }
+    return this.shortlist.isShortlisted(candidate.id)
+      ? `Remove ${candidate.fullName} from your shortlist`
+      : `Add ${candidate.fullName} to your shortlist`;
   }
 
-  protected extraSkillCount(skills: readonly string[]): number {
-    return Math.max(0, skills.length - 3);
+  /**
+   * Adds or removes from the row, without opening the drawer first.
+   *
+   * `stopPropagation` matters: the row itself opens the profile, so without it
+   * every shortlist click would also navigate.
+   */
+  protected async toggleShortlist(candidate: Candidate, event: Event): Promise<void> {
+    event.stopPropagation();
+
+    const fairId = this.auth.activeFairId();
+    if (!fairId) {
+      return;
+    }
+
+    const existing = this.shortlist.entryForCandidate(candidate.id);
+
+    if (existing) {
+      const error = await this.shortlist.remove(existing.id);
+      if (error) {
+        // The store has already put the entry back.
+        this.announcer.announce(`Could not remove ${candidate.fullName}.`, 'assertive');
+        this.snackBar.open(`Couldn't remove ${candidate.fullName}.`, 'Dismiss', {
+          duration: 6000,
+        });
+        return;
+      }
+      this.announcer.announce(`${candidate.fullName} removed from your shortlist.`, 'polite');
+      return;
+    }
+
+    const result = await this.shortlist.add(candidate.id, fairId, null);
+
+    if (result.duplicate) {
+      // Someone else's tab got there first. Not a failure — resync and say so.
+      await this.shortlist.load(fairId);
+      this.announcer.announce(`${candidate.fullName} is already on your shortlist.`, 'polite');
+      return;
+    }
+
+    if (result.error) {
+      this.announcer.announce(`Could not shortlist ${candidate.fullName}.`, 'assertive');
+      const snack = this.snackBar.open(`Couldn't shortlist ${candidate.fullName}.`, 'Retry', {
+        duration: 8000,
+      });
+      snack.onAction().subscribe(() => void this.toggleShortlist(candidate, new Event('click')));
+      return;
+    }
+
+    this.announcer.announce(`${candidate.fullName} added to your shortlist.`, 'polite');
   }
 
   private setParams(params: Record<string, string | null>): void {
