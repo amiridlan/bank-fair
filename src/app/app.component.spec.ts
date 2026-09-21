@@ -141,6 +141,41 @@ describe('App routing', () => {
     expect(text).toContain('Contact details unlock');
   });
 
+  it('renders the interview slot grid for the active fair', async () => {
+    auth.switchUser('u-hm-1');
+    auth.setActiveFair('fair-01');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/hiring/interviews']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Interviews');
+    // 21 twenty-minute slots between 10:00 and 17:00, three pre-booked in the seed.
+    expect(text).toContain('Booked');
+    expect(text).toContain('Open');
+    expect(text).toContain('of 21 booked');
+  });
+
+  it('renders slot times in Malaysian time, not the viewer’s', async () => {
+    auth.switchUser('u-hm-1');
+    auth.setActiveFair('fair-01');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/hiring/interviews']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // Slots run 10:00–17:00 in Asia/Kuala_Lumpur. This suite runs in UTC, so
+    // without DATE_PIPE_DEFAULT_OPTIONS the first slot would read 2:00 am —
+    // which is exactly what it did before that provider existed.
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('10:00 am');
+    expect(text).toContain('4:40 pm');
+    expect(text).not.toContain('2:00 am');
+  });
+
   it('shows the not-found page for an unknown URL', async () => {
     const fixture = TestBed.createComponent(AppComponent);
 

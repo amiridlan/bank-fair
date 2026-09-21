@@ -45,6 +45,11 @@ Agreed before Phase 1a. Later sessions start with fresh context, so they are rec
 - The employer form lives in a dialog, not on a route, so the "dirty form" rule is enforced by the dialog rather than a `CanDeactivate` guard. It sets `disableClose` and routes Escape and backdrop clicks through the same confirmation as Cancel — `disableClose` on its own would have broken Escape, which dialogs are expected to honour.
 - A dialog that closes with the edited entity cannot distinguish "saved a new one" from "cancelled", because the add case has no entity. The form closes with a boolean instead.
 
+### Facts discovered during Phase 5b
+
+- **`DatePipe` uses the browser's timezone, not `LOCALE_ID`.** Setting `LOCALE_ID` to `en-MY` fixes formats but not the zone, so a 10:00 interview slot rendered as "2:00 am" for a viewer outside GMT+8, and a late-evening timestamp would land on the wrong day. `DATE_PIPE_DEFAULT_OPTIONS` with `timezone: '+0800'` fixes every `date` pipe at once. Hand-rolled `toLocaleTimeString` calls need `timeZone: 'Asia/Kuala_Lumpur'` separately.
+- The "no active fair" empty state on the hiring pages is only reachable when `/fairs` fails or returns no open or live fair — `FairContextStore` seeds a default otherwise.
+
 ---
 
 ## Phase 0 — Docs ✅
