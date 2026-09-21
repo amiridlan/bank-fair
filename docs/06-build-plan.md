@@ -33,6 +33,18 @@ Agreed before Phase 1a. Later sessions start with fresh context, so they are rec
 - `CanMatchFn` takes three arguments in Angular 22 (`route`, `segments`, `currentSnapshot`).
 - The initial-bundle warning budget is **600kB** (raw), raised from Angular's generic 500kB default. The shell uses Material sidenav, toolbar, menu and snackbar on every route, which puts the floor near 520kB raw / 122kB transferred. The 1MB error budget is unchanged. Revisit in Phase 7.
 
+### Facts discovered during Phase 3
+
+- `provideCharts` at the application root pulls chart.js into the **initial** bundle (+217kB), defeating any `@defer` around a chart. `BaseChartDirective` injects its config with `optional: true` through the element injector, so the chart components provide it themselves.
+- The mock engine must be behind a dynamic import. Importing `mock-db` statically from the interceptor shipped every seed word list on first load.
+- The `docs/03` status palette **fails** the categorical colour checks: teal↔green ΔE 8.6 for normal vision (below the 15 floor) and red↔green 4.2 under deuteranopia. Charts therefore use one series in one hue with identity from axis labels. The status chips keep the palette — they carry a label and an icon and are never compared side by side.
+
+### Facts discovered during Phase 4
+
+- Budget raised again to **650kB**. Verified first that dialogs, drag-drop, reactive forms and radio are all in lazy chunks; the growth is shared CDK overlay and a11y primitives already reachable from the eager snackbar in `errorInterceptor`.
+- The employer form lives in a dialog, not on a route, so the "dirty form" rule is enforced by the dialog rather than a `CanDeactivate` guard. It sets `disableClose` and routes Escape and backdrop clicks through the same confirmation as Cancel — `disableClose` on its own would have broken Escape, which dialogs are expected to honour.
+- A dialog that closes with the edited entity cannot distinguish "saved a new one" from "cancelled", because the add case has no entity. The form closes with a boolean instead.
+
 ---
 
 ## Phase 0 — Docs ✅
