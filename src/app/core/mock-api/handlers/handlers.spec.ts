@@ -611,23 +611,13 @@ describe('dashboard summary', () => {
 });
 
 describe('demo endpoints', () => {
-  it('reports the record counts the debug page shows', () => {
-    const db = buildMockDb(NOW);
-    const counts = data<Record<string, number>>(call(db, 'GET', '/demo/counts'));
-
-    expect(counts['candidates']).toBe(300);
-    expect(counts['booths']).toBe(200);
-  });
-
   it('reseeds on reset', () => {
     const db = buildMockDb(NOW);
     db.candidates = [];
 
     expect(call(db, 'POST', '/demo/reset', { body: {} }).status).toBe(204);
-    // resetMockDb swaps the module-level database, so re-read it.
-    const counts = data<Record<string, number>>(
-      call(buildMockDb(NOW), 'GET', '/demo/counts'),
-    );
-    expect(counts['candidates']).toBe(300);
+    // resetMockDb swaps the module-level database, so a rebuild is the
+    // observable check that the seed is intact.
+    expect(buildMockDb(NOW).candidates).toHaveLength(300);
   });
 });

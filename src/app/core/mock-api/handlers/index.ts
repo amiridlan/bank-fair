@@ -1,7 +1,7 @@
 import type { MockHandler } from '../mock-response';
 import { assignBooth } from './booths.handler';
 import { getCandidate, listCandidates } from './candidates.handler';
-import { getDashboardSummary, getDemoCounts, resetDemo } from './dashboard.handler';
+import { getDashboardSummary, resetDemo } from './dashboard.handler';
 import {
   createEmployer,
   getEmployer,
@@ -53,8 +53,6 @@ const ROUTES: readonly MockRoute[] = [
   { method: 'PATCH', pattern: '/interview-slots/:id', handler: updateInterviewSlot },
 
   { method: 'POST', pattern: '/demo/reset', handler: resetDemo },
-  // TODO(Phase 6): remove with the /staff/debug page.
-  { method: 'GET', pattern: '/demo/counts', handler: getDemoCounts },
 ];
 
 export interface RouteMatch {

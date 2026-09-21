@@ -36,11 +36,6 @@ export const routes: Routes = [
         path: 'employers',
         loadChildren: () => import('./features/employers/employers.routes'),
       },
-      {
-        // TODO(Phase 6): remove this route with the debug feature.
-        path: 'debug',
-        loadChildren: () => import('./features/debug/debug.routes'),
-      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

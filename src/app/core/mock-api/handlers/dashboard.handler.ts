@@ -94,20 +94,3 @@ export const resetDemo: MockHandler = ({ now }) => {
   resetMockDb(now);
   return noContent();
 };
-
-/**
- * `GET /demo/counts` — mock only, backing the temporary debug page.
- *
- * TODO(Phase 6): remove this handler together with `/staff/debug`.
- */
-export const getDemoCounts: MockHandler = ({ db }) => {
-  return ok({
-    users: db.users.length,
-    fairs: db.fairs.length,
-    booths: db.booths.length,
-    employers: db.employers.length,
-    candidates: db.candidates.length,
-    shortlists: db.shortlists.length,
-    interviewSlots: db.interviewSlots.length,
-  });
-};
