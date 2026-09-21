@@ -1,12 +1,15 @@
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { AuthStore } from '../auth/auth.store';
+import type { User } from '../models';
 import { ApiService } from '../http/api.service';
 import { DemoSettingsService } from '../mock-api/demo-settings.service';
 
@@ -40,7 +43,7 @@ import { DemoSettingsService } from '../mock-api/demo-settings.service';
           mat-menu-item
           type="button"
           [attr.aria-current]="user.id === auth.user().id ? 'true' : null"
-          (click)="auth.switchUser(user.id)"
+          (click)="switchUser(user)"
         >
           <mat-icon aria-hidden="true">
             {{ user.id === auth.user().id ? 'check' : 'person_outline' }}
@@ -79,6 +82,8 @@ import { DemoSettingsService } from '../mock-api/demo-settings.service';
 export class RoleSwitcherComponent {
   private readonly api = inject(ApiService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
+  private readonly announcer = inject(LiveAnnouncer);
 
   protected readonly auth = inject(AuthStore);
   protected readonly demoSettings = inject(DemoSettingsService);
@@ -86,6 +91,37 @@ export class RoleSwitcherComponent {
 
   protected roleLabel(role: string): string {
     return role === 'staff' ? 'Staff' : 'Hiring manager';
+  }
+
+  /**
+   * Switches identity and, when the role changes, lands on that role's home.
+   *
+   * Nothing re-runs `roleGuard` on its own: it is a `CanMatchFn`, evaluated
+   * during navigation, and swapping a signal is not a navigation. Without this
+   * a hiring manager stayed on `/staff/employers` looking at the staff board
+   * with hiring-manager navigation beside it, until something happened to
+   * navigate.
+   *
+   * A switch between two users of the SAME role stays where it is on purpose.
+   * Both hiring managers see the same screens, and the second one exists
+   * precisely to show them empty — jumping to their home would hide the thing
+   * the switch is meant to demonstrate.
+   */
+  protected async switchUser(user: User): Promise<void> {
+    const roleChanged = user.role !== this.auth.role();
+
+    this.auth.switchUser(user.id);
+
+    if (roleChanged) {
+      await this.router.navigateByUrl(this.auth.homeRoute());
+    }
+
+    // A whole-page context change with no visible trigger is worth saying out
+    // loud; the nav and the page both changed underneath the user.
+    this.announcer.announce(
+      `Switched to ${user.name}, ${this.roleLabel(user.role).toLowerCase()}.`,
+      'polite',
+    );
   }
 
   /**

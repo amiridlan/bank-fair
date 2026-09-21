@@ -256,7 +256,13 @@ Two pre-existing defects surfaced while re-verifying the drag paths. Both predat
 
 ## After T5
 
-The plan's phases are done. What the refresh did not touch, and would be the next honest work:
+### Fixed after the phases closed
+
+- **Switching role left you on the previous role's page.** A hiring manager sat on `/staff/employers` looking at the staff board with hiring-manager navigation beside it, until something else happened to navigate. `roleGuard` is a `CanMatchFn` — evaluated during navigation — and swapping a signal is not a navigation, so nothing re-ran it. The switcher now navigates to the new role's home when the role changes. A switch between the two hiring managers deliberately stays put: they see the same screens, and the second exists to show them empty, which jumping home would hide.
+
+### Still open
+
+What the refresh did not touch, and would be the next honest work:
 
 - **The 422 path has never been exercised in a browser.** The T4 fix means field errors should now reach form controls, but that was verified through the store, not through the employer form's UI.
 - **Lighthouse has still never been run.** It needs a browser, and `netlify.app` is outside this environment's allowlist.

@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 
 import { AppComponent } from './app.component';
@@ -221,6 +221,66 @@ describe('App routing', () => {
     expect(text).toContain('10:00 am');
     expect(text).toContain('4:40 pm');
     expect(text).not.toContain('2:00 am');
+  });
+
+  describe('switching demo identity', () => {
+    /** Opens the top-bar user menu and clicks one of its entries. */
+    async function switchTo(fixture: ComponentFixture<AppComponent>, name: string) {
+      const host = fixture.nativeElement as HTMLElement;
+      (host.querySelector('button[aria-label^="Switch demo user"]') as HTMLButtonElement).click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const item = Array.from(document.querySelectorAll('button[mat-menu-item]')).find((el) =>
+        (el.textContent ?? '').includes(name),
+      ) as HTMLButtonElement;
+      item.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    }
+
+    it('lands on the new role home when the role changes', async () => {
+      // roleGuard is a CanMatchFn, evaluated during navigation — swapping a
+      // signal is not a navigation, so without an explicit one a hiring
+      // manager stayed on the staff board with hiring navigation beside it.
+      auth.switchUser('u-staff-1');
+      const fixture = TestBed.createComponent(AppComponent);
+      await router.navigate(['/staff/employers']);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      await switchTo(fixture, 'Daniel Lim');
+
+      expect(router.url).toBe('/hiring/talent-pool');
+      expect((fixture.nativeElement as HTMLElement).textContent).toContain('Talent pool');
+    });
+
+    it('drops the previous role query params on the way', async () => {
+      auth.switchUser('u-staff-1');
+      const fixture = TestBed.createComponent(AppComponent);
+      await router.navigate(['/staff/fairs'], { queryParams: { status: 'live' } });
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      await switchTo(fixture, 'Daniel Lim');
+
+      expect(router.url).toBe('/hiring/talent-pool');
+    });
+
+    it('stays put when the role is unchanged', async () => {
+      // Both hiring managers see the same screens, and the second exists to
+      // show them empty. Jumping to their home would hide that.
+      auth.switchUser('u-hm-1');
+      const fixture = TestBed.createComponent(AppComponent);
+      await router.navigate(['/hiring/shortlist']);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      await switchTo(fixture, 'Priya Nair');
+
+      expect(router.url).toBe('/hiring/shortlist');
+      expect(auth.user().id).toBe('u-hm-2');
+    });
   });
 
   it('shows the not-found page for an unknown URL', async () => {
