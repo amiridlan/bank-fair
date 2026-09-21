@@ -1,6 +1,6 @@
 # BankFair
 
-A career fair operations portal for organiser staff and employer hiring managers, built with **Angular 22**.
+A career fair operations portal for organiser staff and employer hiring managers, built with **Angular 22** and **Tailwind CSS v4**.
 
 > Portfolio demo. The frontend runs against an in-memory mock HTTP API; a Laravel 12 + PostgreSQL backend replaces it later without touching a line of feature code.
 
@@ -23,14 +23,14 @@ Use the menu in the top right to switch between the three demo identities — no
 - **Dashboard** — four KPIs, booths assigned per fair, pipeline value by stage. Charts load only when scrolled into view.
 - **Fairs** — list with status and city filters that live in the URL, plus a detail page whose Overview, Floor plan and Employers tabs are each their own route, so any tab can be linked or refreshed.
 - **Floor plan** — a 40-booth grid per fair. Drag an unassigned employer onto a booth, or select a booth and use *Assign employer*. Dropping onto an occupied booth asks before replacing; a successful assignment offers Undo.
-- **Employer pipeline** — a Kanban board from Lead to Paid. Drag a card or use its menu. Moving to Lost requires a reason; moving to Paid requires a booth package, and opens the edit form if one is missing.
+- **Employer pipeline** — a Kanban board from Lead to Paid, with each column's committed value in its header. Drag a card or use its menu. Moving to Lost requires a reason; moving to Paid requires a booth package, and opens the edit form if one is missing.
 
 ### Hiring manager
 
-- **Talent pool** — 300 candidates, server-side sorted and paginated, with five filters and a debounced search. Every filter is in the URL, so a filtered view can be shared or refreshed.
+- **Talent pool** — 300 candidates, server-side sorted and paginated, with five filters and a debounced search. Shortlist straight from a row rather than opening each profile. Every filter is in the URL, so a filtered view can be shared or refreshed.
 - **Candidate profile** — a deep-linkable drawer. Contact details are masked until the candidate is shortlisted.
 - **Shortlist** — per fair, with full contact details and notes.
-- **Interviews** — twenty-minute slots from 10:00 to 17:00. Book a shortlisted candidate; a slot taken in the meantime returns a conflict and refreshes the grid.
+- **Interviews** — twenty-minute slots from 10:00 to 17:00, per day of the fair. Book a shortlisted candidate; a slot taken in the meantime returns a conflict and refreshes the grid.
 
 ### Throughout
 
@@ -111,6 +111,7 @@ See `docs/04-architecture.md` for the full contract, including every endpoint.
 | **Masking enforced server-side** | The API withholds candidate emails and phones until shortlisted, so an unmasked value never reaches the browser. The `maskEmail` pipe is presentation only and says so. |
 | **`DATE_PIPE_DEFAULT_OPTIONS`** | `LOCALE_ID` sets formats but not the timezone. Without pinning `+0800`, a 10:00 slot renders as 02:00 for anyone outside Malaysia. |
 | **One hue per chart** | The `docs/03` status palette was measured and fails the colourblind-safety checks (teal↔green ΔE 8.6, red↔green 4.2 under deuteranopia). Charts carry identity in axis labels instead. |
+| **Tailwind for layout, Material for components** | Tailwind v4 emits into `@layer`; Material's styles are unlayered, and unlayered beats every layer. So a utility on a Material internal silently does nothing. Tailwind owns layout and rhythm; Material is themed through its own tokens. Tailwind's default palette and type scale are removed, so `bg-blue-500` does not exist and the token system cannot be bypassed. |
 
 ---
 
@@ -125,6 +126,8 @@ Targeting WCAG 2.2 AA.
 - A skip link is the first tab stop. Canvas charts carry an `aria-label` and a visually hidden data table.
 - `prefers-reduced-motion` collapses the motion tokens to zero and disables the skeleton shimmer.
 - Touch targets reach 44px under `pointer: coarse`; the denser 36px default applies on mouse, which satisfies 2.5.8.
+- Every ramp step below 500 is barred from carrying text or acting as a boundary, because step 400 measures 2.64:1 and 2.96:1 — under the 3:1 a UI boundary needs. That rule exists because `--fo-border-strong` once shipped at 1.48:1.
+- axe runs over all eleven pages in both roles at three viewports — 1440, 1024 and 390 — behind the real production CSP. 33 page-checks, zero violations.
 
 ---
 
@@ -136,7 +139,7 @@ Requires **Node.js ≥ 22.22.3** — the Angular 22 CLI hard-fails below it. npm
 npm ci
 npm start                      # dev server on :4200
 npm run build                  # production build → dist/bank-fair/browser
-npm test -- --watch=false      # 216 unit tests (Vitest), single run
+npm test -- --watch=false      # 233 unit tests (Vitest), single run
 npm run lint                   # angular-eslint
 ```
 
@@ -152,6 +155,8 @@ The interesting part was where the documentation turned out to be wrong, and the
 - **The design system's status palette failed a colourblind check.** Running it through a validator before writing chart code showed teal and green only ΔE 8.6 apart for normal vision. The chips keep the palette; the charts do not.
 - **`--fo-border-strong` claimed ≥3:1 and measured 1.48:1.** Caught by computing every token pair rather than trusting the table.
 - **Every timestamp was rendering in the viewer's timezone.** A test running in UTC showed interview slots at "2:00 am". `LOCALE_ID` does not set the zone.
+- **Drag-assign on the floor plan had never worked.** The list of unassigned employers was a plain list of draggables with no drop list, and a drag belonging to no drop list can be picked up but never dropped into one — so the handler never fired. The keyboard path did work, which is why four phases of review and two accessibility audits missed it. Found by driving the drag in a real browser rather than reading the template.
+- **Every HTTP status was collapsing to 0.** The error interceptor normalises failures and rethrows, so stores received an already-normalised error that the normaliser did not recognise as its own output. No 409 read as a conflict and no 422 reached a form field. Every test passed, because `HttpTestingController` bypasses interceptors — the gap was the test strategy, not the assertions.
 
 Each finding is recorded in `docs/06-build-plan.md` under the phase that found it.
 

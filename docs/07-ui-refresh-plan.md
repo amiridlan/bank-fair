@@ -243,3 +243,21 @@ Two pre-existing defects surfaced while re-verifying the drag paths. Both predat
 - **The floor plan's structure was left on SCSS.** It has no UX finding against it, and its stylesheet carries the `::ng-deep .cdk-drop-list-receiving .tile` and drag-preview rules. Churning it for no visible change, on the phase's riskiest surface, was not worth it.
 - **Verified in a browser, every path:** floor plan drag onto a free booth 26 → 27 with Undo restoring 26; drag onto an occupied booth raising "Replace this booth's employer?" and cancelling cleanly; keyboard-only assign (focus tile, Enter, Assign employer, Space, Enter) 26 → 27; board drag Lead → Proposal 15/12 → 14/13 and the card menu 13/10 → 12/11; interview day tabs showing "Day 1 · Mon 21/09" with 3 of 21 booked and "Day 2 · Tue 22/09" with 0 of 21.
 - **Cost:** initial total 637.53 kB → 637.71 kB.
+
+### T5
+
+- **The orphaned-CSS sweep found nothing.** A script compared every class selector in each component's stylesheet against that component's template, the rest of the app, and the global sheet; the only hit was a false positive (`mat.table-overrides` read as a `.table-overrides` selector). T1–T4 deleted the rules they replaced rather than leaving them behind, so there was no cleanup to do. Saying so beats inventing churn.
+- **The audit had only ever run at 1440px.** It now runs at 1440, 1024 and 390 — the widths either side of the rail-nav (1280) and overlay-drawer (768) breakpoints. **33 page-checks, 0 violations, 0 CSP violations.** The tablet run initially failed on the harness, not the app: at 1024 the nav is a 72px icon rail, so the labels are not rendered and the accessible name is the only handle on a link.
+- **The mobile drawer is sound, and axe cannot tell you that.** Verified by driving the keyboard: the skip link is the first tab stop, the menu button is labelled "Open navigation menu", opening moves focus to the first nav link, focus stays trapped across six tabs, Escape closes, a backdrop click closes, and the content region carries `tabindex="0"` with real overflow. One apparent failure was my own test — clicking the backdrop element's *centre* lands inside the 240px drawer.
+- **The top bar, side nav and chart cards were examined and left alone.** None has a usability finding against it, their stylesheets are component-internal rather than layout (state variants, Material token work, `::ng-deep` drag classes), and the side nav's empty lower half is a consequence of having three nav items, not a styling error. Inverting the nav's surface to hide it would also collide with its hover colour, which currently *is* the page background.
+- **Final numbers:** 233 tests across 19 files; global CSS 13.2 kB → 25.95 kB raw (4.03 → 5.37 kB transferred); initial total 624.41 kB → 637.71 kB, inside the 650 kB warning budget with no warnings. SCSS across the app is 1,594 lines, down from 1,603 plus 14 inline blocks — the refresh moved page-level layout to utilities and left component internals in SCSS, which is what T-D2 intended rather than a shortfall against it.
+
+---
+
+## After T5
+
+The plan's phases are done. What the refresh did not touch, and would be the next honest work:
+
+- **The 422 path has never been exercised in a browser.** The T4 fix means field errors should now reach form controls, but that was verified through the store, not through the employer form's UI.
+- **Lighthouse has still never been run.** It needs a browser, and `netlify.app` is outside this environment's allowlist.
+- **The usability review is heuristic.** Every finding above is expert judgement against Nielsen's ten, not observed behaviour. Watching one organiser attempt the demo script's tasks unaided would confirm or kill most of it in half an hour, and is worth more than another phase of inference.
