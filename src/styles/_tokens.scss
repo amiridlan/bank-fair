@@ -1,0 +1,94 @@
+// Design tokens — the single source of truth for colour, spacing, radius,
+// typography and motion. See docs/03-design-system.md.
+//
+// Components must use these custom properties, never raw hex values or magic
+// pixel numbers. They are plain CSS custom properties (not Sass variables) so
+// they can be inspected in DevTools and overridden per theme later.
+
+:root {
+  // ---------------------------------------------------------------- colour
+  --fo-ink: #14213d; // headings, nav background, primary text — 15.6:1 on white
+  --fo-text: #1e293b;
+  --fo-text-muted: #475569; // 7.6:1 on white
+  --fo-text-on-ink: #ffffff;
+
+  --fo-primary: #0f766e; // 5.4:1 on white — safe for text
+  --fo-primary-hover: #115e59;
+  --fo-primary-subtle: #ccfbf1; // pair with --fo-ink for text
+
+  // Accent is 2.1:1 on white. Only ever a background, only for "Live / Today".
+  --fo-accent: #f59e0b;
+
+  --fo-surface: #f8fafc;
+  --fo-surface-raised: #ffffff;
+  --fo-border: #e2e8f0;
+  --fo-border-strong: #cbd5e1; // >=3:1 vs surface — use for input and booth edges
+
+  --fo-success: #15803d;
+  --fo-warning: #b45309; // text-safe amber, unlike --fo-accent
+  --fo-error: #b91c1c;
+  --fo-info: #1d4ed8;
+
+  // Status tints. Backgrounds only; text on them uses the matching solid token.
+  --fo-success-subtle: #dcfce7;
+  --fo-warning-subtle: #fef3c7;
+  --fo-error-subtle: #fee2e2;
+  --fo-info-subtle: #dbeafe;
+  --fo-muted-subtle: #f1f5f9;
+
+  // --------------------------------------------------------------- spacing
+  --fo-space-1: 4px;
+  --fo-space-2: 8px;
+  --fo-space-3: 12px;
+  --fo-space-4: 16px;
+  --fo-space-5: 24px;
+  --fo-space-6: 32px;
+  --fo-space-7: 48px;
+
+  // ------------------------------------------------------- radius and edges
+  --fo-radius-sm: 4px; // inputs, chips, booths
+  --fo-radius-md: 6px; // cards, dialogs
+
+  // Flat by design: cards use a 1px border, not a shadow. Only dialogs, menus
+  // and drag previews are raised.
+  --fo-shadow-overlay: 0 8px 24px rgb(20 33 61 / 0.12);
+
+  // ------------------------------------------------------------ typography
+  --fo-font-brand: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --fo-font-plain: 'IBM Plex Sans', system-ui, sans-serif;
+  --fo-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --fo-display-size: 32px;
+  --fo-display-line: 40px;
+  --fo-h1-size: 24px;
+  --fo-h1-line: 32px;
+  --fo-h2-size: 18px;
+  --fo-h2-line: 26px;
+  --fo-body-size: 14px;
+  --fo-body-line: 22px;
+  --fo-caption-size: 12px;
+  --fo-caption-line: 18px;
+  --fo-mono-size: 13px;
+  --fo-mono-line: 20px;
+
+  // ----------------------------------------------------------------- layout
+  --fo-topbar-height: 56px;
+  --fo-sidenav-width: 240px;
+  --fo-sidenav-rail-width: 72px;
+  --fo-content-max-width: 1440px;
+  --fo-drawer-width: 480px;
+
+  // ----------------------------------------------------------------- motion
+  --fo-motion-fast: 150ms; // hover, chips
+  --fo-motion-base: 250ms; // drawers, dialogs
+  --fo-motion-easing: cubic-bezier(0.2, 0, 0, 1); // Material emphasized standard
+}
+
+// Honour the OS setting rather than animating regardless. Durations collapse to
+// zero so transitions still "complete" and no state machine stalls.
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fo-motion-fast: 0ms;
+    --fo-motion-base: 0ms;
+  }
+}

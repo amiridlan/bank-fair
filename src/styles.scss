@@ -1,39 +1,136 @@
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+// Global styles. See docs/03-design-system.md.
 @use '@angular/material' as mat;
+@use './styles/theme-colors' as brand;
+@use './styles/tokens';
 
 html {
   height: 100%;
+  color-scheme: light; // light theme only for the MVP; tokens allow dark later
+
   @include mat.theme(
     (
       color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        primary: brand.$primary-palette,
+        tertiary: brand.$tertiary-palette,
+        theme-type: light,
       ),
-      typography: Roboto,
-      density: 0,
+      typography: (
+        brand-family: 'Plus Jakarta Sans, system-ui, sans-serif',
+        plain-family: 'IBM Plex Sans, system-ui, sans-serif',
+      ),
+      density: -1, // denser tables and forms, for operators who scan all day
     )
   );
 }
 
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  color-scheme: light;
-
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
   margin: 0;
   height: 100%;
+  background-color: var(--fo-surface);
+  color: var(--fo-text);
+  font-family: var(--fo-font-plain);
+  font-size: var(--fo-body-size);
+  line-height: var(--fo-body-line);
+  -webkit-font-smoothing: antialiased;
 }
-/* You can add global styles to this file, and also import other style files */
+
+// Headings use the brand face; sizes come from tokens so they stay in step
+// with docs/03.
+h1,
+h2,
+h3 {
+  font-family: var(--fo-font-brand);
+  color: var(--fo-ink);
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--fo-h1-size);
+  line-height: var(--fo-h1-line);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: var(--fo-h2-size);
+  line-height: var(--fo-h2-line);
+  font-weight: 600;
+}
+
+// Material Symbols Outlined. `mat-icon` is told to use this class via
+// MAT_ICON_DEFAULT_OPTIONS, so every icon picks it up without per-use markup.
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+// Numbers in tables and KPIs must align in columns.
+.fo-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.fo-mono {
+  font-family: var(--fo-font-mono);
+  font-size: var(--fo-mono-size);
+  line-height: var(--fo-mono-line);
+  font-weight: 500;
+}
+
+.fo-caption {
+  font-size: var(--fo-caption-size);
+  line-height: var(--fo-caption-line);
+  letter-spacing: 0.01em;
+  color: var(--fo-text-muted);
+}
+
+// Every interactive element needs a visible focus state (WCAG 2.2 AA).
+// :focus-visible keeps it out of the way for mouse users.
+:focus-visible {
+  outline: 2px solid var(--fo-primary);
+  outline-offset: 2px;
+}
+
+// Skip link: first tab stop, visible only when focused.
+.fo-skip-link {
+  position: absolute;
+  top: var(--fo-space-2);
+  left: var(--fo-space-2);
+  z-index: 100;
+  padding: var(--fo-space-2) var(--fo-space-4);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-surface-raised);
+  color: var(--fo-primary);
+  font-weight: 500;
+  transform: translateY(-200%);
+
+  &:focus {
+    transform: translateY(0);
+  }
+}
+
+// Visually hidden but available to screen readers.
+.fo-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
