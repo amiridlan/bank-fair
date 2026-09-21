@@ -51,7 +51,7 @@ Closing the browser tab does not stop a session. It keeps running and you can co
 | Problem | Fix |
 |---|---|
 | Repo does not appear in claude.ai/code | Install the Claude GitHub App on it (step 4) |
-| Claude reports Node.js is below 22.22.3 | **This currently happens on every fresh session** — the VM ships 22.22.2 and Angular 22 requires 22.22.3. Edit the environment (cloud icon above the message box → gear icon) and add this setup script, then start a new session: `npm install -g n && n 22 && hash -r && npm install -g npm@latest && node -v && npm -v` |
+| Claude reports Node.js is below 22.22.3 | The VM ships 22.22.2 and Angular 22 requires 22.22.3. **`scripts/cloud-session-start.sh` handles this automatically** (~6s on the first session, cached afterwards), so normally you do nothing. If the hook cannot reach nodejs.org it says so; the manual fallback is to edit the environment (cloud icon above the message box → gear icon), add this setup script and start a new session: `npm install -g n && n 22 && hash -r && npm install -g npm@latest && node -v && npm -v` |
 | `npm install` fails with `Cannot read properties of null (reading 'edgesOut')` | npm 10 bug. The setup script above upgrades npm. As a one-off, `npm ci` works on any npm version because it installs from the lockfile |
 | Setup script fails | Add `set -x` at the top to see which line failed; keep total runtime under ~5 minutes |
 | Netlify build fails on Node version | The repo's `.nvmrc` sets Node 22. Check the Netlify build log; set `NODE_VERSION=22` in Netlify site environment variables if needed |

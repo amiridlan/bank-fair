@@ -21,7 +21,7 @@ Agreed before Phase 1a. Later sessions start with fresh context, so they are rec
 
 ### Facts discovered during Phase 1a
 
-- Angular 22 requires **Node ≥ 22.22.3**, not 22.12.0. The cloud VM ships 22.22.2 — see `docs/00` troubleshooting.
+- Angular 22 requires **Node ≥ 22.22.3**, not 22.12.0. The cloud VM ships 22.22.2, so the SessionStart hook installs a newer Node 22.x and symlinks it into `$HOME/.local/bin` (first on PATH). No environment setup script is needed — see `docs/00` troubleshooting for the fallback.
 - `ng new` generates **Vitest 4 + jsdom** via `@angular/build:unit-test`, not Karma/Jasmine. `npm test -- --watch=false` still works.
 - TypeScript 6 enables `strict` by default; `tsconfig.json` sets it explicitly anyway.
 - npm 10 cannot resolve this dependency graph (`edgesOut` arborist bug). Use `npm ci`, or npm ≥ 11 for `npm install`.
