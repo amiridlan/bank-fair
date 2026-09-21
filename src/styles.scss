@@ -23,38 +23,45 @@ html {
   );
 }
 
-body {
-  margin: 0;
-  height: 100%;
-  background-color: var(--fo-surface);
-  color: var(--fo-text);
-  font-family: var(--fo-font-plain);
-  font-size: var(--fo-body-size);
-  line-height: var(--fo-body-line);
-  -webkit-font-smoothing: antialiased;
-}
+// Element defaults live in the `fo-base` layer, which sits below Tailwind's
+// utilities in the order declared in src/tailwind.css. Unlayered, an `h1` rule
+// would beat `class="text-display"` on the same element and the utility would
+// silently do nothing. Everything below this block stays unlayered on purpose
+// — it must beat utilities, not lose to them.
+@layer fo-base {
+  body {
+    margin: 0;
+    height: 100%;
+    background-color: var(--fo-surface);
+    color: var(--fo-text);
+    font-family: var(--fo-font-plain);
+    font-size: var(--fo-body-size);
+    line-height: var(--fo-body-line);
+    -webkit-font-smoothing: antialiased;
+  }
 
-// Headings use the brand face; sizes come from tokens so they stay in step
-// with docs/03.
-h1,
-h2,
-h3 {
-  font-family: var(--fo-font-brand);
-  color: var(--fo-ink);
-  margin: 0;
-}
+  // Headings use the brand face; sizes come from tokens so they stay in step
+  // with docs/03.
+  h1,
+  h2,
+  h3 {
+    font-family: var(--fo-font-brand);
+    color: var(--fo-ink);
+    margin: 0;
+  }
 
-h1 {
-  font-size: var(--fo-h1-size);
-  line-height: var(--fo-h1-line);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
+  h1 {
+    font-size: var(--fo-h1-size);
+    line-height: var(--fo-h1-line);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
 
-h2 {
-  font-size: var(--fo-h2-size);
-  line-height: var(--fo-h2-line);
-  font-weight: 600;
+  h2 {
+    font-size: var(--fo-h2-size);
+    line-height: var(--fo-h2-line);
+    font-weight: 600;
+  }
 }
 
 // Touch targets.

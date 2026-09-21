@@ -1,0 +1,151 @@
+/*
+ * Tailwind v4 entry point. See docs/07-ui-refresh-plan.md.
+ *
+ * This is plain CSS, not SCSS, on purpose: Sass resolves `@import` itself and
+ * would try to load "tailwindcss" as a Sass module. Angular's build runs
+ * PostCSS over it (see .postcssrc.json) and concatenates the result with
+ * styles.scss, in the order given by angular.json.
+ *
+ * ---------------------------------------------------------------------------
+ * LAYER ORDER — the thing to understand before adding anything here
+ * ---------------------------------------------------------------------------
+ *
+ * Unlayered CSS beats every layer, whatever the specificity. Tailwind emits
+ * into layers; Angular Material does not. That is why a utility class on a
+ * Material component silently does nothing, and it is deliberate (docs/07
+ * T-D2): Material owns its own components, Tailwind owns layout and rhythm.
+ *
+ * The order below inserts one app layer, `fo-base`, between Tailwind's
+ * components and utilities. It holds our element defaults (body, headings) so
+ * a utility can still override them — otherwise `class="text-display"` on an
+ * <h1> would lose to the `h1` rule in styles.scss.
+ *
+ *   theme → base (preflight) → components → fo-base → utilities → UNLAYERED
+ *                                                                 ^ Material,
+ *                                                                   :focus-visible,
+ *                                                                   .fo-* helpers,
+ *                                                                   component styles
+ *
+ * Preflight being layered is what makes it safe here: its `button`, `table`
+ * and heading resets all lose to Material automatically.
+ */
+@layer theme, base, components, fo-base, utilities;
+
+@import 'tailwindcss';
+
+/* Angular components use emulated encapsulation, which rewrites selectors with
+ * an _ngcontent attribute. Tailwind must scan the templates, not the compiled
+ * CSS, to know which utilities to emit. */
+@source '../src/app/**/*.html';
+@source '../src/app/**/*.ts';
+
+@theme {
+  /* ------------------------------------------------------------------ colour
+   *
+   * `--color-*: initial` drops Tailwind's entire default palette first. Only
+   * project tokens survive, so `bg-blue-500` does not exist and CLAUDE.md's
+   * "no hard-coded hex values in components" cannot be worked around by
+   * reaching for a Tailwind default.
+   *
+   * Every value is a var() pointing at src/styles/_tokens.scss, which stays
+   * the single source of truth (docs/07 T-D1). Custom properties resolve at
+   * computed-value time, so load order between the two files does not matter.
+   */
+  --color-*: initial;
+
+  --color-ink: var(--fo-ink);
+  --color-text: var(--fo-text);
+  --color-muted: var(--fo-text-muted);
+  --color-on-ink: var(--fo-text-on-ink);
+
+  --color-primary: var(--fo-primary);
+  --color-primary-hover: var(--fo-primary-hover);
+  --color-primary-subtle: var(--fo-primary-subtle);
+  --color-accent: var(--fo-accent);
+
+  --color-surface: var(--fo-surface);
+  --color-raised: var(--fo-surface-raised);
+  --color-border: var(--fo-border);
+  --color-border-strong: var(--fo-border-strong);
+
+  --color-success: var(--fo-success);
+  --color-warning: var(--fo-warning);
+  --color-error: var(--fo-error);
+  --color-info: var(--fo-info);
+  --color-success-subtle: var(--fo-success-subtle);
+  --color-warning-subtle: var(--fo-warning-subtle);
+  --color-error-subtle: var(--fo-error-subtle);
+  --color-info-subtle: var(--fo-info-subtle);
+  --color-muted-subtle: var(--fo-muted-subtle);
+
+  --color-teal-50: var(--fo-teal-50);
+  --color-teal-100: var(--fo-teal-100);
+  --color-teal-200: var(--fo-teal-200);
+  --color-teal-300: var(--fo-teal-300);
+  --color-teal-400: var(--fo-teal-400);
+  --color-teal-500: var(--fo-teal-500);
+  --color-teal-600: var(--fo-teal-600);
+  --color-teal-700: var(--fo-teal-700);
+  --color-teal-800: var(--fo-teal-800);
+  --color-teal-900: var(--fo-teal-900);
+
+  --color-slate-50: var(--fo-slate-50);
+  --color-slate-100: var(--fo-slate-100);
+  --color-slate-200: var(--fo-slate-200);
+  --color-slate-300: var(--fo-slate-300);
+  --color-slate-400: var(--fo-slate-400);
+  --color-slate-500: var(--fo-slate-500);
+  --color-slate-600: var(--fo-slate-600);
+  --color-slate-700: var(--fo-slate-700);
+  --color-slate-800: var(--fo-slate-800);
+  --color-slate-900: var(--fo-slate-900);
+
+  /* -------------------------------------------------------------- typography
+   *
+   * The project scale is a 1.2 ratio from a 14px body — the right ratio for
+   * information-dense UI (docs/07). Tailwind's default t-shirt scale is built
+   * for a 16px body and does not match, so it is dropped rather than left
+   * alongside ours where the two would drift.
+   */
+  --text-*: initial;
+
+  --text-caption: 12px;
+  --text-caption--line-height: 18px;
+  --text-body: 14px;
+  --text-body--line-height: 22px;
+  --text-lead: 17px;
+  --text-lead--line-height: 26px;
+  --text-h2: 20px;
+  --text-h2--line-height: 28px;
+  --text-h1: 24px;
+  --text-h1--line-height: 32px;
+  --text-display: 29px;
+  --text-display--line-height: 36px;
+  --text-hero: 35px;
+  --text-hero--line-height: 42px;
+
+  --font-sans: var(--fo-font-plain);
+  --font-brand: var(--fo-font-brand);
+  --font-mono: var(--fo-font-mono);
+
+  /* ------------------------------------------------------------------ radius
+   * Flat by design: 4px for inputs/chips/booths, 6px for cards and dialogs.
+   * The forgettable choice is 8px on everything, so the rest are dropped. */
+  --radius-*: initial;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-full: 9999px;
+
+  /* ------------------------------------------------------------------ motion
+   * Mirrors the tokens, which collapse to 0ms under prefers-reduced-motion. */
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Spacing is NOT overridden. Tailwind's default 4px base is already the
+   * project scale, so p-1/2/3/4/6/8/12 map onto --fo-space-1..7 exactly.
+   * Note the numbering differs: --fo-space-5 (24px) is Tailwind's `6`. */
+}
+
+/* Shadow token, kept out of @theme because only overlays use it. */
+@utility shadow-overlay {
+  box-shadow: var(--fo-shadow-overlay);
+}
