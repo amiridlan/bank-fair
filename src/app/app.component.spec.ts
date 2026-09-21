@@ -1,0 +1,90 @@
+import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+
+import { AppComponent } from './app.component';
+import { appConfig } from './app.config';
+import { AuthStore } from './core/auth/auth.store';
+
+/**
+ * Smoke test over the real routes and shell.
+ *
+ * The narrow unit tests cover logic in isolation; this one catches the wiring
+ * mistakes they cannot — a bad provider, a lazy chunk that fails to resolve, a
+ * guard that redirects into a loop. If the app cannot render a route, this
+ * fails rather than the deploy preview.
+ *
+ * It deliberately uses `appConfig.providers` rather than a hand-rolled test
+ * setup: a copy would drift from the real configuration and stop testing it.
+ * That is not hypothetical — the first draft of this file provided its own
+ * router without `withComponentInputBinding()`, and the route-parameter test
+ * failed against a config the app never actually uses.
+ */
+describe('App routing', () => {
+  let router: Router;
+  let auth: AuthStore;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [...appConfig.providers],
+    });
+
+    router = TestBed.inject(Router);
+    auth = TestBed.inject(AuthStore);
+  });
+
+  it('renders the staff dashboard through the shell', async () => {
+    auth.switchUser('u-staff-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/staff/dashboard']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('BankFair');
+    expect(text).toContain('Dashboard');
+  });
+
+  it('sends a hiring manager who opens a staff URL back to their own home', async () => {
+    auth.switchUser('u-hm-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/staff/employers']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(router.url).toBe('/hiring/talent-pool');
+  });
+
+  it('redirects the root path according to the active role', async () => {
+    auth.switchUser('u-staff-1');
+    TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/']);
+
+    expect(router.url).toBe('/staff/dashboard');
+  });
+
+  it('shows the not-found page for an unknown URL', async () => {
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/no-such-page']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Page not found');
+  });
+
+  it('binds a route parameter straight to a component input', async () => {
+    auth.switchUser('u-staff-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/staff/fairs/fair-02']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // withComponentInputBinding() feeds :fairId into the page's input().
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('fair-02');
+  });
+});
