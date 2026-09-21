@@ -29,9 +29,45 @@ export const ROLE_HOME: Readonly<Record<Role, string>> = {
   hiring_manager: '/hiring/talent-pool',
 };
 
+/**
+ * sessionStorage, not localStorage: the demo identity should last as long as
+ * the tab and no longer. A new visitor opening the deployed demo starts as
+ * staff, which is the intended first impression.
+ */
+const USER_KEY = 'fo-demo-user';
+const FAIR_KEY = 'fo-demo-active-fair';
+
+/**
+ * Storage throws in a private window, when site data is blocked, and in some
+ * embedded webviews. None of that should stop the app rendering, so every
+ * access is guarded and a failure simply means the value does not persist.
+ */
+function read(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function write(key: string, value: string | null): void {
+  try {
+    if (value === null) {
+      sessionStorage.removeItem(key);
+    } else {
+      sessionStorage.setItem(key, value);
+    }
+  } catch {
+    // Persisting is a convenience, not a requirement.
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
-  private readonly _user = signal<User>(DEMO_USERS[0]);
+  // Rehydrated from the tab's session, so a refresh or a pasted deep link
+  // stays with the identity the viewer picked. Without this the role guard
+  // sends every reload of a /hiring route back to the staff dashboard.
+  private readonly _user = signal<User>(restoreUser());
 
   /**
    * Fair that shortlists and interview slots are scoped to.
@@ -40,7 +76,7 @@ export class AuthStore {
    * filters do not, so the shell owns this choice and the features read it.
    * Seeded once the fairs load; `null` until then.
    */
-  private readonly _activeFairId = signal<string | null>(null);
+  private readonly _activeFairId = signal<string | null>(read(FAIR_KEY));
 
   readonly user = this._user.asReadonly();
   readonly activeFairId = this._activeFairId.asReadonly();
@@ -65,11 +101,21 @@ export class AuthStore {
     }
 
     this._user.set(next);
+    write(USER_KEY, next.id);
+
     // The previous user's fair is meaningless to a different employer.
     this._activeFairId.set(null);
+    write(FAIR_KEY, null);
   }
 
   setActiveFair(fairId: string | null): void {
     this._activeFairId.set(fairId);
+    write(FAIR_KEY, fairId);
   }
+}
+
+/** Falls back to the first demo user for a missing, stale or tampered id. */
+function restoreUser(): User {
+  const stored = read(USER_KEY);
+  return DEMO_USERS.find((candidate) => candidate.id === stored) ?? DEMO_USERS[0];
 }
