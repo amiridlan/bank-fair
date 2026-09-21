@@ -38,7 +38,21 @@
 | `fair-04` | Southern Graduate Career Fair | Johor Bahru convention venue | Johor Bahru | +90 days | draft |
 | `fair-05` | Graduate Career Fair (Previous) | MITEC | Kuala Lumpur | -60 → -59 days | completed |
 
-Booth fill targets: fair-01 ~95%, fair-02 ~70%, fair-03 ~40%, fair-04 0%, fair-05 100%.
+Booth fill: **derived from the booths, not set per fair.**
+
+The original targets (fair-01 ~95%, fair-02 ~70%, fair-03 ~40%, fair-04 0%, fair-05 100%) cannot all hold. They need 122 occupied booths, and 38 at a single fair, but the stage distribution below yields only **30 committed (confirmed + paid) employers**, each holding at most one booth per fair. The ceiling is 120 in total and 30 at any one fair — so fair-01 can never exceed 75% and fair-05 can never reach 100%.
+
+`buildMockDb` therefore computes each fair's `boothAssigned` from the seeded booths, which keeps the floor plan, the fair list and the dashboard consistent with each other. Attendance is weighted per fair so the *shape* of the original story survives:
+
+| Fair | Status | Fill | Eligible employers | Left unassigned |
+|---|---|---|---|---|
+| fair-01 | live | 26/40 (65%) | 30 | 4 |
+| fair-02 | open | 20/40 (50%) | 24 | 4 |
+| fair-03 | open | 6/40 (15%) | 10 | 4 |
+| fair-04 | draft | 0/40 (0%) | 0 | 0 |
+| fair-05 | completed | 28/40 (70%) | 28 | 0 |
+
+Each open fair deliberately keeps **4 committed employers without a booth**, because flow F1 is "drag an unassigned employer onto a booth" and a fully allocated fair would have nothing to demonstrate.
 
 ## Booth pricing (RM)
 
