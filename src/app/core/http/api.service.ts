@@ -42,6 +42,14 @@ export class ApiService {
       .pipe(map((res) => toCamelCase<SingleResource<T>>(res).data));
   }
 
+  /**
+   * `POST` to an endpoint that answers 204 with no body. Separate from `post`
+   * because unwrapping a `data` envelope that is not there would throw.
+   */
+  postVoid(path: string, body: unknown = {}): Observable<void> {
+    return this.http.post<void>(path, toSnakeCase(body)).pipe(map(() => undefined));
+  }
+
   patch<T>(path: string, body: unknown): Observable<T> {
     return this.http
       .patch<unknown>(path, toSnakeCase(body))

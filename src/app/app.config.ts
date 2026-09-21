@@ -11,10 +11,12 @@ import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { MAT_ICON_DEFAULT_OPTIONS } from '@angular/material/icon';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 
+import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { GlobalErrorHandler } from './core/error-handler';
 import { baseUrlInterceptor } from './core/http/base-url.interceptor';
 import { errorInterceptor } from './core/http/error.interceptor';
+import { mockApiInterceptor } from './core/mock-api/mock-api.interceptor';
 
 // Must run before LOCALE_ID is used, or date and number pipes fall back to en-US.
 registerLocaleData(localeEnMY);
@@ -38,8 +40,9 @@ export const appConfig: ApplicationConfig = {
         // API exactly as it will see them from Laravel.
         baseUrlInterceptor,
         errorInterceptor,
-        // Phase 2 appends mockApiInterceptor here, last, so it can short-circuit
-        // the request without bypassing the error mapping above.
+        // Last, so it short-circuits the request without bypassing the error
+        // mapping above. Dropping it is the whole Laravel switchover.
+        ...(environment.useMockApi ? [mockApiInterceptor] : []),
       ]),
     ),
 
