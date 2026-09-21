@@ -44,17 +44,19 @@
   letter-spacing: 0.06em;
 }
 
-.card__foot {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--fo-space-2);
-  margin-top: var(--fo-space-2);
+// Mono, and a step up in size: the figure is the point of a sales card.
+.card__value {
+  margin: 0;
+  font-family: var(--fo-font-mono);
+  font-size: var(--fo-body-size);
+  font-weight: 600;
+  color: var(--fo-ink);
 }
 
-.card__value {
-  font-weight: 500;
-  color: var(--fo-ink);
+.card__value--missing {
+  font-family: var(--fo-font-plain);
+  font-weight: 400;
+  color: var(--fo-warning);
 }
 
 .card__lost {

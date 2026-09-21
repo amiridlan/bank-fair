@@ -48,22 +48,26 @@ import { PIPELINE_STAGES, STAGE_LABEL } from '../employers.store';
         </mat-menu>
       </div>
 
+      <!-- The money reads immediately after the name. On a sales board it is
+           the second thing you look for, and it used to sit at the foot in the
+           same weight as the industry (docs/07 UX-8). -->
+      @if (employer().dealValueMyr; as value) {
+        <p class="card__value fo-tabular">
+          {{ value | currency: 'MYR' : 'symbol-narrow' : '1.0-0' }}
+        </p>
+      } @else if (needsPackage()) {
+        <!-- Only from Proposal onward, where a missing package is actually
+             something to act on. Every Lead card carried "No package yet",
+             which is the definitional state of a lead (docs/07 UX-9). -->
+        <p class="card__value card__value--missing fo-caption">No package yet</p>
+      }
+
       <p class="card__meta fo-caption">{{ employer().industry }}</p>
       <p class="card__meta fo-caption">{{ employer().contactName }}</p>
 
-      <div class="card__foot">
-        @if (employer().dealValueMyr; as value) {
-          <span class="card__value fo-tabular">
-            {{ value | currency: 'MYR' : 'symbol-narrow' : '1.0-0' }}
-          </span>
-        } @else {
-          <span class="fo-caption">No package yet</span>
-        }
-
-        @if (pending()) {
-          <span class="fo-caption">Saving…</span>
-        }
-      </div>
+      @if (pending()) {
+        <p class="card__meta fo-caption">Saving…</p>
+      }
 
       @if (employer().lostReason; as reason) {
         <p class="card__lost fo-caption">{{ reason }}</p>
@@ -82,6 +86,16 @@ export class EmployerCardComponent {
 
   protected readonly otherStages = computed(() =>
     PIPELINE_STAGES.filter((stage) => stage !== this.employer().stage),
+  );
+
+  /**
+   * True when a missing booth package is worth flagging.
+   *
+   * A lead has not been pitched yet, so it has no package by definition. From
+   * Proposal onward the gap is actionable — Paid is blocked without one.
+   */
+  protected readonly needsPackage = computed(
+    () => this.employer().stage === 'proposal' || this.employer().stage === 'confirmed',
   );
 
   protected label(stage: EmployerStage): string {
