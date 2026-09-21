@@ -50,6 +50,12 @@ Agreed before Phase 1a. Later sessions start with fresh context, so they are rec
 - **`DatePipe` uses the browser's timezone, not `LOCALE_ID`.** Setting `LOCALE_ID` to `en-MY` fixes formats but not the zone, so a 10:00 interview slot rendered as "2:00 am" for a viewer outside GMT+8, and a late-evening timestamp would land on the wrong day. `DATE_PIPE_DEFAULT_OPTIONS` with `timezone: '+0800'` fixes every `date` pipe at once. Hand-rolled `toLocaleTimeString` calls need `timeZone: 'Asia/Kuala_Lumpur'` separately.
 - The "no active fair" empty state on the hiring pages is only reachable when `/fairs` fails or returns no open or live fair — `FairContextStore` seeds a default otherwise.
 
+### Facts discovered during Phase 6
+
+- **`--fo-border-strong` measured 1.48:1 on white**, not the "≥3:1" `docs/03` claimed. It is the only thing distinguishing an empty booth or an open interview slot, so that was a WCAG 1.4.11 failure. Darkened to `#64748B` (4.76:1 / 4.55:1). Every other token pair was computed and passes; the script lives in the Phase 6 commit message rather than the repo, since it is a one-off audit tool.
+- **Material buttons are 36px at density -1**, not the 44px `docs/03` asks for. 36px satisfies WCAG 2.2 AA (2.5.8 needs 24px), and density -1 exists precisely so operators can scan dense tables. The two only conflict on an imprecise pointer, so 44px is applied under `@media (pointer: coarse)` via `mat.button-overrides` rather than globally.
+- Auditing by grep needs the grep to stay honest: test host components initially showed as "components without OnPush". A noisy signal is a useless one, so they were fixed rather than excluded.
+
 ---
 
 ## Phase 0 — Docs ✅
