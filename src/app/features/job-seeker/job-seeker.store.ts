@@ -3,7 +3,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { type ApiError, toApiError } from '../../core/http/api-error';
 import { ApiService } from '../../core/http/api.service';
-import type { Candidate, Fair, FairRegistration } from '../../core/models';
+import type { Candidate, CandidateProfileInput, Fair, FairRegistration } from '../../core/models';
 
 export type LoadStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -30,6 +30,7 @@ export class JobSeekerStore {
   private readonly _status = signal<LoadStatus>('idle');
   private readonly _error = signal<ApiError | null>(null);
   private readonly _busyFairId = signal<string | null>(null);
+  private readonly _saving = signal(false);
 
   readonly fairs = this._fairs.asReadonly();
   readonly registrations = this._registrations.asReadonly();
@@ -37,6 +38,7 @@ export class JobSeekerStore {
   readonly status = this._status.asReadonly();
   readonly error = this._error.asReadonly();
   readonly busyFairId = this._busyFairId.asReadonly();
+  readonly saving = this._saving.asReadonly();
 
   readonly isLoading = computed(() => this._status() === 'loading');
   readonly hasError = computed(() => this._status() === 'error');
@@ -137,5 +139,32 @@ export class JobSeekerStore {
 
   registrationFor(fairId: string): FairRegistration | null {
     return this._registrations().find((entry) => entry.fairId === fairId) ?? null;
+  }
+
+  /**
+   * Saves the profile.
+   *
+   * Not optimistic: this is what employers read, and the 422 path is a real
+   * one here — the form has nine fields and the API validates all of them, so
+   * the caller needs the error back to attach to the right control rather
+   * than a screen that already claims to have saved.
+   */
+  async saveProfile(input: CandidateProfileInput): Promise<ApiError | null> {
+    const id = this._profile()?.id;
+    if (!id) {
+      return null;
+    }
+
+    this._saving.set(true);
+
+    try {
+      const saved = await firstValueFrom(this.api.patch<Candidate>(`/candidates/${id}`, input));
+      this._profile.set(saved);
+      return null;
+    } catch (err: unknown) {
+      return toApiError(err);
+    } finally {
+      this._saving.set(false);
+    }
   }
 }

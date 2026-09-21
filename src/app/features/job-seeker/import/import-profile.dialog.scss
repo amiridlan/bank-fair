@@ -1,0 +1,66 @@
+:host {
+  display: block;
+  max-width: 34rem;
+}
+
+.privacy {
+  color: var(--fo-text-muted);
+}
+
+.privacy__icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  flex: none;
+}
+
+.failed {
+  color: var(--fo-error);
+}
+
+// A file input styled as a button: the input itself is visually hidden but
+// still focusable and still the thing that receives the click, so the keyboard
+// path and the screen-reader label are the native ones.
+.picker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fo-space-2);
+  padding: var(--fo-space-3) var(--fo-space-4);
+  border: 1px dashed var(--fo-border-strong);
+  border-radius: var(--fo-radius-md);
+  cursor: pointer;
+  color: var(--fo-primary);
+  font-weight: 500;
+}
+
+.picker:hover {
+  background: var(--fo-primary-subtle);
+}
+
+// :focus-within, because focus lands on the hidden input inside the label —
+// the label itself is never the focused element, so :focus-visible on it
+// would never fire and the control would have no visible focus state.
+.picker:has(.picker__input:focus-visible) {
+  outline: 2px solid var(--fo-primary);
+  outline-offset: 2px;
+}
+
+.picker__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.found {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--fo-space-2) var(--fo-space-4);
+  margin: var(--fo-space-3) 0;
+}
+
+.found dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

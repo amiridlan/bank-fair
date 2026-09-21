@@ -2,7 +2,13 @@
   title="My profile"
   description="This is what employers see when they find you in the talent pool."
 >
-  <a slot="actions" matButton="outlined" routerLink="/me/fairs">Career fairs</a>
+  <div slot="actions" class="flex flex-wrap gap-2">
+    <button matButton="outlined" type="button" (click)="importFromPdf()">
+      <mat-icon aria-hidden="true">upload_file</mat-icon>
+      Import from LinkedIn
+    </button>
+    <a matButton="outlined" routerLink="/me/fairs">Career fairs</a>
+  </div>
 </app-page-header>
 
 @if (store.isLoading()) {
@@ -11,96 +17,165 @@
   <app-error-state heading="Couldn't load your profile" [error]="store.error()" (retry)="retry()" />
 } @else if (store.profile(); as me) {
   <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
-    <section
-      class="flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
-      aria-labelledby="about-heading"
-    >
-      <h2 id="about-heading" class="text-h2">About you</h2>
+    <form class="contents" [formGroup]="form" (ngSubmit)="save()">
+      <section
+        class="flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
+        aria-labelledby="about-heading"
+      >
+        <h2 id="about-heading" class="text-h2">About you</h2>
 
-      <dl class="m-0 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <dt class="fo-caption">Name</dt>
-          <dd class="m-0 font-medium text-ink">{{ me.fullName }}</dd>
-        </div>
-        <div>
-          <dt class="fo-caption">Headline</dt>
-          <dd class="m-0">{{ me.headline }}</dd>
-        </div>
-        <div>
-          <dt class="fo-caption">University</dt>
-          <dd class="m-0">{{ me.university }}</dd>
-        </div>
-        <div>
-          <dt class="fo-caption">Field of study</dt>
-          <dd class="m-0">{{ me.fieldOfStudy }}</dd>
-        </div>
-        <div>
-          <dt class="fo-caption">Graduating</dt>
-          <dd class="fo-tabular m-0 font-mono">{{ me.graduationYear }}</dd>
-        </div>
-        <div>
-          <dt class="fo-caption">CGPA</dt>
-          <dd class="fo-tabular m-0 font-mono">{{ me.cgpa ?? '—' }}</dd>
-        </div>
-      </dl>
-
-      <div>
-        <h3 class="fo-caption m-0">Skills</h3>
-        <ul class="m-0 mt-2 flex list-none flex-wrap gap-1 p-0">
-          @for (skill of me.skills; track skill) {
-            <li class="skill">{{ skill }}</li>
-          }
-        </ul>
-      </div>
-    </section>
-
-    <section
-      class="flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
-      aria-labelledby="contact-heading"
-    >
-      <h2 id="contact-heading" class="text-h2">Contact details</h2>
-
-      <!-- Unmasked here and only here: a person is not a third party to their
-           own record. Employers see these starred out until they shortlist. -->
-      <dl class="m-0 grid grid-cols-1 gap-4">
-        <div>
-          <dt class="fo-caption">Email</dt>
-          <dd class="m-0 font-mono break-all">{{ me.email }}</dd>
-        </div>
-        <div>
-          <dt class="fo-caption">Phone</dt>
-          @if (me.phone; as phone) {
-            <dd class="m-0 font-mono">{{ phone }}</dd>
-          } @else {
-            <dd class="m-0 text-muted">Not supplied</dd>
-          }
-        </div>
-      </dl>
-
-      <p class="notice fo-caption m-0 flex items-start gap-2">
-        <mat-icon class="notice__icon" aria-hidden="true">lock</mat-icon>
-        Employers cannot see your email or phone number until they add you to their shortlist.
-      </p>
-
-      <div>
-        <h3 class="fo-caption m-0">Visible to employers at</h3>
-        @if (visibleAt().length === 0) {
-          <p class="m-0 mt-2">
-            No fairs yet — your profile is not visible to any employer.
-            <a routerLink="/me/fairs">Register for a fair</a> to change that.
+        @if (importedGaps().length > 0) {
+          <!-- Named rather than silently blank: a field the parser skipped is
+               easy to miss on a form that otherwise looks filled in. -->
+          <p class="notice fo-caption m-0 flex items-start gap-2" role="status">
+            <mat-icon class="notice__icon" aria-hidden="true">info</mat-icon>
+            <span>
+              Imported. The import could not fill {{ importedGaps().join(', ') }} — add those
+              yourself, check the rest, then save.
+            </span>
           </p>
-        } @else {
-          <ul class="m-0 mt-2 list-none p-0">
-            @for (fair of visibleAt(); track fair.id) {
-              <li class="flex items-center gap-2">
-                <mat-icon class="notice__icon" aria-hidden="true">event_available</mat-icon>
-                {{ fair.name }}
-              </li>
-            }
-          </ul>
         }
-      </div>
-    </section>
+
+        <div class="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Full name</mat-label>
+            <input matInput formControlName="fullName" autocomplete="name" />
+            @if (errorFor('fullName'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Headline</mat-label>
+            <input matInput formControlName="headline" />
+            <mat-hint>One line. Employers see this first.</mat-hint>
+            @if (errorFor('headline'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>University</mat-label>
+            <input matInput formControlName="university" />
+            @if (errorFor('university'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Field of study</mat-label>
+            <input matInput formControlName="fieldOfStudy" />
+            @if (errorFor('fieldOfStudy'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Qualification</mat-label>
+            <mat-select formControlName="qualification">
+              @for (option of qualifications; track option.value) {
+                <mat-option [value]="option.value">{{ option.label }}</mat-option>
+              }
+            </mat-select>
+            @if (errorFor('qualification'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Graduating in</mat-label>
+            <input matInput formControlName="graduationYear" type="number" inputmode="numeric" />
+            @if (errorFor('graduationYear'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>CGPA</mat-label>
+            <input matInput formControlName="cgpa" inputmode="decimal" placeholder="3.50" />
+            <mat-hint>Optional. LinkedIn does not carry this, so it is never imported.</mat-hint>
+            @if (errorFor('cgpa'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Skills</mat-label>
+          <textarea matInput formControlName="skills" rows="2"></textarea>
+          <mat-hint>Separated by commas. Up to 20.</mat-hint>
+          @if (errorFor('skills'); as message) {
+            <mat-error>{{ message }}</mat-error>
+          }
+        </mat-form-field>
+      </section>
+
+      <section
+        class="flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
+        aria-labelledby="contact-heading"
+      >
+        <h2 id="contact-heading" class="text-h2">Contact details</h2>
+
+        <!-- Editable here and only here, and unmasked here and only here: a
+             person is not a third party to their own record. -->
+        <div class="grid grid-cols-1 gap-x-4">
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" type="email" autocomplete="email" />
+            @if (errorFor('email'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" type="tel" autocomplete="tel" />
+            <mat-hint>Optional.</mat-hint>
+            @if (errorFor('phone'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <p class="notice fo-caption m-0 flex items-start gap-2">
+          <mat-icon class="notice__icon" aria-hidden="true">lock</mat-icon>
+          Employers cannot see your email or phone number until they add you to their shortlist.
+        </p>
+
+        <div>
+          <h3 class="fo-caption m-0">Visible to employers at</h3>
+          @if (visibleAt().length === 0) {
+            <p class="m-0 mt-2">
+              No fairs yet — your profile is not visible to any employer.
+              <a routerLink="/me/fairs">Register for a fair</a> to change that.
+            </p>
+          } @else {
+            <ul class="m-0 mt-2 list-none p-0">
+              @for (fair of visibleAt(); track fair.id) {
+                <li class="flex items-center gap-2">
+                  <mat-icon class="notice__icon" aria-hidden="true">event_available</mat-icon>
+                  {{ fair.name }}
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="mt-auto flex flex-wrap justify-end gap-2">
+          <button
+            matButton
+            type="button"
+            [disabled]="!form.dirty || store.saving()"
+            (click)="resetForm()"
+          >
+            Discard changes
+          </button>
+          <button matButton="filled" type="submit" [disabled]="store.saving()">
+            {{ store.saving() ? 'Saving…' : 'Save profile' }}
+          </button>
+        </div>
+      </section>
+    </form>
   </div>
 } @else {
   <app-empty-state

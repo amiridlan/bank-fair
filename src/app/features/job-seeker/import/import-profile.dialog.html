@@ -1,0 +1,90 @@
+<h2 mat-dialog-title>Import from LinkedIn</h2>
+
+<mat-dialog-content>
+  @switch (stage()) {
+    @case ('choose') {
+      <p class="mt-0">
+        LinkedIn can export your profile as a PDF. Open your profile, choose
+        <strong>More → Save to PDF</strong>, then pick that file here. Any CV in PDF form works
+        too.
+      </p>
+
+      <!-- The privacy claim is true, not reassurance: the file is read in this
+           tab and never sent anywhere (docs/08 S-D5). -->
+      <p class="privacy fo-caption flex items-start gap-2">
+        <mat-icon class="privacy__icon" aria-hidden="true">lock</mat-icon>
+        <span>
+          Your file is read on this device and never uploaded. Nothing is saved until you check
+          it and press Save.
+        </span>
+      </p>
+
+      <label class="picker" for="import-file">
+        <mat-icon aria-hidden="true">upload_file</mat-icon>
+        <span>Choose a PDF</span>
+        <input
+          id="import-file"
+          class="picker__input"
+          type="file"
+          accept="application/pdf,.pdf"
+          (change)="choose($event)"
+        />
+      </label>
+    }
+
+    @case ('reading') {
+      <p class="mt-0">Reading {{ fileName() }}…</p>
+      <mat-progress-bar mode="indeterminate" aria-label="Reading your file" />
+    }
+
+    @case ('failed') {
+      <p class="failed mt-0 flex items-start gap-2">
+        <mat-icon class="privacy__icon" aria-hidden="true">error_outline</mat-icon>
+        <span>{{ failureMessage() }}</span>
+      </p>
+    }
+
+    @case ('review') {
+      @if (found().length === 0) {
+        <p class="mt-0">
+          Nothing could be read from {{ fileName() }}. Fill the form in below instead — it is
+          not long.
+        </p>
+      } @else {
+        <p class="mt-0">Found in {{ fileName() }}:</p>
+
+        <dl class="found">
+          @for (field of found(); track field.label) {
+            <dt class="fo-caption">{{ field.label }}</dt>
+            <dd>{{ field.value }}</dd>
+          }
+        </dl>
+
+        @if (missing().length > 0) {
+          <!-- Named rather than silently blank: a field left empty because the
+               parser was unsure is easy to miss on a form that looks full. -->
+          <p class="fo-caption mb-0">
+            Not found, so left for you to fill: {{ missing().join(', ') }}.
+          </p>
+        }
+
+        <p class="fo-caption mb-0">
+          Check every field on the form — importing gets it close, not right.
+        </p>
+      }
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton type="button" (click)="dialogRef.close(null)">Cancel</button>
+
+  @switch (stage()) {
+    @case ('failed') {
+      <button matButton="filled" type="button" (click)="retry()">Choose another file</button>
+    }
+    @case ('review') {
+      <button matButton="filled" type="button" (click)="use()">Put this in the form</button>
+    }
+  }
+</mat-dialog-actions>
