@@ -46,7 +46,10 @@ const TABLET = '(min-width: 768px) and (max-width: 1279px)';
         <app-side-nav [rail]="isTablet()" (navigated)="closeDrawerOnMobile()" />
       </mat-sidenav>
 
-      <mat-sidenav-content>
+      <!-- tabindex 0 so the scrolling region can be reached and scrolled with
+           the keyboard. Without it a keyboard-only user cannot scroll a page
+           whose content exceeds the viewport (WCAG 2.1.1). -->
+      <mat-sidenav-content tabindex="0">
         <main id="main-content" class="shell__content" tabindex="-1">
           <router-outlet />
         </main>
