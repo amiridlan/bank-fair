@@ -40,6 +40,7 @@ This project is developed with **Claude Code on the web** (cloud sessions at cla
 ## Stack
 
 - Angular 22 (latest stable), TypeScript strict mode, SCSS
+- **Tailwind CSS v4** (layout, spacing, grid, typography) — see the styling rules below
 - Angular Material 3 + Angular CDK (drag-drop)
 - ng2-charts + chart.js for dashboard charts
 - npm
@@ -111,6 +112,18 @@ npx ng <command>               # use the project-local CLI; do not rely on a glo
 - One component per file. Templates and styles in separate files once a template exceeds ~20 lines.
 - Use design tokens (CSS custom properties from `docs/03-design-system.md`). No hard-coded hex values or magic pixel numbers in components.
 - Every interactive element must be keyboard-accessible with a visible focus state.
+
+## Styling: Tailwind and Material
+
+The two split the work. Getting this wrong wastes an afternoon on a rule that silently does nothing, so read it before styling anything.
+
+- **Tailwind owns** layout, spacing, grid, flex and typography on markup the app writes itself.
+- **Material owns its own components.** Theme them through `mat.theme()`, `mat.*-overrides()` or by styling elements the component itself owns — never with a utility class.
+- **Never use a utility to fight a Material internal**, and never `!important` to force one. Tailwind emits into `@layer`; Material is unlayered, and unlayered beats every layer regardless of specificity. A utility on a Material element loses, always.
+- Layer order is declared in `src/tailwind.css`: `theme → base → components → fo-base → utilities → unlayered`. App element defaults (`body`, `h1`–`h3`) live in `fo-base` so a utility can override them; `.fo-*` helpers, `:focus-visible` and component styles stay unlayered so they beat utilities.
+- **Tailwind's default palette, type scale and radius scale are removed** (`--color-*: initial` etc. in `src/tailwind.css`). `bg-blue-500`, `text-xl` and `rounded-lg` do not exist. Only project tokens do, which is how the no-hard-coded-colours rule is enforced rather than merely stated.
+- `src/styles/_tokens.scss` stays the single source of truth. `@theme` in `src/tailwind.css` points at those custom properties; do not restate a value there.
+- Spacing is Tailwind's default 4px scale, which *is* the project scale — but the numbering differs: `--fo-space-5` (24px) is Tailwind's `6`.
 
 ## Workflow
 
