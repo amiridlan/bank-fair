@@ -1,10 +1,12 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterOutlet } from '@angular/router';
 import { map } from 'rxjs';
 
+import { AuthStore } from '../auth/auth.store';
+import { FairContextStore } from '../fairs/fair-context.store';
 import { SideNavComponent } from './side-nav.component';
 import { TopBarComponent } from './top-bar.component';
 
@@ -27,7 +29,11 @@ const TABLET = '(min-width: 768px) and (max-width: 1279px)';
   template: `
     <a class="fo-skip-link" href="#main-content">Skip to main content</a>
 
-    <app-top-bar [showMenuButton]="isMobile()" (menuToggled)="toggleDrawer()" />
+    <app-top-bar
+      [showMenuButton]="isMobile()"
+      [fairs]="fairContext.selectableFairs()"
+      (menuToggled)="toggleDrawer()"
+    />
 
     <mat-sidenav-container class="shell" [hasBackdrop]="isMobile()">
       <mat-sidenav
@@ -84,6 +90,9 @@ const TABLET = '(min-width: 768px) and (max-width: 1279px)';
 })
 export class ShellComponent {
   private readonly breakpoints = inject(BreakpointObserver);
+  private readonly auth = inject(AuthStore);
+
+  protected readonly fairContext = inject(FairContextStore);
 
   protected readonly drawerOpen = signal(false);
 
@@ -99,6 +108,16 @@ export class ShellComponent {
 
   protected readonly isMobile = computed(() => this.layout().mobile);
   protected readonly isTablet = computed(() => this.layout().tablet);
+
+  constructor() {
+    // Only hiring managers get the picker, and only they need a fair scope.
+    // Re-runs on a role switch, which clears the previously active fair.
+    effect(() => {
+      if (this.auth.isHiringManager()) {
+        void this.fairContext.ensureLoaded();
+      }
+    });
+  }
 
   protected toggleDrawer(): void {
     this.drawerOpen.update((open) => !open);

@@ -10,11 +10,11 @@ import type { Fair } from '../models';
  * decision D3). Shown for hiring managers only.
  *
  * Presentational: it receives fairs and emits a choice, so the shell decides
- * where the list comes from.
+ * where the list comes from. The shell feeds it from `FairContextStore`,
+ * which also seeds the default — the soonest open or live fair, live first.
  *
- * TODO(Phase 3): the shell currently passes an empty list because no fairs
- * endpoint exists yet. Feed it from `FairsStore` once that lands, and default
- * the selection to the hiring manager's next upcoming fair.
+ * It renders nothing when there are no selectable fairs, rather than showing
+ * an empty dropdown.
  */
 @Component({
   selector: 'app-active-fair-picker',

@@ -83,7 +83,7 @@ export class TopBarComponent {
   protected readonly auth = inject(AuthStore);
 
   readonly showMenuButton = input<boolean>(false);
-  /** Empty until Phase 3 wires this to `FairsStore`. */
+  /** Selectable fairs for the active-fair picker; empty hides it. */
   readonly fairs = input<readonly Fair[]>([]);
 
   readonly menuToggled = output<void>();
