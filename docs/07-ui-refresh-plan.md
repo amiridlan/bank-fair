@@ -219,3 +219,14 @@ Top bar, side nav, KPI cards (UX-7), chart card layout. Delete the SCSS the refr
 - **Persistence made a latent test-isolation bug visible.** `sessionStorage` outlives a `TestBed`, so one test's `switchUser` leaked into the next and two assertions failed. The specs now clear storage in `beforeEach`. The tests were right to catch it — the shared state is real.
 - **Verified in a browser, not just in jsdom:** drag Lead → Proposal moves the card (15/12 → 14/13); the card menu's Move to Confirmed moves it again (13/10 → 12/11); totals shift with a valued move (Proposal 79,500 → 76,000, Confirmed 64,000 → 67,500); a reload on `/staff/employers` as Daniel Lim keeps the identity and redirects to `/hiring/talent-pool`; `/hiring/interviews` opens directly from a pasted URL; and a fresh tab still starts as staff, because `sessionStorage` is per-tab.
 - **Cost:** initial total 635.61 kB → 637.21 kB.
+
+### T3
+
+- **Row height is a Material token, not a utility.** `mat.table-overrides((row-item-container-height: 56px))` on the host, per T-D3 — a height class on `tr` would have lost to Material's unlayered row styles. Measured after: all 20 rows exactly 56px, where they had ranged from about 48px to 96px.
+- **`table-layout: fixed` is what makes truncation possible at all.** In auto layout a cell grows to fit its content and `text-overflow` never fires, so every "just add truncate" attempt is a no-op until the layout mode changes.
+- **Percentage columns collapse behind the drawer.** With the profile drawer open the table has roughly 600px, and percentage widths truncated a four-digit year to `2…` and a CGPA to `3…`. A `min-width: 960px` on the table makes the wrapper scroll instead, which is honest; the wrapper needs `tabindex="0"` so that scroll is reachable by keyboard.
+- **Capping the skill chips at two did not save them.** It fixed the row height, but each chip's border and padding left about 70px of text in a 189px column, so they rendered `M…` and `Signal…`. One ellipsised line of comma-joined text carries more information in the same space; the chips stay in the drawer where there is room.
+- **The filter labels needed 172px, not 140px.** Verified by checking `scrollWidth > clientWidth` on each `mat-label` rather than by eye.
+- **A button inside a clickable row needs `stopPropagation`**, or shortlisting also opens the profile. axe has no complaint about the nesting — the row is a focusable `tr` and the button is a separate tab stop.
+- **Verified in a browser:** 20 rows at a uniform 56px, no label clipped, zero cells overflowing their column, 20 chevrons, the toggle flipping `aria-pressed` both ways without navigating, and a row click still opening the drawer.
+- **Cost:** initial total 637.21 kB → 637.53 kB. The talent-pool stylesheet lost its `.pool`, `.filters`, `.table-wrap` and chip rules to utilities.
