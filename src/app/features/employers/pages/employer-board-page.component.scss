@@ -1,63 +1,36 @@
-.filters {
-  display: flex;
-  gap: var(--fo-space-3);
-}
-
-.board {
-  display: flex;
-  gap: var(--fo-space-4);
-  align-items: flex-start;
-  overflow-x: auto;
-  padding-bottom: var(--fo-space-4);
-}
-
+// Column sizing is the fix for docs/07 UX-1: five fixed 280px columns needed
+// 1464px and the content area is ~1136px at a 1440px viewport, so Paid was
+// half cut off and Lost was entirely off-screen with nothing to say so.
+//
+// The four working stages now flex to share the space; Lost — a terminal stage
+// nobody drags out of — keeps the same minimum but does not grow into the
+// spare room. 4 x 200 + 200 + gaps = 1048 inside a 1136px content area, so
+// nothing is hidden at desktop width. Below that the board still scrolls and
+// the fade below says so.
+//
+// The minimum is 200px for every column including Lost, and that is measured,
+// not chosen: a card's overflow-menu button carries a 48px Material touch
+// target, and at 150px it pushed 31px past the column edge.
 .column {
-  flex: 0 0 280px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--fo-space-2);
-  padding: var(--fo-space-3);
-  background: var(--fo-surface);
-  border: 1px solid var(--fo-border);
-  border-radius: var(--fo-radius-md);
+  flex: 1 1 200px;
+  min-width: 200px;
 }
 
-.column__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--fo-space-2);
+.column--terminal {
+  flex: 0 1 200px;
 }
 
-.column__title {
-  margin: 0;
-  font-size: var(--fo-body-size);
-  line-height: var(--fo-body-line);
-  font-weight: 600;
-}
-
-.column__count {
-  min-width: 24px;
-  padding: 0 var(--fo-space-2);
-  border-radius: var(--fo-radius-sm);
-  background: var(--fo-muted-subtle);
-  color: var(--fo-text-muted);
-  font-size: var(--fo-caption-size);
-  line-height: var(--fo-caption-line);
-  text-align: center;
-}
-
-.column__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--fo-space-2);
-  min-height: 80px;
-}
-
-.column__empty {
-  margin: 0;
-  padding: var(--fo-space-4) var(--fo-space-2);
-  text-align: center;
+// Right-edge fade, applied only while `overflowsRight()` is true — a permanent
+// fade over a board with nothing cut off would be a lie about the state.
+.board-wrap--overflowing::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: var(--fo-space-4); // clear of the horizontal scrollbar
+  width: var(--fo-space-6);
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--fo-surface));
 }
 
 /* Where the card will land. */

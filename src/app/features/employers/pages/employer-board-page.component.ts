@@ -1,16 +1,27 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { ViewportRuler } from '@angular/cdk/scrolling';
 import {
   CdkDrag,
   CdkDragDrop,
   CdkDropList,
   CdkDropListGroup,
 } from '@angular/cdk/drag-drop';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  afterRenderEffect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { DecimalPipe } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 
 import type { Employer, EmployerStage } from '../../../core/models';
@@ -38,6 +49,7 @@ import { EmployersStore, PIPELINE_STAGES, STAGE_LABEL } from '../employers.store
   selector: 'app-employer-board-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DecimalPipe,
     CdkDrag,
     CdkDropList,
     CdkDropListGroup,
@@ -58,11 +70,55 @@ export default class EmployerBoardPageComponent {
   private readonly snackBar = inject(MatSnackBar);
   private readonly announcer = inject(LiveAnnouncer);
 
+  private readonly viewportRuler = inject(ViewportRuler);
+
   protected readonly store = inject(EmployersStore);
   protected readonly stages = PIPELINE_STAGES;
 
+  private readonly board = viewChild<ElementRef<HTMLElement>>('board');
+
+  /**
+   * True while the board has content scrolled off to the right.
+   *
+   * The fade it drives is the only thing telling a user there is more board
+   * than they can see, so it has to track the real state rather than being
+   * painted on — hence measuring on scroll and on resize rather than assuming.
+   */
+  protected readonly overflowsRight = signal(false);
+
   constructor() {
     void this.store.load();
+
+    // ViewportRuler rather than a ResizeObserver: the board only changes width
+    // when the viewport does, the CDK is already a dependency, and unlike
+    // ResizeObserver it exists under jsdom — so this cannot take the whole
+    // board down in an environment that lacks it.
+    this.viewportRuler
+      .change(100)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.measure());
+
+    // The board element does not exist until the employers land, so a one-shot
+    // render hook measures nothing. This re-runs when the element appears and
+    // again whenever the columns change, since a search can remove enough
+    // cards to change whether the board overflows at all.
+    afterRenderEffect(() => {
+      this.board();
+      this.store.byStage();
+      this.measure();
+    });
+  }
+
+  /** Called on scroll, on resize, and whenever the board re-renders. */
+  protected measure(): void {
+    const el = this.board()?.nativeElement;
+    if (!el) {
+      this.overflowsRight.set(false);
+      return;
+    }
+    // 1px of slack: fractional layout widths otherwise leave the fade on
+    // permanently at some zoom levels.
+    this.overflowsRight.set(el.scrollWidth - el.clientWidth - el.scrollLeft > 1);
   }
 
   protected label(stage: EmployerStage): string {

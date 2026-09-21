@@ -3,7 +3,7 @@
     Add employer
   </button>
 
-  <div slot="filters" class="filters">
+  <div slot="filters" class="flex gap-3">
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Search employers</mat-label>
       <input matInput type="search" [value]="store.search()" (input)="onSearch($event)" />
@@ -24,36 +24,55 @@
     (action)="addEmployer()"
   />
 } @else {
-  <div class="board" cdkDropListGroup>
-    @for (stage of stages; track stage) {
-      <section class="column" [attr.aria-label]="label(stage) + ' column'">
-        <header class="column__head">
-          <h2 class="column__title">{{ label(stage) }}</h2>
-          <span class="column__count fo-tabular">{{ store.byStage()[stage].length }}</span>
-        </header>
-
-        <div
-          class="column__body"
-          cdkDropList
-          [id]="'column-' + stage"
-          [cdkDropListData]="stage"
-          [cdkDropListConnectedTo]="columnIds"
-          (cdkDropListDropped)="onDrop($event, stage)"
+  <!-- The fade is a real affordance, not decoration: it appears only while
+       there is something still cut off to the right (docs/07 UX-1). -->
+  <div class="board-wrap relative" [class.board-wrap--overflowing]="overflowsRight()">
+    <div #board class="board flex items-start gap-3 overflow-x-auto pb-4" cdkDropListGroup (scroll)="measure()">
+      @for (stage of stages; track stage) {
+        <section
+          class="column flex flex-col gap-2 rounded-md border border-border bg-surface p-3"
+          [class.column--terminal]="stage === 'lost'"
+          [attr.aria-label]="label(stage) + ' column'"
         >
-          @for (employer of store.byStage()[stage]; track employer.id) {
-            <div cdkDrag [cdkDragData]="employer">
-              <app-employer-card
-                [employer]="employer"
-                [pending]="store.pendingId() === employer.id"
-                (moveRequested)="move(employer, $event)"
-                (edit)="editEmployer($event)"
-              />
+          <header class="flex flex-col gap-1">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="m-0 text-body font-semibold">{{ label(stage) }}</h2>
+              <span
+                class="column__count fo-tabular min-w-6 rounded-sm bg-muted-subtle px-2 text-center text-caption text-muted"
+              >
+                {{ store.byStage()[stage].length }}
+              </span>
             </div>
-          } @empty {
-            <p class="column__empty fo-caption">No employers in {{ label(stage) }}.</p>
-          }
-        </div>
-      </section>
-    }
+            <!-- The number is the point of a sales column, so it gets the mono
+                 face and sits directly under the stage name. -->
+            <p class="fo-mono m-0 text-muted">
+              RM {{ store.valueByStage()[stage] | number: '1.0-0' }}
+            </p>
+          </header>
+
+          <div
+            class="flex min-h-20 flex-col gap-2"
+            cdkDropList
+            [id]="'column-' + stage"
+            [cdkDropListData]="stage"
+            [cdkDropListConnectedTo]="columnIds"
+            (cdkDropListDropped)="onDrop($event, stage)"
+          >
+            @for (employer of store.byStage()[stage]; track employer.id) {
+              <div cdkDrag [cdkDragData]="employer">
+                <app-employer-card
+                  [employer]="employer"
+                  [pending]="store.pendingId() === employer.id"
+                  (moveRequested)="move(employer, $event)"
+                  (edit)="editEmployer($event)"
+                />
+              </div>
+            } @empty {
+              <p class="fo-caption m-0 px-2 py-4 text-center">No employers in {{ label(stage) }}.</p>
+            }
+          </div>
+        </section>
+      }
+    </div>
   </div>
 }

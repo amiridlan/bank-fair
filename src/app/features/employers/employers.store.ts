@@ -72,6 +72,25 @@ export class EmployersStore {
     return grouped;
   });
 
+  /**
+   * Committed value per column, over the same filtered set the board renders,
+   * so the header total always matches the cards under it.
+   *
+   * The board could not answer "what is in Proposal?" without adding the cards
+   * up by hand (docs/07 UX-1).
+   */
+  readonly valueByStage = computed<Readonly<Record<EmployerStage, number>>>(() => {
+    const grouped = this.byStage();
+    const totals = {} as Record<EmployerStage, number>;
+    for (const stage of PIPELINE_STAGES) {
+      totals[stage] = grouped[stage].reduce(
+        (sum, employer) => sum + (employer.dealValueMyr ?? 0),
+        0,
+      );
+    }
+    return totals;
+  });
+
   readonly totalValueMyr = computed(() =>
     this._employers()
       .filter((employer) => employer.stage !== 'lost')

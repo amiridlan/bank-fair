@@ -201,4 +201,39 @@ describe('EmployersStore', () => {
       expect(store.employers()).toHaveLength(3);
     });
   });
+
+  describe('valueByStage', () => {
+    it('totals each column, and reports zero for an empty one', () => {
+      const totals = store.valueByStage();
+
+      // Every seeded row carries 7500, one per stage.
+      expect(totals.lead).toBe(7500);
+      expect(totals.proposal).toBe(7500);
+      expect(totals.paid).toBe(7500);
+      expect(totals.confirmed).toBe(0);
+      expect(totals.lost).toBe(0);
+    });
+
+    it('follows the search, so the header total matches the cards under it', () => {
+      store.setSearch('emp-001');
+
+      const totals = store.valueByStage();
+
+      expect(totals.lead).toBe(7500);
+      expect(totals.proposal).toBe(0);
+      expect(totals.paid).toBe(0);
+    });
+
+    it('counts an employer with no deal value as zero rather than skipping it', async () => {
+      // A lead has no proposal yet, so dealValueMyr is null.
+      const loading = store.load();
+      http
+        .expectOne((r) => r.url === '/employers')
+        .flush({ data: [row('emp-009', 'lead', { deal_value_myr: null })] });
+      await loading;
+
+      expect(store.valueByStage().lead).toBe(0);
+      expect(store.byStage().lead).toHaveLength(1);
+    });
+  });
 });
