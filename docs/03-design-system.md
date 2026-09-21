@@ -31,6 +31,31 @@ Defined as CSS custom properties on `:root` in `src/styles/_tokens.scss`. Compon
 | `--fo-error` | `#B91C1C` | Errors, Lost | |
 | `--fo-info` | `#1D4ED8` | Lead, informational | |
 
+### Tonal ramps (added T1)
+
+Intermediate steps so components stop inventing tints. Defined in `src/styles/_tokens.scss`; every value was computed, and the contrast column is against white.
+
+| Step | Teal | vs white | Slate | vs white |
+|---|---|---|---|---|
+| 50 | `#F3FCFB` | 1.04 | `#F8F9FC` | 1.05 |
+| 100 | `#E3F7F5` | 1.11 | `#F1F3F8` | 1.11 |
+| 200 | `#C3EAE7` | 1.29 | `#DEE2ED` | 1.30 |
+| 300 | `#88D3CD` | 1.71 | `#C0C7D8` | 1.69 |
+| 400 | `#3BB0A6` | 2.64 | `#8B96B1` | 2.96 |
+| **500** | `#1F847C` | **4.52** | `#5B6B8F` | **5.32** |
+| 600 | `#176E67` | 6.06 | `#445274` | 7.76 |
+| 700 | `#115A54` | 8.03 | `#323F5D` | 10.48 |
+| 800 | `#0F433F` | 11.08 | `#222C44` | 13.89 |
+| 900 | `#0C2C2A` | 14.90 | `#172036` | 16.20 |
+
+> **Rule (docs/07 T-D4): nothing below step 500 may carry text or act as a functional boundary.**
+>
+> Step 400 is the highest step that still fails — teal 400 is 2.64:1 and slate 400 is 2.96:1, both under the 3:1 that WCAG 1.4.11 requires of a UI boundary. Below 500 is for fills and decoration only.
+>
+> This is the `--fo-border-strong` bug written down. It shipped at 1.48:1 as the sole indicator of an empty booth because the rule was implicit. It is now explicit, and the ramp makes the safe step obvious.
+
+The existing anchors sit inside these ramps and are unchanged: `--fo-primary` `#0F766E` (5.47:1) between teal 500 and 600; `--fo-border-strong` `#64748B` (4.76:1) at slate 500 — which the ramp independently validates; `--fo-ink` `#14213D` (15.97:1) at slate 900.
+
 ### Status mapping (always text + icon, never colour alone)
 
 | Status | Colour token | Material icon |

@@ -39,6 +39,41 @@
   --fo-info-subtle: #dbeafe;
   --fo-muted-subtle: #f1f5f9;
 
+  // ------------------------------------------------------------------ ramps
+  //
+  // Intermediate steps, added in T1 so components stop inventing tints. Every
+  // value was computed, not eyeballed; the contrast column is against white.
+  //
+  // RULE (docs/07 T-D4): nothing below step 500 may carry text or act as a
+  // functional boundary. `--fo-border-strong` shipped at 1.48:1 once because
+  // that rule was implicit. It is now explicit.
+  //
+  // The existing anchors sit inside these ramps and are unchanged:
+  //   --fo-primary       #0f766e  5.47:1  between teal 500 and 600
+  //   --fo-border-strong #64748b  4.76:1  slate 500
+  //   --fo-ink           #14213d 15.97:1  slate 900
+  --fo-teal-50: #f3fcfb; //  1.04  subtle fills
+  --fo-teal-100: #e3f7f5; //  1.11
+  --fo-teal-200: #c3eae7; //  1.29  borders on teal surfaces
+  --fo-teal-300: #88d3cd; //  1.71
+  --fo-teal-400: #3bb0a6; //  2.64  disabled, placeholder
+  --fo-teal-500: #1f847c; //  4.52  lowest step usable for text
+  --fo-teal-600: #176e67; //  6.06  primary buttons, links
+  --fo-teal-700: #115a54; //  8.03  hover, active
+  --fo-teal-800: #0f433f; // 11.08
+  --fo-teal-900: #0c2c2a; // 14.90
+
+  --fo-slate-50: #f8f9fc; //  1.05  page surface
+  --fo-slate-100: #f1f3f8; //  1.11
+  --fo-slate-200: #dee2ed; //  1.30  hairline borders
+  --fo-slate-300: #c0c7d8; //  1.69
+  --fo-slate-400: #8b96b1; //  2.96  fails 3:1 — decorative only
+  --fo-slate-500: #5b6b8f; //  5.32  strong borders
+  --fo-slate-600: #445274; //  7.76
+  --fo-slate-700: #323f5d; // 10.48  secondary text
+  --fo-slate-800: #222c44; // 13.89
+  --fo-slate-900: #172036; // 16.20  headings
+
   // --------------------------------------------------------------- spacing
   --fo-space-1: 4px;
   --fo-space-2: 8px;
