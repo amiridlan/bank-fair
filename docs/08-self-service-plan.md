@@ -84,7 +84,7 @@ The button says **Import from LinkedIn**, because that is what the person is doi
 
 - **Bundle.** The initial bundle is 637.99 kB against a 650 kB warning budget — **12 kB of headroom**. `pdfjs-dist` is an order of magnitude larger than that, so it must load through a dynamic import, reached only when someone clicks Import. The same pattern already keeps chart.js and the mock seed data out of the initial bundle.
 - **CSP.** The production policy is `script-src 'self'` with no `unsafe-eval` (Phase 7). pdf.js runs its parser in a worker and, in some configurations, wants `eval`. The worker is same-origin so it should fall back to `default-src 'self'` and pass, and pdf.js accepts `isEvalSupported: false`. **Both need verifying against the real build behind the real headers before this is called done** — Phase 7 already found one inline handler the CSP blocked.
-- **New dependency.** `pdfjs-dist`, which `CLAUDE.md` says to ask about before adding. Not yet approved.
+- **New dependency.** `pdfjs-dist`, which `CLAUDE.md` says to ask about before adding. **Approved**, and added at 6.3.289.
 - **Scope.** PDF only. DOCX parsing is a different library and a larger surface, and LinkedIn exports PDF.
 
 *Risk: highest of the four.* A third-party parser, a web worker, a tight budget and a strict CSP, all at once.
@@ -100,6 +100,20 @@ The button says **Import from LinkedIn**, because that is what the person is doi
 ---
 
 ## Facts discovered
+
+### S4
+
+- **The CSP worry was the wrong worry, and the MIME type was the real one.** pdf.js 6 removed `isEvalSupported` because it no longer evaluates source at all — there is no `eval(` or `new Function(` left in the shipped worker (the one grep hit is `new FunctionBasedShading`). `script-src 'self'` with no `unsafe-eval` is therefore enough, confirmed live: the worker loads and returns its `action: "ready"` handshake under the exact production headers, 0 violations. What did break it was `Content-Type: application/octet-stream` — a **module** worker is rejected outright without a JavaScript MIME type, and the symptom is a silent `error` event that looks like a broken worker rather than a wrong header. Pinned in `netlify.toml`.
+- **`Cache-Control: immutable` would have been a bug.** `pdf.worker.min.mjs` carries no content hash, so a year-long immutable cache pins a stale worker through the next `pdfjs-dist` upgrade. One hour, revalidated.
+- **Sharing a baseline does not make two runs one line.** The first end-to-end run imported the skill `SQL Summary` — the sidebar's last skill welded to the main column's next heading, because LinkedIn's layout is two columns and a sidebar entry lands level with a body line constantly. Grouping by `y` alone corrupts both columns. `groupIntoLines` now breaks a baseline wherever the horizontal gap exceeds several times the glyph height, which also separates a right-aligned date from the job title beside it.
+- **The line under the name is usually the contact line, not a headline.** On the plain-CV fixture the parser took `tan.weiming@example.com | 012-3456789` as the headline — which would publish, in the field employers read first, the very details the masking rules exist to keep private until a shortlist. Lines carrying an `@` or a phone-shaped run are skipped.
+- **Joining runs needs the geometry, not a rule.** Joining with a space breaks a word that kerning split (`Univer` + `siti`); joining with nothing fuses words from a producer that emits no trailing spaces. The gap between runs says which happened.
+- **The 422 path is finally exercised through the UI** — open since T5. The trick was finding a rule the client cannot check: the form caps skills at 400 characters, the API at 20 skills, so 21 short ones travel the whole way. The message comes back attached to the Skills field, with no snackbar, and saving again clears it.
+- **`fairIds` and `isContactVisible` are not writable by the profile form.** Registration is what puts someone at a fair, with consent recorded against it, and masking is the API's decision — a profile PATCH that could set either would be a way around both. Asserted, not just intended.
+- **Editing is the owner's alone.** `PATCH /candidates/{id}` answers 404 to staff, to employers, and to another job seeker — the same answer a missing id gets, so it never confirms which candidates exist.
+- **The parser is built against a reconstruction of LinkedIn's export, not a real one.** No real LinkedIn PDF was available in this environment, so the fixtures were generated from what that layout is understood to be. The real file will differ in ways this cannot predict — which is the reason the design never saves silently and shows what it found first. Worth re-testing against a genuine export before this is called finished.
+- **Verified:** 15 pages and 5 dialog states at three viewports, 0 axe violations, 0 CSP violations, 0 console errors. End to end in a browser: a LinkedIn-shaped PDF fills six fields and leaves CGPA alone, a plain CV fills five and reads `diploma` correctly, a scanned PDF and a non-PDF each give their own message and recover, and a saved profile appears in the employer's talent pool.
+- **Cost:** initial total 639.04 kB → 639.79 kB. pdf.js is a 432 kB lazy chunk, absent from every initial chunk, reached only when the dialog opens.
 
 ### S3
 
