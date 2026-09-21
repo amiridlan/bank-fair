@@ -1,0 +1,65 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-1);
+  padding: var(--fo-space-3);
+  background: var(--fo-surface-raised);
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-sm);
+  transition: border-color var(--fo-motion-fast) var(--fo-motion-easing);
+}
+
+.card:hover {
+  border-color: var(--fo-border-strong);
+}
+
+/* Dimmed while its move is in flight, so an optimistic card is visibly
+   provisional rather than silently assumed saved. */
+.card--pending {
+  opacity: 0.6;
+}
+
+.card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--fo-space-2);
+}
+
+.card__name {
+  margin: 0;
+  font-size: var(--fo-body-size);
+  line-height: var(--fo-body-line);
+  font-weight: 600;
+  color: var(--fo-ink);
+}
+
+.card__meta {
+  margin: 0;
+}
+
+.card__menu-caption {
+  padding: var(--fo-space-2) var(--fo-space-4) var(--fo-space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.card__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--fo-space-2);
+  margin-top: var(--fo-space-2);
+}
+
+.card__value {
+  font-weight: 500;
+  color: var(--fo-ink);
+}
+
+.card__lost {
+  margin: var(--fo-space-1) 0 0;
+  padding-top: var(--fo-space-2);
+  border-top: 1px solid var(--fo-border);
+  color: var(--fo-error);
+}

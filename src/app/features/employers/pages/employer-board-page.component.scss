@@ -1,0 +1,86 @@
+.filters {
+  display: flex;
+  gap: var(--fo-space-3);
+}
+
+.board {
+  display: flex;
+  gap: var(--fo-space-4);
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: var(--fo-space-4);
+}
+
+.column {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-2);
+  padding: var(--fo-space-3);
+  background: var(--fo-surface);
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-md);
+}
+
+.column__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fo-space-2);
+}
+
+.column__title {
+  margin: 0;
+  font-size: var(--fo-body-size);
+  line-height: var(--fo-body-line);
+  font-weight: 600;
+}
+
+.column__count {
+  min-width: 24px;
+  padding: 0 var(--fo-space-2);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-muted-subtle);
+  color: var(--fo-text-muted);
+  font-size: var(--fo-caption-size);
+  line-height: var(--fo-caption-line);
+  text-align: center;
+}
+
+.column__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-2);
+  min-height: 80px;
+}
+
+.column__empty {
+  margin: 0;
+  padding: var(--fo-space-4) var(--fo-space-2);
+  text-align: center;
+}
+
+/* Where the card will land. */
+.cdk-drop-list-dragging .cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+:host ::ng-deep .cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+/* Only drag previews get a shadow; cards themselves stay flat (docs/03). */
+:host ::ng-deep .cdk-drag-preview {
+  box-shadow: var(--fo-shadow-overlay);
+  border-radius: var(--fo-radius-sm);
+}
+
+:host ::ng-deep .cdk-drag-animating {
+  transition: transform var(--fo-motion-base) var(--fo-motion-easing);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host ::ng-deep .cdk-drag-animating {
+    transition: none;
+  }
+}

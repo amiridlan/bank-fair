@@ -1,0 +1,102 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit employer' : 'Add employer' }}</h2>
+
+<mat-dialog-content>
+  @if (data.reason; as reason) {
+    <p class="banner banner--info" role="status">
+      <mat-icon aria-hidden="true">info</mat-icon>
+      {{ reason }}
+    </p>
+  }
+
+  @if (formError(); as message) {
+    <p class="banner banner--error" role="alert">
+      <mat-icon aria-hidden="true">error_outline</mat-icon>
+      {{ message }}
+    </p>
+  }
+
+  <form class="form" [formGroup]="form" (ngSubmit)="save()">
+    <mat-form-field appearance="outline" class="form__field form__field--wide">
+      <mat-label>Company name</mat-label>
+      <input matInput formControlName="name" autocomplete="organization" />
+      @if (errorFor('name'); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Industry</mat-label>
+      <mat-select formControlName="industry">
+        @for (industry of industries; track industry) {
+          <mat-option [value]="industry">{{ industry }}</mat-option>
+        }
+      </mat-select>
+      @if (errorFor('industry'); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Company size</mat-label>
+      <mat-select formControlName="companySize">
+        @for (size of companySizes; track size) {
+          <mat-option [value]="size">{{ size }} employees</mat-option>
+        }
+      </mat-select>
+      @if (errorFor('companySize'); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Contact name</mat-label>
+      <input matInput formControlName="contactName" autocomplete="name" />
+      @if (errorFor('contactName'); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Contact email</mat-label>
+      <input matInput type="email" formControlName="contactEmail" autocomplete="email" />
+      @if (errorFor('contactEmail'); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Contact phone</mat-label>
+      <input matInput formControlName="contactPhone" placeholder="+60 12-345 6789" />
+      <mat-hint>Optional</mat-hint>
+      @if (errorFor('contactPhone'); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Booth package</mat-label>
+      <mat-select formControlName="boothPackage">
+        <mat-option value="">Not chosen yet</mat-option>
+        @for (option of boothPackages; track option) {
+          <mat-option [value]="option">{{ option | titlecase }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>Required before an employer can be marked Paid</mat-hint>
+      @if (errorFor('boothPackage'); as message) {
+        <mat-error>{{ message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field form__field--wide">
+      <mat-label>Notes</mat-label>
+      <textarea matInput formControlName="notes" rows="3"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton type="button" [disabled]="saving()" (click)="requestClose()">Cancel</button>
+  <button matButton="filled" type="button" [disabled]="saving()" (click)="save()">
+    {{ saving() ? 'Saving…' : isEdit ? 'Save changes' : 'Add employer' }}
+  </button>
+</mat-dialog-actions>

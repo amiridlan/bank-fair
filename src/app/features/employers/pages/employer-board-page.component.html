@@ -1,0 +1,59 @@
+<app-page-header title="Employers" description="Sales pipeline from Lead through to Paid.">
+  <button slot="actions" matButton="filled" type="button" (click)="addEmployer()">
+    Add employer
+  </button>
+
+  <div slot="filters" class="filters">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Search employers</mat-label>
+      <input matInput type="search" [value]="store.search()" (input)="onSearch($event)" />
+    </mat-form-field>
+  </div>
+</app-page-header>
+
+@if (store.isLoading()) {
+  <app-skeleton [count]="4" [height]="120" label="Loading employers" />
+} @else if (store.hasError()) {
+  <app-error-state heading="Couldn't load employers" [error]="store.error()" (retry)="retry()" />
+} @else if (store.isEmpty()) {
+  <app-empty-state
+    icon="apartment"
+    heading="No employers yet"
+    message="Add the first employer to start building the pipeline."
+    actionLabel="Add employer"
+    (action)="addEmployer()"
+  />
+} @else {
+  <div class="board" cdkDropListGroup>
+    @for (stage of stages; track stage) {
+      <section class="column" [attr.aria-label]="label(stage) + ' column'">
+        <header class="column__head">
+          <h2 class="column__title">{{ label(stage) }}</h2>
+          <span class="column__count fo-tabular">{{ store.byStage()[stage].length }}</span>
+        </header>
+
+        <div
+          class="column__body"
+          cdkDropList
+          [id]="'column-' + stage"
+          [cdkDropListData]="stage"
+          [cdkDropListConnectedTo]="columnIds"
+          (cdkDropListDropped)="onDrop($event, stage)"
+        >
+          @for (employer of store.byStage()[stage]; track employer.id) {
+            <div cdkDrag [cdkDragData]="employer">
+              <app-employer-card
+                [employer]="employer"
+                [pending]="store.pendingId() === employer.id"
+                (moveRequested)="move(employer, $event)"
+                (edit)="editEmployer($event)"
+              />
+            </div>
+          } @empty {
+            <p class="column__empty fo-caption">No employers in {{ label(stage) }}.</p>
+          }
+        </div>
+      </section>
+    }
+  </div>
+}
