@@ -33,7 +33,6 @@ import { SkeletonComponent } from '../../../shared/ui/skeleton.component';
     SkeletonComponent,
   ],
   templateUrl: './dashboard-page.component.html',
-  styleUrl: './dashboard-page.component.scss',
 })
 export default class DashboardPageComponent {
   protected readonly store = inject(DashboardStore);

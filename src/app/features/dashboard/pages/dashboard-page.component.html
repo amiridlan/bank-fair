@@ -3,12 +3,15 @@
   description="Booth fill, registrations and pipeline value across every active fair."
 />
 
-<!-- KPI row -->
-<section class="kpis" aria-label="Key figures">
+<!-- KPI row. Breakpoints match docs/03: 1 up on mobile, 2 on tablet (md =
+     768px), 4 on desktop (xl = 1280px). The loading and error branches span
+     the whole row rather than sitting in the first column. -->
+<section class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4" aria-label="Key figures">
   @if (store.isLoading()) {
-    <app-skeleton [count]="4" [height]="104" label="Loading key figures" />
+    <app-skeleton class="col-span-full" [count]="4" [height]="104" label="Loading key figures" />
   } @else if (store.hasError()) {
     <app-error-state
+      class="col-span-full"
       heading="Couldn't load the key figures"
       [error]="store.error()"
       (retry)="retry()"
@@ -42,10 +45,16 @@
   }
 </section>
 
-<div class="charts">
+<div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
   <!-- Booth fill -->
-  <section class="panel" aria-labelledby="booth-fill-heading">
-    <h2 id="booth-fill-heading">Booths assigned per fair</h2>
+  <section
+    class="flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
+    aria-labelledby="booth-fill-heading"
+  >
+    <!-- text-h2 is the 1.2-ratio scale from docs/07. It sits in the utilities
+         layer and the element default sits in fo-base, so the utility wins —
+         which is the whole point of the layer order in src/tailwind.css. -->
+    <h2 id="booth-fill-heading" class="text-h2">Booths assigned per fair</h2>
 
     @if (store.isLoading()) {
       <app-skeleton [count]="1" [height]="260" label="Loading booth fill" />
@@ -71,8 +80,11 @@
   </section>
 
   <!-- Pipeline -->
-  <section class="panel" aria-labelledby="pipeline-heading">
-    <h2 id="pipeline-heading">Pipeline value by stage</h2>
+  <section
+    class="flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
+    aria-labelledby="pipeline-heading"
+  >
+    <h2 id="pipeline-heading" class="text-h2">Pipeline value by stage</h2>
 
     @if (store.isLoading()) {
       <app-skeleton [count]="1" [height]="260" label="Loading pipeline" />

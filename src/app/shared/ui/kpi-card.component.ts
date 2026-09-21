@@ -13,18 +13,31 @@ import { MatIconModule } from '@angular/material/icon';
   selector: 'app-kpi-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DecimalPipe, PercentPipe, MatIconModule],
+  // block + h-full so every card in the KPI grid is the same height. Without
+  // it the host sizes to content and a card with no delta line ends short,
+  // leaving the row's bottom edge ragged (docs/07 UX-7).
+  host: { class: 'block h-full' },
   template: `
-    <article class="kpi">
-      <p class="kpi__label fo-caption">{{ label() }}</p>
-      <p class="kpi__value fo-tabular">
+    <article
+      class="flex h-full flex-col gap-1 rounded-md border border-border bg-raised p-4"
+    >
+      <p class="kpi__label fo-caption m-0">{{ label() }}</p>
+      <p
+        class="kpi__value fo-tabular m-0 font-brand text-display font-bold tracking-tight text-ink"
+      >
         @if (prefix(); as text) {
-          <span class="kpi__affix">{{ text }}</span>
+          <span class="text-h2 font-semibold">{{ text }}</span>
         }{{ value() | number: format() }}@if (suffix(); as text) {
-          <span class="kpi__affix">{{ text }}</span>
+          <span class="text-h2 font-semibold">{{ text }}</span>
         }
       </p>
       @if (deltaPct(); as delta) {
-        <p class="kpi__delta fo-caption" [style.color]="deltaColor()">
+        <!-- mt-auto pins the delta to the bottom, so deltas line up across the
+             row even when a value wraps. -->
+        <p
+          class="kpi__delta fo-caption m-0 mt-auto flex items-center gap-1"
+          [style.color]="deltaColor()"
+        >
           <mat-icon class="kpi__delta-icon" aria-hidden="true">{{ deltaIcon() }}</mat-icon>
           {{ delta | percent: '1.0-1' }} {{ deltaCaption() }}
         </p>
@@ -32,42 +45,8 @@ import { MatIconModule } from '@angular/material/icon';
     </article>
   `,
   styles: `
-    .kpi {
-      display: flex;
-      flex-direction: column;
-      gap: var(--fo-space-1);
-      padding: var(--fo-space-4);
-      border: 1px solid var(--fo-border);
-      border-radius: var(--fo-radius-md);
-      background: var(--fo-surface-raised);
-    }
-
-    .kpi__label {
-      margin: 0;
-    }
-
-    .kpi__value {
-      margin: 0;
-      font-family: var(--fo-font-brand);
-      font-size: var(--fo-display-size);
-      font-weight: 700;
-      line-height: var(--fo-display-line);
-      letter-spacing: -0.02em;
-      color: var(--fo-ink);
-    }
-
-    .kpi__affix {
-      font-size: var(--fo-h2-size);
-      font-weight: 600;
-    }
-
-    .kpi__delta {
-      display: flex;
-      align-items: center;
-      gap: var(--fo-space-1);
-      margin: 0;
-    }
-
+    // Material sizes mat-icon from its own tokens, so this is not something a
+    // utility can do (docs/07 T-D3).
     .kpi__delta-icon {
       width: 16px;
       height: 16px;
