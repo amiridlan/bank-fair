@@ -25,7 +25,7 @@ Defined as CSS custom properties on `:root` in `src/styles/_tokens.scss`. Compon
 | `--fo-surface` | `#F8FAFC` | Page background | |
 | `--fo-surface-raised` | `#FFFFFF` | Cards, tables, drawers | |
 | `--fo-border` | `#E2E8F0` | Dividers, card borders | |
-| `--fo-border-strong` | `#CBD5E1` | Input borders, booth outlines | ≥3:1 vs surface for UI edges: use for inputs |
+| `--fo-border-strong` | `#64748B` | Input borders, booth outlines, open slot outlines | **Measured 4.76:1 on white, 4.55:1 on surface.** Was `#CBD5E1`, which measured 1.48:1 and failed WCAG 1.4.11 — it is the sole indicator of an empty booth or open slot |
 | `--fo-success` | `#15803D` | Paid, Booked | |
 | `--fo-warning` | `#B45309` | Proposal, pending | Text-safe amber |
 | `--fo-error` | `#B91C1C` | Errors, Lost | |

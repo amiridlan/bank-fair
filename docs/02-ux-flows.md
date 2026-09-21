@@ -117,5 +117,5 @@ These are **not** research-based personas. Each lists how to validate it.
 - Status changes (assign, move, book) are announced via `LiveAnnouncer`.
 - Status is never shown by colour alone: chips have text + icon.
 - Contrast ≥ 4.5:1 for text, ≥ 3:1 for UI components.
-- Touch targets ≥ 44×44 px.
+- Touch targets ≥ 44×44 px under `pointer: coarse`; 36px on a mouse, which meets WCAG 2.2 AA 2.5.8 (24px).
 - Respect `prefers-reduced-motion`.

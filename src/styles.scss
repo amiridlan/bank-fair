@@ -57,6 +57,28 @@ h2 {
   font-weight: 600;
 }
 
+// Touch targets.
+//
+// docs/03 asks for 44x44px targets; docs/03 also asks for density -1, because
+// operators scan dense tables all day. Those only conflict on a mouse, where
+// Material's 36px at this density already satisfies WCAG 2.2 AA (2.5.8 needs
+// 24px). So the larger target is applied where it actually matters: pointing
+// devices that are not precise.
+@media (pointer: coarse) {
+  html {
+    @include mat.button-overrides(
+      (
+        filled-container-height: 44px,
+        outlined-container-height: 44px,
+        protected-container-height: 44px,
+        text-container-height: 44px,
+        tonal-container-height: 44px,
+      )
+    );
+    @include mat.icon-button-overrides((state-layer-size: 44px));
+  }
+}
+
 // Material Symbols Outlined. `mat-icon` is told to use this class via
 // MAT_ICON_DEFAULT_OPTIONS, so every icon picks it up without per-use markup.
 .material-symbols-outlined {

@@ -22,7 +22,10 @@
   --fo-surface: #f8fafc;
   --fo-surface-raised: #ffffff;
   --fo-border: #e2e8f0;
-  --fo-border-strong: #cbd5e1; // >=3:1 vs surface — use for input and booth edges
+  // Measured 4.76:1 on white and 4.55:1 on --fo-surface. The previous value
+  // (#cbd5e1) was only 1.48:1, failing WCAG 1.4.11 for the dashed outlines
+  // that are the sole indicator of an empty booth or an open interview slot.
+  --fo-border-strong: #64748b;
 
   --fo-success: #15803d;
   --fo-warning: #b45309; // text-safe amber, unlike --fo-accent
