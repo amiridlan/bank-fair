@@ -37,11 +37,21 @@ describe('SideNavComponent', () => {
     expect(labels(renderAs('employer'))).toEqual(['Talent pool', 'Shortlist', 'Interviews']);
   });
 
-  it('shows nothing for a role with no pages yet, rather than another role’s menu', () => {
+  it('lists the portal routes for a job seeker', () => {
     // The nav used to be `isStaff() ? STAFF_NAV : EMPLOYER_NAV`. That is fine
     // with two roles and silently wrong with three — a job seeker would have
     // been handed the employer's menu, every link of which roleGuard blocks.
     // A record over `Role` makes the compiler name a forgotten role instead.
-    expect(labels(renderAs('job_seeker'))).toEqual([]);
+    expect(labels(renderAs('job_seeker'))).toEqual(['Career fairs', 'My profile']);
+  });
+
+  it('gives each role a menu of its own', () => {
+    const menus = (['staff', 'employer', 'job_seeker'] as const).map((role) => {
+      // A TestBed can only be configured once, and this renders three.
+      TestBed.resetTestingModule();
+      return labels(renderAs(role)).join();
+    });
+
+    expect(new Set(menus).size).toBe(3);
   });
 });

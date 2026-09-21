@@ -43,7 +43,7 @@ export const listShortlists: MockHandler = ({ db, query, currentUser }) => {
 export const createShortlist: MockHandler = ({ db, body, currentUser, now }) => {
   const employerId = currentUser.employerId;
   if (employerId === null) {
-    return notFound('Only a hiring manager can shortlist candidates.');
+    return notFound('Only an employer can shortlist candidates.');
   }
 
   const payload = isRecord(body) ? body : {};

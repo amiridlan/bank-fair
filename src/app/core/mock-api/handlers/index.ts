@@ -9,6 +9,11 @@ import {
   updateEmployer,
 } from './employers.handler';
 import {
+  createRegistration,
+  deleteRegistration,
+  listRegistrations,
+} from './registrations.handler';
+import {
   createShortlist,
   deleteShortlist,
   listInterviewSlots,
@@ -49,6 +54,9 @@ const ROUTES: readonly MockRoute[] = [
   { method: 'POST', pattern: '/shortlists', handler: createShortlist },
   { method: 'DELETE', pattern: '/shortlists/:id', handler: deleteShortlist },
 
+  { method: 'GET', pattern: '/fair-registrations', handler: listRegistrations },
+  { method: 'POST', pattern: '/fair-registrations', handler: createRegistration },
+  { method: 'DELETE', pattern: '/fair-registrations/:id', handler: deleteRegistration },
   { method: 'GET', pattern: '/interview-slots', handler: listInterviewSlots },
   { method: 'PATCH', pattern: '/interview-slots/:id', handler: updateInterviewSlot },
 

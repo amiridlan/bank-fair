@@ -28,13 +28,17 @@ const EMPLOYER_NAV: readonly NavItem[] = [
  *
  * With two roles `isStaff() ? a : b` was fine. With three it silently sends
  * the odd one out to the wrong menu, whereas an exhaustive record makes the
- * compiler name the role that was forgotten. `job_seeker` is empty until S2
- * builds its pages.
+ * compiler name the role that was forgotten.
  */
+const JOB_SEEKER_NAV: readonly NavItem[] = [
+  { label: 'Career fairs', icon: 'event', route: '/me/fairs' },
+  { label: 'My profile', icon: 'person', route: '/me/profile' },
+];
+
 const NAV_BY_ROLE: Readonly<Record<Role, readonly NavItem[]>> = {
   staff: STAFF_NAV,
   employer: EMPLOYER_NAV,
-  job_seeker: [],
+  job_seeker: JOB_SEEKER_NAV,
 };
 
 /**

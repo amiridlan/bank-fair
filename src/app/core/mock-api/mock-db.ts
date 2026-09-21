@@ -3,6 +3,7 @@ import type {
   Candidate,
   Employer,
   Fair,
+  FairRegistration,
   InterviewSlot,
   Shortlist,
   User,
@@ -15,6 +16,7 @@ import { seedEmployers } from './seed/seed-employers';
 import { seedFairs } from './seed/seed-fairs';
 import {
   applySeedBookings,
+  seedFairRegistrations,
   seedInterviewSlots,
   seedShortlists,
 } from './seed/seed-engagements';
@@ -36,6 +38,7 @@ export interface MockDb {
   candidates: Candidate[];
   shortlists: Shortlist[];
   interviewSlots: InterviewSlot[];
+  fairRegistrations: FairRegistration[];
 }
 
 /**
@@ -78,6 +81,9 @@ export function buildMockDb(now: number = Date.now()): MockDb {
     candidates,
     shortlists,
     interviewSlots,
+    // Derived from the candidates' seeded fairIds, so the demo opens with
+    // registrations already in place rather than an empty portal.
+    fairRegistrations: seedFairRegistrations(candidates, now),
   };
 }
 

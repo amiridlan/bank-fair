@@ -60,6 +60,14 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'me',
+    component: ShellComponent,
+    canMatch: [roleGuard('job_seeker')],
+    // One lazy chunk for the whole portal: its two pages share a store and
+    // are always used together.
+    loadChildren: () => import('./features/job-seeker/job-seeker.routes'),
+  },
+  {
     path: '**',
     title: 'Page not found · BankFair',
     loadComponent: () => import('./core/layout/not-found.component'),

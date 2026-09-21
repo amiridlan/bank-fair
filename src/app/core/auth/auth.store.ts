@@ -21,20 +21,22 @@ export const DEMO_USERS: readonly User[] = [
   { id: 'u-staff-1', name: 'Farah Iskandar', role: 'staff', employerId: null, candidateId: null },
   { id: 'u-emp-1', name: 'Daniel Lim', role: 'employer', employerId: 'emp-001', candidateId: null },
   { id: 'u-emp-2', name: 'Priya Nair', role: 'employer', employerId: 'emp-002', candidateId: null },
+  // Mapped onto a seeded candidate rather than a fourth invented person, so
+  // the job seeker's profile is the same record employers browse.
+  {
+    id: 'u-seeker-1',
+    name: 'Ahmad Zaki Abdullah Sani',
+    role: 'job_seeker',
+    employerId: null,
+    candidateId: 'cand-001',
+  },
 ];
 
-/**
- * Where each role lands when it has no route of its own to go to.
- *
- * `job_seeker` has no pages yet and no demo user, so `/me` is unreachable
- * until S2 builds it. The key exists because the record is exhaustive over
- * `Role`, which is what makes the compiler catch a missed role rather than
- * letting one fall through to a wrong home.
- */
+/** Where each role lands when it has no route of its own to go to. */
 export const ROLE_HOME: Readonly<Record<Role, string>> = {
   staff: '/staff/dashboard',
   employer: '/hiring/talent-pool',
-  job_seeker: '/me',
+  job_seeker: '/me/fairs',
 };
 
 /**

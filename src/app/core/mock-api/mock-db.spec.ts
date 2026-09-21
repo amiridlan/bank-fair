@@ -72,7 +72,8 @@ describe('buildMockDb', () => {
   it('produces the volumes docs/05 specifies', () => {
     const db = buildMockDb(NOW);
 
-    expect(db.users).toHaveLength(3);
+    // Farah (staff), Daniel and Priya (employer), and one job seeker.
+    expect(db.users).toHaveLength(4);
     expect(db.fairs).toHaveLength(5);
     expect(db.booths).toHaveLength(200); // 40 per fair
     expect(db.employers).toHaveLength(60);
@@ -82,6 +83,11 @@ describe('buildMockDb', () => {
     // each, fair-03 one: (42 + 42 + 21) x 2. This asserted 126 while the seed
     // built a single day per fair, contradicting the fairs' own date ranges.
     expect(db.interviewSlots).toHaveLength(210);
+    // One row per (candidate, fair) the seeder paired up, so the portal opens
+    // with registrations in place rather than empty.
+    expect(db.fairRegistrations).toHaveLength(
+      db.candidates.reduce((total, candidate) => total + candidate.fairIds.length, 0),
+    );
   });
 
   it('is identical across rebuilds, so the demo never shifts', () => {

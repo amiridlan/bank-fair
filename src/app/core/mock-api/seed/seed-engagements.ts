@@ -1,4 +1,4 @@
-import type { Candidate, InterviewSlot, Shortlist } from '../../models';
+import type { Candidate, FairRegistration, InterviewSlot, Shortlist } from '../../models';
 import { klTimestamp } from './kl-time';
 import { SeededRandom } from './random';
 
@@ -124,4 +124,28 @@ export function applySeedBookings(
       candidateName: shortlist.candidate.fullName,
     };
   });
+}
+
+/**
+ * One registration row per (candidate, fair) the seeder already paired up.
+ *
+ * `Candidate.fairIds` was the only record of who is attending what. Consent is
+ * backdated to the seed's own clock rather than invented as "now", so a demo
+ * opened tomorrow does not claim everyone consented tomorrow.
+ */
+export function seedFairRegistrations(
+  candidates: readonly Candidate[],
+  now: number,
+): FairRegistration[] {
+  const registeredAt = klTimestamp(-14, 9, 0, now);
+
+  return candidates.flatMap((candidate) =>
+    candidate.fairIds.map((fairId) => ({
+      id: `reg-${candidate.id}-${fairId}`,
+      fairId,
+      candidateId: candidate.id,
+      registeredAt,
+      consentedAt: registeredAt,
+    })),
+  );
 }

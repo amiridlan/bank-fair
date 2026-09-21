@@ -26,6 +26,13 @@ const HM_TWO: User = {
   employerId: 'emp-002',
   candidateId: null,
 };
+const SEEKER: User = {
+  id: 'u-seeker-1',
+  name: 'Seeded Candidate',
+  role: 'job_seeker',
+  employerId: null,
+  candidateId: 'cand-001',
+};
 
 /** Drives a request through the same route table the interceptor uses. */
 function call(
@@ -640,5 +647,133 @@ describe('demo endpoints', () => {
     // resetMockDb swaps the module-level database, so a rebuild is the
     // observable check that the seed is intact.
     expect(buildMockDb(NOW).candidates).toHaveLength(300);
+  });
+});
+
+describe('fair registrations', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  /** A fair still taking registrations that cand-001 is not already on. */
+  function openFairWithout(candidateId: string): string {
+    const taken = new Set(
+      db.fairRegistrations.filter((r) => r.candidateId === candidateId).map((r) => r.fairId),
+    );
+    return db.fairs.find(
+      (fair) => (fair.status === 'open' || fair.status === 'live') && !taken.has(fair.id),
+    )!.id;
+  }
+
+  it('lists only the viewer’s own registrations', () => {
+    const rows = data<{ candidateId: string }[]>(
+      call(db, 'GET', '/fair-registrations', { user: SEEKER }),
+    );
+
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((row) => row.candidateId === 'cand-001')).toBe(true);
+  });
+
+  it('returns nothing for someone with no candidate record', () => {
+    // There is no parameter for reading another person's registrations, so an
+    // employer simply has none rather than being able to ask for someone's.
+    expect(data<unknown[]>(call(db, 'GET', '/fair-registrations', { user: HM_ONE }))).toEqual([]);
+  });
+
+  it('registers for an open fair and records when consent was given', () => {
+    const fairId = openFairWithout('cand-001');
+
+    const result = call(db, 'POST', '/fair-registrations', {
+      user: SEEKER,
+      body: { fairId, consent: true },
+    });
+
+    expect(result.status).toBe(201);
+    const row = data<{ consentedAt: string; fairId: string }>(result);
+    expect(row.fairId).toBe(fairId);
+    expect(Date.parse(row.consentedAt)).not.toBeNaN();
+  });
+
+  it('refuses to register without consent', () => {
+    // The payload cannot default it: a request that can omit consent is a UI
+    // that can forget to ask for it.
+    const result = call(db, 'POST', '/fair-registrations', {
+      user: SEEKER,
+      body: { fairId: openFairWithout('cand-001') },
+    });
+
+    expect(result.status).toBe(422);
+    expect(db.fairRegistrations.some((r) => r.candidateId === 'cand-001' && r.consentedAt === ''))
+      .toBe(false);
+  });
+
+  it('refuses a consent value that is not true', () => {
+    const result = call(db, 'POST', '/fair-registrations', {
+      user: SEEKER,
+      body: { fairId: openFairWithout('cand-001'), consent: 'yes' },
+    });
+
+    expect(result.status).toBe(422);
+  });
+
+  it('409s on a fair the candidate is already registered for', () => {
+    const existing = db.fairRegistrations.find((r) => r.candidateId === 'cand-001')!;
+
+    const result = call(db, 'POST', '/fair-registrations', {
+      user: SEEKER,
+      body: { fairId: existing.fairId, consent: true },
+    });
+
+    expect(result.status).toBe(409);
+  });
+
+  it('refuses a fair that has closed', () => {
+    const closed = db.fairs.find((fair) => fair.status === 'completed' || fair.status === 'draft')!;
+
+    const result = call(db, 'POST', '/fair-registrations', {
+      user: SEEKER,
+      body: { fairId: closed.id, consent: true },
+    });
+
+    expect(result.status).toBe(409);
+  });
+
+  it('keeps the candidate’s fairIds in step, so the talent pool agrees', () => {
+    const fairId = openFairWithout('cand-001');
+    call(db, 'POST', '/fair-registrations', { user: SEEKER, body: { fairId, consent: true } });
+
+    expect(db.candidates.find((c) => c.id === 'cand-001')!.fairIds).toContain(fairId);
+  });
+
+  it('withdraws, and removes the fair from the candidate too', () => {
+    const existing = db.fairRegistrations.find((r) => r.candidateId === 'cand-001')!;
+
+    const result = call(db, 'DELETE', `/fair-registrations/${existing.id}`, { user: SEEKER });
+
+    expect(result.status).toBe(204);
+    expect(db.candidates.find((c) => c.id === 'cand-001')!.fairIds).not.toContain(existing.fairId);
+  });
+
+  it('cannot withdraw someone else’s registration', () => {
+    const other = db.fairRegistrations.find((r) => r.candidateId !== 'cand-001')!;
+    const before = db.fairRegistrations.length;
+
+    // 404 rather than 403: confirming the id exists would leak it.
+    expect(call(db, 'DELETE', `/fair-registrations/${other.id}`, { user: SEEKER }).status).toBe(404);
+    expect(db.fairRegistrations).toHaveLength(before);
+  });
+
+  it('shows a job seeker their own contact details unmasked', () => {
+    // A person is not a third party to their own record. Employers still see
+    // them starred out until they shortlist.
+    const mine = data<{ email: string; isContactVisible: boolean }>(
+      call(db, 'GET', '/candidates/cand-001', { user: SEEKER }),
+    );
+    const theirs = data<{ email: string; isContactVisible: boolean }>(
+      call(db, 'GET', '/candidates/cand-001', { user: HM_TWO }),
+    );
+
+    expect(mine.isContactVisible).toBe(true);
+    expect(mine.email).not.toContain('***');
+    expect(theirs.email).toContain('***');
   });
 });

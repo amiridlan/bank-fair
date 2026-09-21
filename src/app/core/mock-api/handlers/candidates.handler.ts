@@ -16,11 +16,14 @@ const SORT_FIELDS: readonly SortField[] = ['fullName', 'university', 'graduation
 export function maskForViewer(candidate: Candidate, db: MockDb, viewer: User): Candidate {
   const employerId = viewer.employerId;
   const visible =
-    employerId !== null &&
-    db.shortlists.some(
-      (shortlist) =>
-        shortlist.employerId === employerId && shortlist.candidateId === candidate.id,
-    );
+    // A job seeker is not a third party to their own record. Without this they
+    // would open their profile and find their own email starred out.
+    viewer.candidateId === candidate.id ||
+    (employerId !== null &&
+      db.shortlists.some(
+        (shortlist) =>
+          shortlist.employerId === employerId && shortlist.candidateId === candidate.id,
+      ));
 
   if (visible) {
     return { ...candidate, isContactVisible: true };
