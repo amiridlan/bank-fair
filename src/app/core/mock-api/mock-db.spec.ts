@@ -78,8 +78,10 @@ describe('buildMockDb', () => {
     expect(db.employers).toHaveLength(60);
     expect(db.candidates).toHaveLength(300);
     expect(db.shortlists).toHaveLength(6);
-    // 21 slots x 2 employers x 3 fairs.
-    expect(db.interviewSlots).toHaveLength(126);
+    // 21 slots per fair DAY x 2 employers. fair-01 and fair-02 run two days
+    // each, fair-03 one: (42 + 42 + 21) x 2. This asserted 126 while the seed
+    // built a single day per fair, contradicting the fairs' own date ranges.
+    expect(db.interviewSlots).toHaveLength(210);
   });
 
   it('is identical across rebuilds, so the demo never shifts', () => {

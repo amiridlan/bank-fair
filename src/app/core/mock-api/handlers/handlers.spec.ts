@@ -455,10 +455,22 @@ describe('interview slots', () => {
   let db: MockDb;
   beforeEach(() => (db = buildMockDb(NOW)));
 
-  it('returns 21 slots for a seeded employer and fair', () => {
-    const slots = data<unknown[]>(
+  it('returns a full day of slots for every day the fair runs', () => {
+    // docs/05 says "21 per fair day". fair-01 is a two-day fair, so 42 — this
+    // asserted 21 while the seed built only the first day (docs/07 T4).
+    const slots = data<{ startTime: string }[]>(
       call(db, 'GET', '/interview-slots?fair_id=fair-01', { user: HM_ONE }),
     );
+
+    expect(slots).toHaveLength(42);
+    expect(new Set(slots.map((slot) => slot.startTime.slice(0, 10))).size).toBe(2);
+  });
+
+  it('returns one day for a single-day fair', () => {
+    const slots = data<unknown[]>(
+      call(db, 'GET', '/interview-slots?fair_id=fair-03', { user: HM_ONE }),
+    );
+
     expect(slots).toHaveLength(21);
   });
 
@@ -468,7 +480,8 @@ describe('interview slots', () => {
       call(db, 'GET', '/interview-slots?fair_id=fair-02', { user: other }),
     );
 
-    expect(slots).toHaveLength(21);
+    // fair-02 also runs two days.
+    expect(slots).toHaveLength(42);
     expect(db.interviewSlots.some((s) => s.employerId === 'emp-030')).toBe(true);
   });
 
