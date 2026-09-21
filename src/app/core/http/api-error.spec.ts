@@ -84,4 +84,39 @@ describe('toApiError', () => {
     expect(result.status).toBe(0);
     expect(result.message).toBeTruthy();
   });
+
+  describe('idempotence', () => {
+    // errorInterceptor converts every failure to an ApiError and rethrows it,
+    // so a store's catch block calls toApiError on a value that has already
+    // been through it. Without this, an ApiError matched neither
+    // HttpErrorResponse nor Error and fell through to the generic branch, so
+    // every status became 0 — which silently broke every code-dependent path
+    // in the app: 409s stopped reading as conflicts and 422s stopped reaching
+    // form fields. The existing tests all missed it, because
+    // HttpTestingController bypasses interceptors.
+    it('returns an already-normalised error unchanged', () => {
+      const once = toApiError(httpError(409, { message: 'Booth taken.' }));
+      const twice = toApiError(once);
+
+      expect(twice).toEqual(once);
+      expect(twice.status).toBe(409);
+    });
+
+    it('preserves a 422 and its field errors through a second pass', () => {
+      const once = toApiError(
+        httpError(422, { message: 'Invalid.', errors: { contact_email: ['Taken.'] } }),
+      );
+      const twice = toApiError(once);
+
+      expect(isValidationError(twice)).toBe(true);
+      expect(twice.fieldErrors).toEqual({ contactEmail: ['Taken.'] });
+    });
+
+    it('does not mistake an arbitrary object for an ApiError', () => {
+      // A shape check has to be narrow enough not to swallow unrelated values.
+      expect(toApiError({ status: '409', message: 'x', fieldErrors: {} }).status).toBe(0);
+      expect(toApiError({ status: 409 }).status).toBe(0);
+      expect(toApiError({ status: 409, message: 'x' }).status).toBe(0);
+    });
+  });
 });

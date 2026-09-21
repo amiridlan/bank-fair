@@ -54,11 +54,35 @@ function snakeToCamel(key: string): string {
   return key.replace(/_([a-z0-9])/g, (_match, char: string) => char.toUpperCase());
 }
 
+/** An already-normalised error, which is what `errorInterceptor` rethrows. */
+function isApiError(value: unknown): value is ApiError {
+  return (
+    isRecord(value) &&
+    typeof value['status'] === 'number' &&
+    typeof value['message'] === 'string' &&
+    isRecord(value['fieldErrors'])
+  );
+}
+
 /**
  * Maps anything thrown by `HttpClient` — or by our own code — into an
  * `ApiError`. Never throws, so error handling paths cannot themselves fail.
+ *
+ * It must be idempotent, and that is not a nicety. `errorInterceptor` converts
+ * every failure to an `ApiError` and rethrows it, so by the time a store's
+ * catch block calls this, the value is already an `ApiError` — a plain object,
+ * matching neither `HttpErrorResponse` nor `Error`. Without the check below it
+ * fell through to the generic branch and every status became 0, which silently
+ * disabled every code-dependent path in the app: 409 conflicts stopped being
+ * recognised as conflicts, and 422 validation errors stopped reaching form
+ * fields. The unit tests missed it because `HttpTestingController` bypasses
+ * interceptors, so stores saw a real `HttpErrorResponse` there.
  */
 export function toApiError(error: unknown): ApiError {
+  if (isApiError(error)) {
+    return error;
+  }
+
   if (error instanceof HttpErrorResponse) {
     const status = error.status;
     const message =
