@@ -54,6 +54,11 @@ export const appConfig: ApplicationConfig = {
     // Icons are Material Symbols Outlined (docs/03), not the legacy Material Icons.
     { provide: MAT_ICON_DEFAULT_OPTIONS, useValue: { fontSet: 'material-symbols-outlined' } },
 
+    // chart.js is deliberately NOT registered here. Providing it at the root
+    // pulls the whole library into the initial bundle, which would defeat the
+    // @defer blocks around the charts. The chart components provide it
+    // themselves — see CHART_PROVIDERS.
+
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
   ],
 };

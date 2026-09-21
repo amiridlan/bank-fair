@@ -84,7 +84,11 @@ describe('App routing', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // withComponentInputBinding() feeds :fairId into the page's input().
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('fair-02');
+    // withComponentInputBinding() feeds :fairId into the page's input(), which
+    // the store then loads — so the fair's own name appearing proves the whole
+    // chain, not just that the id reached the template.
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('National Career Fair');
+    expect(text).toContain('MITEC');
   });
 });
