@@ -34,7 +34,8 @@ This project is developed with **Claude Code on the web** (cloud sessions at cla
 | `docs/03-design-system.md` | Styling, theming, any visual work |
 | `docs/04-architecture.md` | Folder structure, routing, state, API, models |
 | `docs/05-mock-data.md` | Seed data and the mock API |
-| `docs/06-build-plan.md` | Current phase, tasks, acceptance criteria |
+| `docs/06-build-plan.md` | Phases 0–7 (the original build). Reference for what was decided and why |
+| `docs/07-ui-refresh-plan.md` | **Current work.** Tailwind v4 refresh: phases T1–T5, the usability review, the visual direction |
 
 ## Stack
 
@@ -113,12 +114,12 @@ npx ng <command>               # use the project-local CLI; do not rely on a glo
 
 ## Workflow
 
-- Work one phase from `docs/06-build-plan.md` per session. Stop at the end of the phase.
+- Work one phase from `docs/07-ui-refresh-plan.md` per session. Stop at the end of the phase.
 - Before pushing: `npm run build` and `npm test -- --watch=false` must pass with zero errors and no new warnings.
 - Commit in small logical steps with Conventional Commit messages (`feat: add fair list page`), then push the session branch.
 - End every phase with a short summary for the developer:
   1. What was built (files and features).
   2. What to check on the Netlify deploy preview (specific pages and interactions).
-  3. The "Concepts to explain" for that phase from `docs/06-build-plan.md`, each explained in 2–3 plain sentences with a pointer to the file where it is used.
+  3. The "Concepts to explain" for that phase, each explained in 2–3 plain sentences with a pointer to the file where it is used.
 - Do not add a dependency that is not listed in this file without asking first.
 - Never commit secrets. Cloud environment variables are visible to anyone using the environment.
