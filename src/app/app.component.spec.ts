@@ -94,6 +94,53 @@ describe('App routing', () => {
     expect(text).toContain('A-01');
   });
 
+  it('renders the talent pool table for a hiring manager', async () => {
+    auth.switchUser('u-hm-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/hiring/talent-pool']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Talent pool');
+    expect(text).toContain('University');
+    // 300 seeded candidates, 20 per page.
+    expect(text).toContain('300');
+  });
+
+  it('applies a filter taken from the URL query string', async () => {
+    auth.switchUser('u-hm-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/hiring/talent-pool'], {
+      queryParams: { field: 'Data Science' },
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // Every visible row must match, which is what makes the URL shareable.
+    const cells = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('tbody tr'),
+    ).map((row) => row.textContent ?? '');
+    expect(cells.length).toBeGreaterThan(0);
+    expect(cells.every((row) => row.includes('Data Science'))).toBe(true);
+  });
+
+  it('opens the candidate drawer from a deep link', async () => {
+    auth.switchUser('u-hm-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/hiring/talent-pool', 'cand-001']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Skills');
+    // Not shortlisted by emp-001, so contact stays locked.
+    expect(text).toContain('Contact details unlock');
+  });
+
   it('shows the not-found page for an unknown URL', async () => {
     const fixture = TestBed.createComponent(AppComponent);
 
