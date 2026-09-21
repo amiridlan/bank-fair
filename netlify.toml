@@ -1,0 +1,26 @@
+# Netlify configuration for BankFair (see docs/00-cloud-setup.md).
+
+[build]
+  command = "npm run build"
+  publish = "dist/bank-fair/browser"
+
+[build.environment]
+  # Resolves to the latest Node 22.x, which satisfies Angular 22's >= 22.22.3.
+  NODE_VERSION = "22"
+  NPM_FLAGS = "--no-audit --no-fund"
+
+# Single-page app: every unmatched path is served by the Angular router.
+# Must stay last among redirects so real files and assets win first.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Content-Security-Policy is added in Phase 7 (docs/06-build-plan.md).
