@@ -1,0 +1,633 @@
+import type { User } from '../../models';
+import { type MockDb, buildMockDb } from '../mock-db';
+import type { MockContext, MockResult } from '../mock-response';
+import { matchRoute } from './index';
+
+const NOW = Date.parse('2026-09-21T04:00:00Z');
+
+const STAFF: User = { id: 'u-staff-1', name: 'Farah Iskandar', role: 'staff', employerId: null };
+const HM_ONE: User = {
+  id: 'u-hm-1',
+  name: 'Daniel Lim',
+  role: 'hiring_manager',
+  employerId: 'emp-001',
+};
+const HM_TWO: User = {
+  id: 'u-hm-2',
+  name: 'Priya Nair',
+  role: 'hiring_manager',
+  employerId: 'emp-002',
+};
+
+/** Drives a request through the same route table the interceptor uses. */
+function call(
+  db: MockDb,
+  method: string,
+  path: string,
+  options: { body?: unknown; user?: User } = {},
+): MockResult {
+  const url = new URL(path, 'http://mock.local');
+  const match = matchRoute(method, url.pathname);
+  if (!match) {
+    throw new Error(`No handler for ${method} ${url.pathname}`);
+  }
+
+  const context: MockContext = {
+    method,
+    path: url.pathname,
+    params: match.params,
+    query: url.searchParams,
+    body: options.body ?? null,
+    db,
+    currentUser: options.user ?? STAFF,
+    now: NOW,
+  };
+  return match.handler(context);
+}
+
+function data<T>(result: MockResult): T {
+  return (result.body as { data: T }).data;
+}
+
+function message(result: MockResult): string {
+  return (result.body as { message: string }).message;
+}
+
+function fieldErrors(result: MockResult): Record<string, string[]> {
+  return (result.body as { errors: Record<string, string[]> }).errors;
+}
+
+describe('mock API routing', () => {
+  it('prefers the more specific pattern', () => {
+    expect(matchRoute('GET', '/fairs/fair-01/booths')?.params).toEqual({ id: 'fair-01' });
+    expect(matchRoute('GET', '/fairs/fair-01')?.params).toEqual({ id: 'fair-01' });
+  });
+
+  it('returns null for an unknown route or wrong method', () => {
+    expect(matchRoute('GET', '/nope')).toBeNull();
+    expect(matchRoute('DELETE', '/fairs/fair-01')).toBeNull();
+  });
+});
+
+describe('fairs', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  it('lists all fairs', () => {
+    expect(data<unknown[]>(call(db, 'GET', '/fairs'))).toHaveLength(5);
+  });
+
+  it('filters by status and city', () => {
+    expect(data<unknown[]>(call(db, 'GET', '/fairs?status=open'))).toHaveLength(2);
+    expect(data<unknown[]>(call(db, 'GET', '/fairs?city=George Town'))).toHaveLength(1);
+  });
+
+  it('404s an unknown fair with a usable message', () => {
+    const result = call(db, 'GET', '/fairs/fair-99');
+
+    expect(result.status).toBe(404);
+    expect(message(result)).toBe('Fair not found.');
+  });
+
+  it('returns booths in grid order', () => {
+    const booths = data<{ code: string }[]>(call(db, 'GET', '/fairs/fair-01/booths'));
+
+    expect(booths).toHaveLength(40);
+    expect(booths[0].code).toBe('A-01');
+    expect(booths[39].code).toBe('E-08');
+  });
+});
+
+describe('booth assignment', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  function emptyBooth() {
+    return db.booths.find((b) => b.fairId === 'fair-01' && b.employerId === null)!;
+  }
+  function takenBooth() {
+    return db.booths.find((b) => b.fairId === 'fair-01' && b.employerId !== null)!;
+  }
+
+  it('assigns an employer and denormalises the name', () => {
+    const booth = emptyBooth();
+    const result = call(db, 'PATCH', `/booths/${booth.id}`, {
+      body: { employerId: 'emp-003' },
+    });
+
+    expect(result.status).toBe(200);
+    expect(data<{ employerId: string; employerName: string }>(result).employerId).toBe('emp-003');
+    expect(data<{ employerName: string }>(result).employerName).toBe(db.employers[2].name);
+  });
+
+  it('409s on an occupied booth rather than overwriting silently', () => {
+    const booth = takenBooth();
+    const result = call(db, 'PATCH', `/booths/${booth.id}`, {
+      body: { employerId: 'emp-050' },
+    });
+
+    expect(result.status).toBe(409);
+    expect(message(result)).toContain(booth.code);
+  });
+
+  it('allows the overwrite when force is set', () => {
+    const booth = takenBooth();
+    const result = call(db, 'PATCH', `/booths/${booth.id}`, {
+      body: { employerId: 'emp-050', force: true },
+    });
+
+    expect(result.status).toBe(200);
+    expect(data<{ employerId: string }>(result).employerId).toBe('emp-050');
+  });
+
+  it('clears a booth when employerId is null, which is how Undo works', () => {
+    const booth = takenBooth();
+    const result = call(db, 'PATCH', `/booths/${booth.id}`, { body: { employerId: null } });
+
+    expect(data<{ employerId: string | null }>(result).employerId).toBeNull();
+  });
+
+  it('keeps the fair booth count in step after an assignment', () => {
+    const before = db.fairs.find((f) => f.id === 'fair-01')!.boothAssigned;
+    call(db, 'PATCH', `/booths/${emptyBooth().id}`, { body: { employerId: 'emp-003' } });
+
+    expect(db.fairs.find((f) => f.id === 'fair-01')!.boothAssigned).toBe(before + 1);
+  });
+
+  it('moves an employer rather than leaving them on two booths', () => {
+    const first = emptyBooth();
+    call(db, 'PATCH', `/booths/${first.id}`, { body: { employerId: 'emp-007' } });
+    const second = db.booths.find(
+      (b) => b.fairId === 'fair-01' && b.employerId === null && b.id !== first.id,
+    )!;
+    call(db, 'PATCH', `/booths/${second.id}`, { body: { employerId: 'emp-007' } });
+
+    const held = db.booths.filter((b) => b.fairId === 'fair-01' && b.employerId === 'emp-007');
+    expect(held).toHaveLength(1);
+    expect(held[0].id).toBe(second.id);
+  });
+
+  it('404s an unknown booth', () => {
+    expect(call(db, 'PATCH', '/booths/nope', { body: { employerId: 'emp-003' } }).status).toBe(404);
+  });
+});
+
+describe('employers', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  it('filters by stage and search', () => {
+    const paid = data<unknown[]>(call(db, 'GET', '/employers?stage=paid'));
+    expect(paid.length).toBeGreaterThan(0);
+
+    const name = db.employers[5].name.split(' ')[0];
+    const found = data<{ name: string }[]>(
+      call(db, 'GET', `/employers?search=${encodeURIComponent(name)}`),
+    );
+    expect(found.every((e) => e.name.toLowerCase().includes(name.toLowerCase()))).toBe(true);
+  });
+
+  it('422s a missing required field in Laravel shape', () => {
+    const result = call(db, 'POST', '/employers', { body: { name: 'Test Sdn Bhd' } });
+
+    expect(result.status).toBe(422);
+    expect(fieldErrors(result)['contactEmail']).toEqual([
+      'The contact email field is required.',
+    ]);
+    expect(fieldErrors(result)['industry']).toBeDefined();
+  });
+
+  it('422s a malformed email', () => {
+    const result = call(db, 'POST', '/employers', {
+      body: {
+        name: 'Test Sdn Bhd',
+        industry: 'Technology',
+        companySize: '51-200',
+        contactName: 'Aisyah Rahman',
+        contactEmail: 'not-an-email',
+      },
+    });
+
+    expect(result.status).toBe(422);
+    expect(fieldErrors(result)['contactEmail']).toEqual([
+      'The contact email must be a valid email address.',
+    ]);
+  });
+
+  it('creates a valid employer as a lead with no deal value', () => {
+    const result = call(db, 'POST', '/employers', {
+      body: {
+        name: 'Brand New Sdn Bhd',
+        industry: 'Technology',
+        companySize: '51-200',
+        contactName: 'Aisyah Rahman',
+        contactEmail: 'aisyah@brandnew.example.com',
+      },
+    });
+
+    expect(result.status).toBe(201);
+    expect(data<{ stage: string }>(result).stage).toBe('lead');
+    expect(data<{ dealValueMyr: number | null }>(result).dealValueMyr).toBeNull();
+    expect(db.employers).toHaveLength(61);
+  });
+
+  it('409s a duplicate company name', () => {
+    const existing = db.employers[10].name;
+    const result = call(db, 'POST', '/employers', {
+      body: {
+        name: existing,
+        industry: 'Technology',
+        companySize: '51-200',
+        contactName: 'Aisyah Rahman',
+        contactEmail: 'aisyah@example.com',
+      },
+    });
+
+    expect(result.status).toBe(409);
+  });
+
+  it('requires a reason when moving to lost', () => {
+    const result = call(db, 'PATCH', '/employers/emp-005', { body: { stage: 'lost' } });
+
+    expect(result.status).toBe(422);
+    expect(fieldErrors(result)['lostReason']).toBeDefined();
+  });
+
+  it('accepts a lost move with a reason', () => {
+    const result = call(db, 'PATCH', '/employers/emp-005', {
+      body: { stage: 'lost', lostReason: 'Budget cut.' },
+    });
+
+    expect(result.status).toBe(200);
+    expect(data<{ lostReason: string }>(result).lostReason).toBe('Budget cut.');
+    // A lost deal carries no value.
+    expect(data<{ dealValueMyr: number | null }>(result).dealValueMyr).toBeNull();
+  });
+
+  it('requires a booth package before an employer can be marked paid', () => {
+    const lead = db.employers.find((e) => e.boothPackage === null)!;
+    const result = call(db, 'PATCH', `/employers/${lead.id}`, { body: { stage: 'paid' } });
+
+    expect(result.status).toBe(422);
+    expect(fieldErrors(result)['boothPackage']).toBeDefined();
+  });
+
+  it('derives deal value from the package on a stage move', () => {
+    const result = call(db, 'PATCH', '/employers/emp-002', {
+      body: { stage: 'paid', boothPackage: 'platinum' },
+    });
+
+    expect(data<{ dealValueMyr: number }>(result).dealValueMyr).toBe(12_000);
+  });
+
+  it('404s an unknown employer', () => {
+    expect(call(db, 'PATCH', '/employers/emp-999', { body: { stage: 'paid' } }).status).toBe(404);
+  });
+});
+
+describe('candidates', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  it('paginates with 20 per page by default', () => {
+    const result = call(db, 'GET', '/candidates');
+    const meta = (result.body as { meta: { total: number; perPage: number; lastPage: number } })
+      .meta;
+
+    expect(data<unknown[]>(result)).toHaveLength(20);
+    expect(meta.total).toBe(300);
+    expect(meta.perPage).toBe(20);
+    expect(meta.lastPage).toBe(15);
+  });
+
+  it('returns the requested page', () => {
+    const first = data<{ id: string }[]>(call(db, 'GET', '/candidates?page=1'));
+    const second = data<{ id: string }[]>(call(db, 'GET', '/candidates?page=2'));
+
+    expect(second[0].id).not.toBe(first[0].id);
+  });
+
+  it('clamps an absurd per_page instead of returning everything', () => {
+    const result = call(db, 'GET', '/candidates?per_page=100000');
+    expect(data<unknown[]>(result).length).toBeLessThanOrEqual(100);
+  });
+
+  it('filters by university, field and graduation year', () => {
+    const university = db.candidates[0].university;
+    const filtered = data<{ university: string }[]>(
+      call(db, 'GET', `/candidates?university=${encodeURIComponent(university)}`),
+    );
+
+    expect(filtered.every((c) => c.university === university)).toBe(true);
+  });
+
+  it('excludes candidates without a CGPA from a minimum filter', () => {
+    const result = call(db, 'GET', '/candidates?min_cgpa=3.5&per_page=100');
+    const items = data<{ cgpa: number | null }[]>(result);
+
+    expect(items.every((c) => c.cgpa !== null && c.cgpa >= 3.5)).toBe(true);
+  });
+
+  it('searches name, skills and field', () => {
+    const items = data<{ skills: string[]; fullName: string; fieldOfStudy: string }[]>(
+      call(db, 'GET', '/candidates?search=python&per_page=100'),
+    );
+
+    expect(items.length).toBeGreaterThan(0);
+    expect(
+      items.every((c) =>
+        `${c.fullName} ${c.skills.join(' ')} ${c.fieldOfStudy}`.toLowerCase().includes('python'),
+      ),
+    ).toBe(true);
+  });
+
+  it('sorts by CGPA descending with nulls last', () => {
+    const items = data<{ cgpa: number | null }[]>(
+      call(db, 'GET', '/candidates?sort=cgpa&dir=desc&per_page=100'),
+    );
+    const values = items.map((c) => c.cgpa).filter((v): v is number => v !== null);
+
+    expect([...values].sort((a, b) => b - a)).toEqual(values);
+  });
+
+  it('ignores an unknown sort field rather than breaking the list', () => {
+    const result = call(db, 'GET', '/candidates?sort=; DROP TABLE');
+    expect(result.status).toBe(200);
+    expect(data<unknown[]>(result)).toHaveLength(20);
+  });
+
+  it('masks contact details for a non-shortlisted candidate', () => {
+    const items = data<{ email: string; phone: string | null; isContactVisible: boolean }[]>(
+      call(db, 'GET', '/candidates', { user: HM_TWO }),
+    );
+
+    expect(items.every((c) => c.email.includes('***'))).toBe(true);
+    expect(items.every((c) => c.phone === null)).toBe(true);
+    expect(items.every((c) => !c.isContactVisible)).toBe(true);
+  });
+
+  it('unmasks a candidate this employer has shortlisted', () => {
+    const shortlisted = db.shortlists[0].candidateId;
+    const result = call(db, 'GET', `/candidates/${shortlisted}`, { user: HM_ONE });
+    const candidate = data<{ email: string; isContactVisible: boolean }>(result);
+
+    expect(candidate.isContactVisible).toBe(true);
+    expect(candidate.email).not.toContain('***');
+  });
+
+  it('keeps that candidate masked for a different employer', () => {
+    const shortlisted = db.shortlists[0].candidateId;
+    const candidate = data<{ isContactVisible: boolean }>(
+      call(db, 'GET', `/candidates/${shortlisted}`, { user: HM_TWO }),
+    );
+
+    expect(candidate.isContactVisible).toBe(false);
+  });
+
+  it('masks for staff, who have no employer of their own', () => {
+    const candidate = data<{ isContactVisible: boolean }>(
+      call(db, 'GET', '/candidates/cand-001', { user: STAFF }),
+    );
+
+    expect(candidate.isContactVisible).toBe(false);
+  });
+});
+
+describe('shortlists', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  it('returns only the viewer own employer entries', () => {
+    expect(data<unknown[]>(call(db, 'GET', '/shortlists', { user: HM_ONE }))).toHaveLength(6);
+    expect(data<unknown[]>(call(db, 'GET', '/shortlists', { user: HM_TWO }))).toHaveLength(0);
+  });
+
+  it('409s a duplicate shortlist', () => {
+    const existing = db.shortlists[0];
+    const result = call(db, 'POST', '/shortlists', {
+      user: HM_ONE,
+      body: { candidateId: existing.candidateId, fairId: existing.fairId },
+    });
+
+    expect(result.status).toBe(409);
+    expect(message(result)).toContain('already on your shortlist');
+  });
+
+  it('creates a shortlist and unmasks the candidate', () => {
+    const fresh = db.candidates.find(
+      (c) => !db.shortlists.some((s) => s.candidateId === c.id),
+    )!;
+    const result = call(db, 'POST', '/shortlists', {
+      user: HM_ONE,
+      body: { candidateId: fresh.id, fairId: 'fair-01' },
+    });
+
+    expect(result.status).toBe(201);
+    expect(data<{ candidate: { isContactVisible: boolean } }>(result).candidate.isContactVisible).toBe(
+      true,
+    );
+  });
+
+  it('422s a missing candidate', () => {
+    const result = call(db, 'POST', '/shortlists', { user: HM_ONE, body: { fairId: 'fair-01' } });
+
+    expect(result.status).toBe(422);
+    expect(fieldErrors(result)['candidateId']).toBeDefined();
+  });
+
+  it('deletes an entry and frees any slot booked for that candidate', () => {
+    const booked = db.interviewSlots.find((slot) => slot.candidateId !== null)!;
+    const shortlist = db.shortlists.find((s) => s.candidateId === booked.candidateId)!;
+
+    const result = call(db, 'DELETE', `/shortlists/${shortlist.id}`, { user: HM_ONE });
+
+    expect(result.status).toBe(204);
+    expect(db.interviewSlots.find((s) => s.id === booked.id)?.candidateId).toBeNull();
+  });
+
+  it('404s deleting another employer entry', () => {
+    const result = call(db, 'DELETE', `/shortlists/${db.shortlists[0].id}`, { user: HM_TWO });
+    expect(result.status).toBe(404);
+  });
+});
+
+describe('interview slots', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  it('returns 21 slots for a seeded employer and fair', () => {
+    const slots = data<unknown[]>(
+      call(db, 'GET', '/interview-slots?fair_id=fair-01', { user: HM_ONE }),
+    );
+    expect(slots).toHaveLength(21);
+  });
+
+  it('generates slots on demand for an employer that was not seeded', () => {
+    const other: User = { ...HM_ONE, id: 'u-x', employerId: 'emp-030' };
+    const slots = data<unknown[]>(
+      call(db, 'GET', '/interview-slots?fair_id=fair-02', { user: other }),
+    );
+
+    expect(slots).toHaveLength(21);
+    expect(db.interviewSlots.some((s) => s.employerId === 'emp-030')).toBe(true);
+  });
+
+  it('409s booking a slot someone already holds', () => {
+    const taken = db.interviewSlots.find(
+      (s) => s.employerId === 'emp-001' && s.candidateId !== null,
+    )!;
+    const otherShortlist = db.shortlists.find((s) => s.candidateId !== taken.candidateId)!;
+
+    const result = call(db, 'PATCH', `/interview-slots/${taken.id}`, {
+      user: HM_ONE,
+      body: { candidateId: otherShortlist.candidateId },
+    });
+
+    expect(result.status).toBe(409);
+    expect(message(result)).toBe('That slot was just booked. Pick another.');
+  });
+
+  it('refuses to book a candidate who is not shortlisted', () => {
+    const open = db.interviewSlots.find(
+      (s) => s.employerId === 'emp-001' && s.fairId === 'fair-01' && s.candidateId === null,
+    )!;
+    const stranger = db.candidates.find(
+      (c) => !db.shortlists.some((s) => s.candidateId === c.id),
+    )!;
+
+    const result = call(db, 'PATCH', `/interview-slots/${open.id}`, {
+      user: HM_ONE,
+      body: { candidateId: stranger.id },
+    });
+
+    expect(result.status).toBe(422);
+    expect(fieldErrors(result)['candidateId']).toBeDefined();
+  });
+
+  it('books a shortlisted candidate into an open slot', () => {
+    const open = db.interviewSlots.find(
+      (s) => s.employerId === 'emp-001' && s.fairId === 'fair-01' && s.candidateId === null,
+    )!;
+    const free = db.shortlists.find(
+      (s) => !db.interviewSlots.some((slot) => slot.candidateId === s.candidateId),
+    )!;
+
+    const result = call(db, 'PATCH', `/interview-slots/${open.id}`, {
+      user: HM_ONE,
+      body: { candidateId: free.candidateId },
+    });
+
+    expect(result.status).toBe(200);
+    expect(data<{ candidateName: string }>(result).candidateName).toBe(free.candidate.fullName);
+  });
+
+  it('409s a second interview for the same candidate at one fair', () => {
+    const booked = db.interviewSlots.find(
+      (s) => s.employerId === 'emp-001' && s.candidateId !== null,
+    )!;
+    const open = db.interviewSlots.find(
+      (s) => s.employerId === 'emp-001' && s.fairId === 'fair-01' && s.candidateId === null,
+    )!;
+
+    const result = call(db, 'PATCH', `/interview-slots/${open.id}`, {
+      user: HM_ONE,
+      body: { candidateId: booked.candidateId },
+    });
+
+    expect(result.status).toBe(409);
+    expect(message(result)).toContain('already has an interview');
+  });
+
+  it('cancels a booking when candidateId is null', () => {
+    const booked = db.interviewSlots.find((s) => s.candidateId !== null)!;
+    const result = call(db, 'PATCH', `/interview-slots/${booked.id}`, {
+      user: HM_ONE,
+      body: { candidateId: null },
+    });
+
+    expect(data<{ candidateId: string | null }>(result).candidateId).toBeNull();
+  });
+
+  it('hides another employer slots', () => {
+    const slot = db.interviewSlots.find((s) => s.employerId === 'emp-001')!;
+    const result = call(db, 'PATCH', `/interview-slots/${slot.id}`, {
+      user: HM_TWO,
+      body: { candidateId: null },
+    });
+
+    expect(result.status).toBe(404);
+  });
+});
+
+describe('dashboard summary', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  it('counts only open and live fairs', () => {
+    const summary = data<{ upcomingFairs: { value: number } }>(
+      call(db, 'GET', '/dashboard/summary'),
+    );
+    expect(summary.upcomingFairs.value).toBe(3);
+  });
+
+  it('reports fill rate as a fraction', () => {
+    const summary = data<{ boothFillRate: { value: number } }>(
+      call(db, 'GET', '/dashboard/summary'),
+    );
+
+    expect(summary.boothFillRate.value).toBeGreaterThan(0);
+    expect(summary.boothFillRate.value).toBeLessThanOrEqual(1);
+  });
+
+  it('excludes lost and lead employers from pipeline value', () => {
+    const summary = data<{
+      pipelineValueMyr: { value: number };
+      pipelineByStage: { stage: string; valueMyr: number }[];
+    }>(call(db, 'GET', '/dashboard/summary'));
+
+    const lost = summary.pipelineByStage.find((s) => s.stage === 'lost')!;
+    expect(lost.valueMyr).toBe(0);
+
+    const valued = summary.pipelineByStage
+      .filter((s) => ['proposal', 'confirmed', 'paid'].includes(s.stage))
+      .reduce((sum, s) => sum + s.valueMyr, 0);
+    expect(summary.pipelineValueMyr.value).toBe(valued);
+  });
+
+  it('covers every stage in the pipeline breakdown', () => {
+    const summary = data<{ pipelineByStage: { stage: string; count: number }[] }>(
+      call(db, 'GET', '/dashboard/summary'),
+    );
+
+    expect(summary.pipelineByStage.map((s) => s.stage)).toEqual([
+      'lead',
+      'proposal',
+      'confirmed',
+      'paid',
+      'lost',
+    ]);
+    expect(summary.pipelineByStage.reduce((sum, s) => sum + s.count, 0)).toBe(60);
+  });
+});
+
+describe('demo endpoints', () => {
+  it('reports the record counts the debug page shows', () => {
+    const db = buildMockDb(NOW);
+    const counts = data<Record<string, number>>(call(db, 'GET', '/demo/counts'));
+
+    expect(counts['candidates']).toBe(300);
+    expect(counts['booths']).toBe(200);
+  });
+
+  it('reseeds on reset', () => {
+    const db = buildMockDb(NOW);
+    db.candidates = [];
+
+    expect(call(db, 'POST', '/demo/reset', { body: {} }).status).toBe(204);
+    // resetMockDb swaps the module-level database, so re-read it.
+    const counts = data<Record<string, number>>(
+      call(buildMockDb(NOW), 'GET', '/demo/counts'),
+    );
+    expect(counts['candidates']).toBe(300);
+  });
+});
