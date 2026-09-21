@@ -35,7 +35,8 @@ This project is developed with **Claude Code on the web** (cloud sessions at cla
 | `docs/04-architecture.md` | Folder structure, routing, state, API, models |
 | `docs/05-mock-data.md` | Seed data and the mock API |
 | `docs/06-build-plan.md` | Phases 0–7 (the original build). Reference for what was decided and why |
-| `docs/07-ui-refresh-plan.md` | **Current work.** Tailwind v4 refresh: phases T1–T5, the usability review, the visual direction |
+| `docs/07-ui-refresh-plan.md` | Tailwind v4 refresh: phases T1–T5, the usability review, the visual direction. Complete |
+| `docs/08-self-service-plan.md` | **Current work.** Employer and job-seeker self-service (S1–S3), profile import from a PDF (S4) |
 
 ## Stack
 
@@ -127,7 +128,7 @@ The two split the work. Getting this wrong wastes an afternoon on a rule that si
 
 ## Workflow
 
-- Work one phase from `docs/07-ui-refresh-plan.md` per session. Stop at the end of the phase.
+- Work one phase from `docs/08-self-service-plan.md` per session. Stop at the end of the phase.
 - Before pushing: `npm run build` and `npm test -- --watch=false` must pass with zero errors and no new warnings.
 - Commit in small logical steps with Conventional Commit messages (`feat: add fair list page`), then push the session branch.
 - End every phase with a short summary for the developer:
