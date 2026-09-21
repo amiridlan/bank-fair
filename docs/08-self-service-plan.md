@@ -100,6 +100,18 @@ The button says **Import from LinkedIn**, because that is what the person is doi
 
 ## Facts discovered
 
+### S3
+
+- **An approved employer is not yet a seatable one, and the plan's bullet above overstated it.** Approving adds the fair to `employer.fairIds`, which puts them on the fair's Employers tab — verified in-session, 27 rows → 28. But the floor plan's "Without a booth" list also requires `stage === 'confirmed' || 'paid'`, and an applicant is typically a `lead` (the seed gives leads no `fairIds` at all, which is exactly why they are the ones with something to apply for). Approving does **not** advance the pipeline: that would move a sales deal nobody agreed to move, and would seat an employer who has not paid. Left as a business decision, as S3 said it would be — but the copy no longer claims otherwise, on the confirm dialog and on the approved card.
+- **A `page.goto` rebuilds the mock database from its seed.** The first run of the S3 browser check navigated to the floor plan by URL and reported the approval had not reached it — which was the harness reloading the app, not the app losing the change. Every cross-page assertion here stays inside the SPA. This is the second time this exact trap has produced a false finding; it is worth assuming for any future check that spans two screens.
+- **Rejection needs a reason in two places, and only one of them is a UI.** The dialog cannot be confirmed empty, and `PATCH /fair-applications/{id}` 422s on a blank or whitespace-only reason regardless. A dialog is a convenience; the API is the rule. The reason is trimmed server-side, verified end to end: `'  Not enough graduate roles.  '` reaches the employer as `'Not enough graduate roles.'`
+- **A decided application cannot be decided again — 409, not a silent overwrite.** Two organisers can have the queue open at once; the first decision stands and the second is told so, then the list resyncs. The same non-optimistic reasoning as S2's registration: approving changes what other staff see, so nothing is shown as done before the server agreed.
+- **An employer asking to decide gets 404, not 403.** Consistent with S2's withdraw rule: a 403 would confirm the id exists.
+- **A rejection is not a permanent bar.** A rejected employer may apply again — the reason may be something they can fix — but a pending or approved one may not, or staff would review the same request twice. `applicationFor()` in the store therefore prefers a non-rejected row over the latest one.
+- **The nav spec caught both new links.** Adding Registrations and the employer Fairs entry failed `side-nav.component.spec.ts` immediately, which is the record over `Role` doing its job for the second phase running.
+- **Verified:** 15 pages at three viewports and both new dialogs at two, 0 axe violations, 0 CSP violations. In a browser: the queue reads "Awaiting review (4)", approving drops it to 3 with a snackbar naming the employer and fair, an empty rejection is blocked with "A reason is required", the decided filter shows both outcomes with the reason, an employer applying moves their card to "Applied — awaiting review", and the new row appears in the staff queue after switching back.
+- **Cost:** initial total 638.77 kB → 639.04 kB.
+
 ### S2
 
 - **`maskForViewer` masked a job seeker from themselves.** Contact details were visible only to an employer who had shortlisted the candidate, so the first render of "My profile" would have starred out the person's own email. A viewer is not a third party to their own record; `viewer.candidateId === candidate.id` now unmasks. Verified both directions in a browser: the job seeker sees `jia.hui@example.com`, an employer who has not shortlisted them sees `a***@example.com`.
