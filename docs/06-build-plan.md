@@ -56,6 +56,15 @@ Agreed before Phase 1a. Later sessions start with fresh context, so they are rec
 - **Material buttons are 36px at density -1**, not the 44px `docs/03` asks for. 36px satisfies WCAG 2.2 AA (2.5.8 needs 24px), and density -1 exists precisely so operators can scan dense tables. The two only conflict on an imprecise pointer, so 44px is applied under `@media (pointer: coarse)` via `mat.button-overrides` rather than globally.
 - Auditing by grep needs the grep to stay honest: test host components initially showed as "components without OnPush". A noisy signal is a useless one, so they were fixed rather than excluded.
 
+### Facts discovered during Phase 7
+
+- **Angular's critical-CSS inlining is incompatible with `script-src 'self'`.** `inlineCritical` rewrites the stylesheet link into `<link rel="stylesheet" media="print" onload="this.media='all'">`, and an inline event handler needs `'unsafe-inline'` — which would defeat the CSP. Set `optimization.styles.inlineCritical: false` in `angular.json`; the styles then load render-blocking, which for a 16kB sheet is the cheaper trade.
+- **`style-src` still needs `'unsafe-inline'`.** Angular Material writes inline `style` attributes at runtime (overlay positioning, ripple geometry, sidenav transforms), and Angular's own style bindings do the same. There is no nonce path for attribute styles, so this is unavoidable today. It is a far smaller exposure than script injection: the risk is defacement, not code execution, and `script-src 'self'` with `object-src 'none'` and `base-uri 'self'` keeps the actual XSS surface closed.
+- **CSS custom properties are not enough to fix contrast inside Material components.** The top-bar trigger rendered at 1.07:1. Overriding `--mat-*` tokens from the parent failed (emulated encapsulation scopes the rule to the parent's own elements, not the button's internals), and a token override on the trigger itself was still beaten by Material's own more specific rule. The fix is to set `color` directly on the elements the component owns — the `mat-icon` and the label `span`. That also forced the three top-bar components' styles out of inline `styles:` and into `.scss` files, because inline styles cannot `@use` the Material mixins.
+- **The accessibility audit ran headless and found nothing.** Playwright + `@axe-core/playwright` against the production build, served behind the real `netlify.toml` headers: **0 violations across 10 pages** in both roles, and **0 CSP violations**. Google Fonts is blocked by the sandbox proxy (`ERR_CERT_AUTHORITY_INVALID`), so icons render as ligature text in that environment only — not an app fault.
+- The audit harness was installed in the session scratchpad, not the repo. Making it a permanent `npm run a11y` script means adding Playwright and axe as devDependencies, which `CLAUDE.md` says to ask about first.
+- Final production build: **625.08 kB raw / 154.01 kB transferred**, inside the 650kB warning budget with no warnings.
+
 ---
 
 ## Phase 0 — Docs ✅
