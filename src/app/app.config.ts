@@ -1,4 +1,4 @@
-import { registerLocaleData } from '@angular/common';
+import { DATE_PIPE_DEFAULT_OPTIONS, registerLocaleData } from '@angular/common';
 import localeEnMY from '@angular/common/locales/en-MY';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import {
@@ -50,6 +50,12 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'en-MY' },
     // en-GB so the datepicker parses typed input as DD/MM/YYYY rather than US order.
     { provide: MAT_DATE_LOCALE, useValue: 'en-GB' },
+
+    // Every timestamp is a Malaysian one, so render it in Malaysian time
+    // regardless of where the browser is. Without this, DatePipe uses the
+    // viewer's own zone and a 10:00 slot reads as 02:00 to anyone outside
+    // GMT+8 — and a late-evening timestamp lands on the wrong day.
+    { provide: DATE_PIPE_DEFAULT_OPTIONS, useValue: { timezone: '+0800' } },
 
     // Icons are Material Symbols Outlined (docs/03), not the legacy Material Icons.
     { provide: MAT_ICON_DEFAULT_OPTIONS, useValue: { fontSet: 'material-symbols-outlined' } },
