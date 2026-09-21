@@ -1,9 +1,17 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -34,6 +42,7 @@ import { InterviewsStore } from '../interviews.store';
     DatePipe,
     MatButtonModule,
     MatIconModule,
+    MatTabsModule,
     RouterLink,
     EmptyStateComponent,
     ErrorStateComponent,
@@ -53,6 +62,37 @@ export default class InterviewsPageComponent {
   protected readonly shortlist = inject(ShortlistStore);
   protected readonly fairContext = inject(FairContextStore);
 
+  /**
+   * Fair days, derived from the slots themselves rather than from the fair's
+   * date range — the grid must show the days that actually have slots.
+   *
+   * A hiring manager could not tell which day they were booking: the grid
+   * carried no date and a two-day fair rendered as one undifferentiated
+   * block (docs/07 UX-6).
+   */
+  protected readonly days = computed<readonly string[]>(() => {
+    const seen = new Set(this.store.slots().map((slot) => slot.startTime.slice(0, 10)));
+    return [...seen].sort();
+  });
+
+  protected readonly isMultiDay = computed(() => this.days().length > 1);
+
+  /** Index into `days()`. Reset whenever the fair changes. */
+  protected readonly selectedDay = signal(0);
+
+  protected readonly slotsForSelectedDay = computed<readonly InterviewSlot[]>(() => {
+    const day = this.days()[this.selectedDay()];
+    if (day === undefined) {
+      return this.store.slots();
+    }
+    return this.store.slots().filter((slot) => slot.startTime.startsWith(day));
+  });
+
+  /** Booked count for the visible day, so the header matches the grid. */
+  protected readonly bookedOnSelectedDay = computed(
+    () => this.slotsForSelectedDay().filter((slot) => slot.candidateId !== null).length,
+  );
+
   /** Shortlisted candidates who do not already hold a slot at this fair. */
   protected readonly availableCandidates = computed(() =>
     this.shortlist.entries().filter((entry) => !this.store.bookedCandidateIds().has(entry.candidateId)),
@@ -61,9 +101,15 @@ export default class InterviewsPageComponent {
   constructor() {
     effect(() => {
       const fairId = this.auth.activeFairId();
+      // Day one of the new fair, not whatever index the last fair was on.
+      this.selectedDay.set(0);
       void this.store.load(fairId);
       void this.shortlist.load(fairId);
     });
+  }
+
+  protected selectDay(index: number): void {
+    this.selectedDay.set(index);
   }
 
   protected hasActiveFair(): boolean {

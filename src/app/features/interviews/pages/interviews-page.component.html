@@ -6,10 +6,10 @@
       : 'Book shortlisted candidates into slots on fair day.'
   "
 >
-  <div slot="actions" class="actions">
+  <div slot="actions" class="flex items-center gap-3">
     @if (hasActiveFair() && !store.hasNoSlots()) {
-      <span class="fo-caption fo-tabular">
-        {{ store.bookedCount() }} of {{ store.slots().length }} booked
+      <span class="fo-caption fo-tabular font-mono">
+        {{ bookedOnSelectedDay() }} of {{ slotsForSelectedDay().length }} booked
       </span>
     }
     <a matButton="outlined" routerLink="/hiring/shortlist">View shortlist</a>
@@ -45,8 +45,30 @@
     </p>
   }
 
+  <!-- Which day, in words. A two-day fair used to render as one
+       undifferentiated block with no date anywhere (docs/07 UX-6). -->
+  @if (isMultiDay()) {
+    <nav mat-tab-nav-bar [tabPanel]="dayPanel" aria-label="Fair days" class="mb-4">
+      @for (day of days(); track day; let i = $index) {
+        <a
+          mat-tab-link
+          href="#"
+          [active]="selectedDay() === i"
+          (click)="selectDay(i); $event.preventDefault()"
+        >
+          Day {{ i + 1 }} · {{ day | date: 'EEE dd/MM' }}
+        </a>
+      }
+    </nav>
+  } @else if (days()[0]; as onlyDay) {
+    <p class="fo-caption mb-4">
+      Fair day · <span class="fo-tabular font-mono">{{ onlyDay | date: 'EEEE dd/MM/yyyy' }}</span>
+    </p>
+  }
+
+  <mat-tab-nav-panel #dayPanel>
   <ul class="grid">
-    @for (slot of store.slots(); track slot.id) {
+    @for (slot of slotsForSelectedDay(); track slot.id) {
       <li>
         <button
           type="button"
@@ -74,4 +96,5 @@
       </li>
     }
   </ul>
+  </mat-tab-nav-panel>
 }
