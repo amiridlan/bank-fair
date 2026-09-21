@@ -777,3 +777,192 @@ describe('fair registrations', () => {
     expect(theirs.email).toContain('***');
   });
 });
+
+describe('fair applications', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  /** The seeded pending application belonging to a given employer, if any. */
+  function pendingFor(employerId: string) {
+    return db.fairApplications.find(
+      (entry) => entry.employerId === employerId && entry.status === 'pending',
+    );
+  }
+
+  function anyPending() {
+    return db.fairApplications.find((entry) => entry.status === 'pending')!;
+  }
+
+  /** An open fair this employer has neither applied to nor been booked on. */
+  function openFairFor(employerId: string): string {
+    const taken = new Set(
+      db.fairApplications.filter((e) => e.employerId === employerId).map((e) => e.fairId),
+    );
+    const employer = db.employers.find((e) => e.id === employerId)!;
+    return db.fairs.find(
+      (fair) =>
+        (fair.status === 'open' || fair.status === 'live') &&
+        !taken.has(fair.id) &&
+        !employer.fairIds.includes(fair.id),
+    )!.id;
+  }
+
+  it('shows staff every application', () => {
+    const rows = data<readonly { id: string }[]>(call(db, 'GET', '/fair-applications'));
+
+    expect(rows).toHaveLength(db.fairApplications.length);
+  });
+
+  it('shows an employer only their own', () => {
+    const rows = data<readonly { employerId: string }[]>(
+      call(db, 'GET', '/fair-applications', { user: HM_ONE }),
+    );
+
+    // Scoped by who is asking, not by a parameter: there is no way to ask for
+    // somebody else's.
+    expect(rows.every((row) => row.employerId === 'emp-001')).toBe(true);
+  });
+
+  it('filters by status', () => {
+    const rows = data<readonly { status: string }[]>(
+      call(db, 'GET', '/fair-applications?status=pending'),
+    );
+
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((row) => row.status === 'pending')).toBe(true);
+  });
+
+  it('applies, landing pending', () => {
+    const fairId = openFairFor('emp-001');
+
+    const result = call(db, 'POST', '/fair-applications', { user: HM_ONE, body: { fairId } });
+
+    expect(result.status).toBe(201);
+    const row = data<{ status: string; employerName: string; decidedAt: string | null }>(result);
+    expect(row.status).toBe('pending');
+    expect(row.decidedAt).toBeNull();
+    expect(row.employerName).not.toBe('Unknown employer');
+  });
+
+  it('refuses an application with no fair', () => {
+    const result = call(db, 'POST', '/fair-applications', { user: HM_ONE, body: {} });
+
+    expect(result.status).toBe(422);
+    expect(fieldErrors(result)).toHaveProperty('fairId');
+  });
+
+  it('409s when an application is already under review', () => {
+    const existing = pendingFor('emp-001') ?? anyPending();
+    const user = { ...HM_ONE, employerId: existing.employerId };
+
+    const result = call(db, 'POST', '/fair-applications', {
+      user,
+      body: { fairId: existing.fairId },
+    });
+
+    expect(result.status).toBe(409);
+  });
+
+  it('lets a rejected employer apply again', () => {
+    // Being turned down once is not a permanent bar; the reason may have been
+    // something they can fix.
+    const rejected = db.fairApplications.find((entry) => entry.status === 'rejected')!;
+    const user = { ...HM_ONE, employerId: rejected.employerId };
+
+    const result = call(db, 'POST', '/fair-applications', {
+      user,
+      body: { fairId: rejected.fairId },
+    });
+
+    expect(result.status).toBe(201);
+  });
+
+  it('refuses an application to a fair that has closed', () => {
+    const closed = db.fairs.find((fair) => fair.status === 'completed' || fair.status === 'draft')!;
+
+    const result = call(db, 'POST', '/fair-applications', {
+      user: HM_ONE,
+      body: { fairId: closed.id },
+    });
+
+    expect(result.status).toBe(409);
+  });
+
+  it('will not let an employer decide anything', () => {
+    const pending = anyPending();
+
+    // 404 rather than 403: the queue is not theirs to know about.
+    const result = call(db, 'PATCH', `/fair-applications/${pending.id}`, {
+      user: HM_TWO,
+      body: { status: 'approved' },
+    });
+
+    expect(result.status).toBe(404);
+    expect(db.fairApplications.find((e) => e.id === pending.id)!.status).toBe('pending');
+  });
+
+  it('approves, and puts the employer on the fair', () => {
+    const pending = anyPending();
+
+    const result = call(db, 'PATCH', `/fair-applications/${pending.id}`, {
+      body: { status: 'approved' },
+    });
+
+    expect(result.status).toBe(200);
+    expect(data<{ status: string }>(result).status).toBe('approved');
+    // The link that makes the approval mean something: without it they are
+    // not assignable to a booth and the decision changed nothing.
+    expect(db.employers.find((e) => e.id === pending.employerId)!.fairIds).toContain(pending.fairId);
+  });
+
+  it('refuses a rejection with no reason', () => {
+    const pending = anyPending();
+
+    const blank = call(db, 'PATCH', `/fair-applications/${pending.id}`, {
+      body: { status: 'rejected', rejectionReason: '   ' },
+    });
+
+    expect(blank.status).toBe(422);
+    expect(fieldErrors(blank)).toHaveProperty('rejectionReason');
+    expect(db.fairApplications.find((e) => e.id === pending.id)!.status).toBe('pending');
+  });
+
+  it('rejects with a trimmed reason', () => {
+    const pending = anyPending();
+
+    const result = call(db, 'PATCH', `/fair-applications/${pending.id}`, {
+      body: { status: 'rejected', rejectionReason: '  Not enough graduate roles.  ' },
+    });
+
+    const row = data<{ rejectionReason: string; decidedAt: string }>(result);
+    expect(row.rejectionReason).toBe('Not enough graduate roles.');
+    expect(Date.parse(row.decidedAt)).not.toBeNaN();
+    expect(db.employers.find((e) => e.id === pending.employerId)!.fairIds).not.toContain(
+      pending.fairId,
+    );
+  });
+
+  it('refuses a status that is neither approved nor rejected', () => {
+    const pending = anyPending();
+
+    const result = call(db, 'PATCH', `/fair-applications/${pending.id}`, {
+      body: { status: 'pending' },
+    });
+
+    expect(result.status).toBe(422);
+  });
+
+  it('409s on a second decision', () => {
+    // Two organisers open the queue; the first decision is the one that stands.
+    const pending = anyPending();
+    call(db, 'PATCH', `/fair-applications/${pending.id}`, { body: { status: 'approved' } });
+
+    const again = call(db, 'PATCH', `/fair-applications/${pending.id}`, {
+      body: { status: 'rejected', rejectionReason: 'Changed my mind.' },
+    });
+
+    expect(again.status).toBe(409);
+    expect(message(again)).toContain('already been decided');
+    expect(db.fairApplications.find((e) => e.id === pending.id)!.status).toBe('approved');
+  });
+});

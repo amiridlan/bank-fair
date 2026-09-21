@@ -30,11 +30,21 @@ describe('SideNavComponent', () => {
   afterEach(() => TestBed.resetTestingModule());
 
   it('lists the staff routes for staff', () => {
-    expect(labels(renderAs('staff'))).toEqual(['Dashboard', 'Fairs', 'Employers']);
+    expect(labels(renderAs('staff'))).toEqual([
+      'Dashboard',
+      'Fairs',
+      'Employers',
+      'Registrations',
+    ]);
   });
 
   it('lists the hiring routes for an employer', () => {
-    expect(labels(renderAs('employer'))).toEqual(['Talent pool', 'Shortlist', 'Interviews']);
+    expect(labels(renderAs('employer'))).toEqual([
+      'Talent pool',
+      'Shortlist',
+      'Interviews',
+      'Fairs',
+    ]);
   });
 
   it('lists the portal routes for a job seeker', () => {
