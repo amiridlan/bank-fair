@@ -1009,3 +1009,112 @@ describe('fair applications', () => {
     expect(db.fairApplications.find((e) => e.id === pending.id)!.status).toBe('approved');
   });
 });
+
+describe('editing your own profile', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  const VALID = {
+    fullName: 'Ahmad Zaki Abdullah Sani',
+    headline: 'Final-year software engineering student',
+    university: 'Universiti Malaya',
+    fieldOfStudy: 'Software Engineering',
+    qualification: 'degree',
+    graduationYear: 2027,
+    cgpa: 3.62,
+    email: 'ahmad.zaki@example.com',
+    phone: '012-3456789',
+    skills: ['TypeScript', 'Laravel'],
+  };
+
+  function patch(body: unknown, user = SEEKER, id = 'cand-001') {
+    return call(db, 'PATCH', `/candidates/${id}`, { user, body });
+  }
+
+  it('saves the profile', () => {
+    const result = patch(VALID);
+
+    expect(result.status).toBe(200);
+    const saved = db.candidates.find((c) => c.id === 'cand-001')!;
+    expect(saved.fullName).toBe(VALID.fullName);
+    expect(saved.skills).toEqual(['TypeScript', 'Laravel']);
+  });
+
+  it('returns the record through the mask, like every other read', () => {
+    const row = data<{ isContactVisible: boolean; email: string }>(patch(VALID));
+
+    expect(row.isContactVisible).toBe(true);
+    expect(row.email).not.toContain('***');
+  });
+
+  it('will not let anyone edit someone else’s profile', () => {
+    // 404, not 403: the same answer a missing id gets, so the response does
+    // not confirm which candidates exist.
+    const other = db.candidates.find((c) => c.id !== 'cand-001')!;
+    const before = other.fullName;
+
+    expect(patch(VALID, SEEKER, other.id).status).toBe(404);
+    expect(db.candidates.find((c) => c.id === other.id)!.fullName).toBe(before);
+  });
+
+  it('does not give staff an edit path either', () => {
+    // The record belongs to the person; that is the point of the role.
+    expect(patch(VALID, STAFF).status).toBe(404);
+  });
+
+  it('will not let an employer edit a candidate', () => {
+    expect(patch(VALID, HM_ONE).status).toBe(404);
+  });
+
+  it('reports every bad field at once, Laravel-style', () => {
+    const result = patch({ ...VALID, fullName: '   ', email: 'not-an-email', graduationYear: 1780 });
+
+    expect(result.status).toBe(422);
+    expect(Object.keys(fieldErrors(result)).sort()).toEqual([
+      'email',
+      'fullName',
+      'graduationYear',
+    ]);
+  });
+
+  it('refuses a CGPA outside 0.00–4.00', () => {
+    expect(patch({ ...VALID, cgpa: 4.5 }).status).toBe(422);
+    expect(patch({ ...VALID, cgpa: -1 }).status).toBe(422);
+    expect(patch({ ...VALID, cgpa: null }).status).toBe(200);
+  });
+
+  it('refuses a qualification outside the union', () => {
+    expect(patch({ ...VALID, qualification: 'postgrad' }).status).toBe(422);
+  });
+
+  it('caps the skills list', () => {
+    const many = Array.from({ length: 21 }, (_, i) => `Skill ${i}`);
+
+    expect(patch({ ...VALID, skills: many }).status).toBe(422);
+  });
+
+  it('ignores an attempt to set fairIds or unmask contact details', () => {
+    // Registration is what puts someone at a fair, with consent recorded
+    // against it, and masking is the API's call. A profile PATCH must not be
+    // a way around either.
+    const before = db.candidates.find((c) => c.id === 'cand-001')!.fairIds;
+
+    patch({ ...VALID, fairIds: ['fair-01', 'fair-02', 'fair-03'], isContactVisible: true });
+
+    expect(db.candidates.find((c) => c.id === 'cand-001')!.fairIds).toEqual(before);
+  });
+
+  it('trims what it stores and drops a blank phone to null', () => {
+    patch({ ...VALID, fullName: '  Ahmad Zaki  ', phone: '   ' });
+
+    const saved = db.candidates.find((c) => c.id === 'cand-001')!;
+    expect(saved.fullName).toBe('Ahmad Zaki');
+    expect(saved.phone).toBeNull();
+  });
+
+  it('rounds a CGPA to two decimal places', () => {
+    patch({ ...VALID, cgpa: 3.666666 });
+
+    expect(db.candidates.find((c) => c.id === 'cand-001')!.cgpa).toBe(3.67);
+  });
+});
