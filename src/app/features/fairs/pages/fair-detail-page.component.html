@@ -14,67 +14,40 @@
     </div>
   </app-page-header>
 
-  <mat-tab-group>
-    <mat-tab label="Overview">
-      <div class="tab">
-        <dl class="stats">
-          <div class="stat">
-            <dt class="fo-caption">Dates</dt>
-            <dd>
-              {{ fair.startDate | date: 'dd/MM/yyyy' }}
-              @if (isMultiDay()) {
-                – {{ fair.endDate | date: 'dd/MM/yyyy' }}
-              }
-            </dd>
-          </div>
-          <div class="stat">
-            <dt class="fo-caption">Booths assigned</dt>
-            <dd class="fo-tabular">
-              {{ fair.boothAssigned }}/{{ fair.boothTotal }}
-              <span class="fo-caption">({{ fillRate() | percent: '1.0-0' }})</span>
-            </dd>
-          </div>
-          <div class="stat">
-            <dt class="fo-caption">Registrations</dt>
-            <dd class="fo-tabular">{{ fair.registrations | number }}</dd>
-          </div>
-          <div class="stat">
-            <dt class="fo-caption">Check-ins</dt>
-            <dd class="fo-tabular">
-              {{ fair.checkIns | number }}
-              @if (fair.registrations > 0) {
-                <span class="fo-caption">({{ checkInRate() | percent: '1.0-0' }})</span>
-              }
-            </dd>
-          </div>
-        </dl>
-      </div>
-    </mat-tab>
+  <nav mat-tab-nav-bar [tabPanel]="tabPanel" aria-label="Fair sections">
+    <a
+      mat-tab-link
+      [routerLink]="['/staff/fairs', fair.id]"
+      routerLinkActive
+      #overview="routerLinkActive"
+      [routerLinkActiveOptions]="{ exact: true }"
+      [active]="overview.isActive"
+    >
+      Overview
+    </a>
+    <a
+      mat-tab-link
+      [routerLink]="['/staff/fairs', fair.id, 'floor-plan']"
+      routerLinkActive
+      #floorPlan="routerLinkActive"
+      [active]="floorPlan.isActive"
+    >
+      Floor plan
+    </a>
+    <a
+      mat-tab-link
+      [routerLink]="['/staff/fairs', fair.id, 'employers']"
+      routerLinkActive
+      #employers="routerLinkActive"
+      [active]="employers.isActive"
+    >
+      Employers
+    </a>
+  </nav>
 
-    <mat-tab label="Floor plan">
-      <div class="tab">
-        <app-empty-state
-          icon="grid_view"
-          heading="Floor plan arrives in Phase 4"
-          message="Booths will be assignable here by drag or by keyboard."
-        />
-        <p class="fo-caption tab__link">
-          The standalone page already routes:
-          <a [routerLink]="['/staff/fairs', fair.id, 'floor-plan']">open the floor plan</a>.
-        </p>
-      </div>
-    </mat-tab>
-
-    <mat-tab label="Employers">
-      <div class="tab">
-        <app-empty-state
-          icon="apartment"
-          heading="Employers arrive in Phase 4"
-          message="The employers attending this fair will be listed here."
-        />
-      </div>
-    </mat-tab>
-  </mat-tab-group>
+  <mat-tab-nav-panel #tabPanel class="tab">
+    <router-outlet />
+  </mat-tab-nav-panel>
 } @else {
   <app-empty-state
     icon="search_off"

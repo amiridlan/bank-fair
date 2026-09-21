@@ -1,6 +1,15 @@
-.actions {
+.toolbar {
   display: flex;
-  gap: var(--fo-space-2);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fo-space-3);
+  margin-bottom: var(--fo-space-4);
+}
+
+.toolbar__hint {
+  margin: 0;
+  color: var(--fo-text-muted);
 }
 
 .layout {

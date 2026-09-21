@@ -5,14 +5,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import type { Booth, Employer } from '../../../core/models';
 import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog.component';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { ErrorStateComponent } from '../../../shared/ui/error-state.component';
-import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { SkeletonComponent } from '../../../shared/ui/skeleton.component';
 import {
   AssignBoothDialogComponent,
@@ -22,7 +20,10 @@ import { BoothTileComponent } from '../components/booth-tile.component';
 import { FloorPlanStore } from '../floor-plan.store';
 
 /**
- * Floor plan (flow F1).
+ * Floor plan (flow F1), rendered as a tab of the fair detail page.
+ *
+ * The fair header and tab bar belong to the parent shell, so this starts at
+ * the toolbar. `fairId` comes from the parent route segment.
  *
  * Two ways to assign a booth, both ending in `assign()`: drag an employer
  * from the side list onto a tile, or select a tile and use "Assign employer",
@@ -38,11 +39,9 @@ import { FloorPlanStore } from '../floor-plan.store';
     CdkDropListGroup,
     MatButtonModule,
     MatIconModule,
-    RouterLink,
     BoothTileComponent,
     EmptyStateComponent,
     ErrorStateComponent,
-    PageHeaderComponent,
     SkeletonComponent,
   ],
   templateUrl: './floor-plan-page.component.html',

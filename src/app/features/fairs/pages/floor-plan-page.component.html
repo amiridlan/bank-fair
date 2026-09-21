@@ -1,19 +1,16 @@
-<app-page-header
-  title="Floor plan"
-  description="Drag an employer onto a booth, or select a booth and use Assign employer."
->
-  <div slot="actions" class="actions">
-    <button
-      matButton="filled"
-      type="button"
-      [disabled]="!selectedBoothId()"
-      (click)="openAssignDialog()"
-    >
-      Assign employer
-    </button>
-    <a matButton="outlined" [routerLink]="['/staff/fairs', fairId()]">Back to fair</a>
-  </div>
-</app-page-header>
+<div class="toolbar">
+  <p class="toolbar__hint">
+    Drag an employer onto a booth, or select a booth and use Assign employer.
+  </p>
+  <button
+    matButton="filled"
+    type="button"
+    [disabled]="!selectedBoothId()"
+    (click)="openAssignDialog()"
+  >
+    Assign employer
+  </button>
+</div>
 
 @if (store.isLoading()) {
   <app-skeleton [count]="5" [height]="80" label="Loading floor plan" />

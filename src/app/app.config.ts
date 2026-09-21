@@ -9,7 +9,12 @@ import {
 } from '@angular/core';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { MAT_ICON_DEFAULT_OPTIONS } from '@angular/material/icon';
-import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
+import {
+  provideRouter,
+  withComponentInputBinding,
+  withInMemoryScrolling,
+  withRouterConfig,
+} from '@angular/router';
 
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
@@ -30,6 +35,10 @@ export const appConfig: ApplicationConfig = {
       // Binds route params and query params straight to component `input()`s.
       withComponentInputBinding(),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
+      // The fair tabs are child routes, and a child with a non-empty path
+      // does not inherit `:fairId` under the default 'emptyOnly' strategy —
+      // so the floor plan tab would receive no fair to load.
+      withRouterConfig({ paramsInheritanceStrategy: 'always' }),
     ),
 
     provideHttpClient(

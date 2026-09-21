@@ -21,7 +21,7 @@ Use the menu in the top right to switch between the three demo identities — no
 ### Staff
 
 - **Dashboard** — four KPIs, booths assigned per fair, pipeline value by stage. Charts load only when scrolled into view.
-- **Fairs** — list with status and city filters that live in the URL, plus a detail page with Overview, Floor plan and Employers tabs.
+- **Fairs** — list with status and city filters that live in the URL, plus a detail page whose Overview, Floor plan and Employers tabs are each their own route, so any tab can be linked or refreshed.
 - **Floor plan** — a 40-booth grid per fair. Drag an unassigned employer onto a booth, or select a booth and use *Assign employer*. Dropping onto an occupied booth asks before replacing; a successful assignment offers Undo.
 - **Employer pipeline** — a Kanban board from Lead to Paid. Drag a card or use its menu. Moving to Lost requires a reason; moving to Paid requires a booth package, and opens the edit form if one is missing.
 
@@ -136,7 +136,7 @@ Requires **Node.js ≥ 22.22.3** — the Angular 22 CLI hard-fails below it. npm
 npm ci
 npm start                      # dev server on :4200
 npm run build                  # production build → dist/bank-fair/browser
-npm test -- --watch=false      # 212 unit tests (Vitest), single run
+npm test -- --watch=false      # 216 unit tests (Vitest), single run
 npm run lint                   # angular-eslint
 ```
 

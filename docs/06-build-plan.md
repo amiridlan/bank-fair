@@ -65,6 +65,12 @@ Agreed before Phase 1a. Later sessions start with fresh context, so they are rec
 - The audit harness was installed in the session scratchpad, not the repo. Making it a permanent `npm run a11y` script means adding Playwright and axe as devDependencies, which `CLAUDE.md` says to ask about first.
 - Final production build: **625.08 kB raw / 154.01 kB transferred**, inside the 650kB warning budget with no warnings.
 
+### Found after Phase 7
+
+- **The fair detail page still shipped its Phase 3 placeholders.** Its Floor plan and Employers tabs read "arrives in Phase 4" on the live site: Phase 4 built the floor plan as a separate route and the pipeline as a global board, and nothing went back to wire the tabs up. The Phase 6 audit did not catch it because it grepped for banned Angular APIs, not for stale copy — `grep -rn "Phase [0-9]"` over `src/` is now part of the sweep.
+- The tabs became **child routes** under `:fairId` rather than a `mat-tab-group`, so each is linkable and refresh-safe like the rest of the app's view state. That needs `paramsInheritanceStrategy: 'always'`: a child route with a non-empty path does not inherit `:fairId` by default, so the floor plan tab would have loaded nothing.
+- `shared/ui/placeholder-page.component.ts` had no remaining references and was removed.
+
 ---
 
 ## Phase 0 — Docs ✅

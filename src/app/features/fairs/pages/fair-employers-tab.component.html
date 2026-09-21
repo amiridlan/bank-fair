@@ -1,0 +1,71 @@
+@if (store.isLoading()) {
+  <app-skeleton [count]="5" [height]="52" label="Loading employers" />
+} @else if (store.hasError()) {
+  <app-error-state
+    heading="Couldn't load the employers"
+    [error]="store.error()"
+    (retry)="retry()"
+  />
+} @else if (isEmpty()) {
+  <app-empty-state
+    icon="apartment"
+    heading="No employers in the pipeline for this fair"
+    message="Add one on the pipeline board and tag it with this fair."
+  />
+} @else {
+  <div class="summary">
+    <p class="summary__text">
+      <strong class="fo-tabular">{{ employers().length }}</strong> in the pipeline ·
+      <strong class="fo-tabular">{{ confirmedCount() }}</strong> confirmed or paid ·
+      <strong class="fo-tabular">RM {{ committedValueMyr() | number: '1.0-0' }}</strong> committed
+    </p>
+    <a matButton="outlined" routerLink="/staff/employers">Open the pipeline board</a>
+  </div>
+
+  <div class="table-wrap" tabindex="0" role="region" aria-labelledby="fair-employers-caption">
+    <table mat-table [dataSource]="employers()" class="table">
+      <caption id="fair-employers-caption" class="fo-sr-only">
+        Employers in the pipeline for this fair
+      </caption>
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Employer</th>
+        <td mat-cell *matCellDef="let employer">
+          <span class="cell__name">{{ employer.name }}</span>
+          <span class="cell__meta fo-caption">{{ employer.industry }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="stage">
+        <th mat-header-cell *matHeaderCellDef>Stage</th>
+        <td mat-cell *matCellDef="let employer">
+          <app-status-chip kind="employer" [status]="employer.stage" />
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="package">
+        <th mat-header-cell *matHeaderCellDef>Booth package</th>
+        <td mat-cell *matCellDef="let employer">{{ packageLabel(employer.boothPackage) }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="value">
+        <th mat-header-cell *matHeaderCellDef class="table__number">Deal value</th>
+        <td mat-cell *matCellDef="let employer" class="table__number fo-tabular">
+          @if (employer.dealValueMyr !== null) {
+            RM {{ employer.dealValueMyr | number: '1.0-0' }}
+          } @else {
+            —
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="contact">
+        <th mat-header-cell *matHeaderCellDef>Contact</th>
+        <td mat-cell *matCellDef="let employer">{{ employer.contactName }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  </div>
+}
