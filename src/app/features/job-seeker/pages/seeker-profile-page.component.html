@@ -1,0 +1,111 @@
+<app-page-header
+  title="My profile"
+  description="This is what employers see when they find you in the talent pool."
+>
+  <a slot="actions" matButton="outlined" routerLink="/me/fairs">Career fairs</a>
+</app-page-header>
+
+@if (store.isLoading()) {
+  <app-skeleton [count]="2" [height]="180" label="Loading your profile" />
+} @else if (store.hasError()) {
+  <app-error-state heading="Couldn't load your profile" [error]="store.error()" (retry)="retry()" />
+} @else if (store.profile(); as me) {
+  <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+    <section
+      class="flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
+      aria-labelledby="about-heading"
+    >
+      <h2 id="about-heading" class="text-h2">About you</h2>
+
+      <dl class="m-0 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div>
+          <dt class="fo-caption">Name</dt>
+          <dd class="m-0 font-medium text-ink">{{ me.fullName }}</dd>
+        </div>
+        <div>
+          <dt class="fo-caption">Headline</dt>
+          <dd class="m-0">{{ me.headline }}</dd>
+        </div>
+        <div>
+          <dt class="fo-caption">University</dt>
+          <dd class="m-0">{{ me.university }}</dd>
+        </div>
+        <div>
+          <dt class="fo-caption">Field of study</dt>
+          <dd class="m-0">{{ me.fieldOfStudy }}</dd>
+        </div>
+        <div>
+          <dt class="fo-caption">Graduating</dt>
+          <dd class="fo-tabular m-0 font-mono">{{ me.graduationYear }}</dd>
+        </div>
+        <div>
+          <dt class="fo-caption">CGPA</dt>
+          <dd class="fo-tabular m-0 font-mono">{{ me.cgpa ?? '—' }}</dd>
+        </div>
+      </dl>
+
+      <div>
+        <h3 class="fo-caption m-0">Skills</h3>
+        <ul class="m-0 mt-2 flex list-none flex-wrap gap-1 p-0">
+          @for (skill of me.skills; track skill) {
+            <li class="skill">{{ skill }}</li>
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section
+      class="flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
+      aria-labelledby="contact-heading"
+    >
+      <h2 id="contact-heading" class="text-h2">Contact details</h2>
+
+      <!-- Unmasked here and only here: a person is not a third party to their
+           own record. Employers see these starred out until they shortlist. -->
+      <dl class="m-0 grid grid-cols-1 gap-4">
+        <div>
+          <dt class="fo-caption">Email</dt>
+          <dd class="m-0 font-mono break-all">{{ me.email }}</dd>
+        </div>
+        <div>
+          <dt class="fo-caption">Phone</dt>
+          @if (me.phone; as phone) {
+            <dd class="m-0 font-mono">{{ phone }}</dd>
+          } @else {
+            <dd class="m-0 text-muted">Not supplied</dd>
+          }
+        </div>
+      </dl>
+
+      <p class="notice fo-caption m-0 flex items-start gap-2">
+        <mat-icon class="notice__icon" aria-hidden="true">lock</mat-icon>
+        Employers cannot see your email or phone number until they add you to their shortlist.
+      </p>
+
+      <div>
+        <h3 class="fo-caption m-0">Visible to employers at</h3>
+        @if (visibleAt().length === 0) {
+          <p class="m-0 mt-2">
+            No fairs yet — your profile is not visible to any employer.
+            <a routerLink="/me/fairs">Register for a fair</a> to change that.
+          </p>
+        } @else {
+          <ul class="m-0 mt-2 list-none p-0">
+            @for (fair of visibleAt(); track fair.id) {
+              <li class="flex items-center gap-2">
+                <mat-icon class="notice__icon" aria-hidden="true">event_available</mat-icon>
+                {{ fair.name }}
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
+  </div>
+} @else {
+  <app-empty-state
+    icon="person_off"
+    heading="No profile found"
+    message="This demo identity is not linked to a candidate record."
+  />
+}

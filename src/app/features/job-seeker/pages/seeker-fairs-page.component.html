@@ -1,0 +1,111 @@
+<app-page-header
+  title="Career fairs"
+  description="Register for the fairs you want to attend. Employers there can then find your profile."
+>
+  <div slot="filters" class="flex flex-wrap items-center gap-3">
+    <div class="flex gap-2" role="group" aria-label="Filter fairs">
+      <button
+        matButton
+        type="button"
+        [class.filter--on]="filter() === 'all'"
+        [attr.aria-pressed]="filter() === 'all'"
+        (click)="filter.set('all')"
+      >
+        All open fairs
+      </button>
+      <button
+        matButton
+        type="button"
+        [class.filter--on]="filter() === 'registered'"
+        [attr.aria-pressed]="filter() === 'registered'"
+        (click)="filter.set('registered')"
+      >
+        Registered ({{ store.registeredCount() }})
+      </button>
+    </div>
+  </div>
+</app-page-header>
+
+@if (store.isLoading()) {
+  <app-skeleton [count]="3" [height]="148" label="Loading career fairs" />
+} @else if (store.hasError()) {
+  <app-error-state
+    heading="Couldn't load the career fairs"
+    [error]="store.error()"
+    (retry)="retry()"
+  />
+} @else if (isEmptyForFilter()) {
+  @if (filter() === 'registered') {
+    <app-empty-state
+      icon="event_available"
+      heading="You haven't registered for anything yet"
+      message="Browse the open fairs and register for the ones worth your time."
+      actionLabel="Show all open fairs"
+      (action)="filter.set('all')"
+    />
+  } @else {
+    <app-empty-state
+      icon="event_busy"
+      heading="No fairs are open for registration"
+      message="Check back — new fairs open a few weeks before they run."
+    />
+  }
+} @else {
+  <ul class="m-0 grid list-none grid-cols-1 gap-4 p-0 xl:grid-cols-2">
+    @for (fair of visibleFairs(); track fair.id) {
+      <li class="flex flex-col gap-3 rounded-md border border-border bg-raised p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h2 class="m-0 text-h2">{{ fair.name }}</h2>
+            <p class="fo-caption m-0">{{ fair.venue }}, {{ fair.city }}</p>
+          </div>
+          <app-status-chip kind="fair" [status]="fair.status" />
+        </div>
+
+        <dl class="m-0 flex flex-wrap gap-x-6 gap-y-2">
+          <div>
+            <dt class="fo-caption">Dates</dt>
+            <dd class="fo-tabular m-0 font-mono">
+              {{ fair.startDate | date: 'dd/MM/yyyy' }}
+              @if (isMultiDay(fair)) {
+                – {{ fair.endDate | date: 'dd/MM/yyyy' }}
+              }
+            </dd>
+          </div>
+          <div>
+            <dt class="fo-caption">Employers attending</dt>
+            <dd class="fo-tabular m-0 font-mono">{{ fair.boothAssigned }}</dd>
+          </div>
+        </dl>
+
+        @if (isRegistered(fair.id)) {
+          <p class="registered fo-caption m-0 flex items-center gap-1">
+            <mat-icon class="registered__icon" aria-hidden="true">check_circle</mat-icon>
+            You are registered for this fair
+          </p>
+          <div class="flex justify-end">
+            <button
+              matButton
+              type="button"
+              [disabled]="store.busyFairId() === fair.id"
+              (click)="withdraw(fair)"
+            >
+              Withdraw
+            </button>
+          </div>
+        } @else {
+          <div class="flex justify-end">
+            <button
+              matButton="filled"
+              type="button"
+              [disabled]="store.busyFairId() === fair.id"
+              (click)="register(fair)"
+            >
+              Register
+            </button>
+          </div>
+        }
+      </li>
+    }
+  </ul>
+}

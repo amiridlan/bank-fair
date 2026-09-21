@@ -1,0 +1,23 @@
+.skill {
+  padding: 1px var(--fo-space-2);
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-surface);
+  font-size: var(--fo-caption-size);
+  line-height: var(--fo-caption-line);
+}
+
+.notice {
+  padding: var(--fo-space-3);
+  border: 1px solid var(--fo-info);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-info-subtle);
+  color: var(--fo-info);
+}
+
+.notice__icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  flex: none;
+}
