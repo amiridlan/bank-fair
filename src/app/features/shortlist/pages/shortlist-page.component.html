@@ -44,11 +44,15 @@
           <dl class="contact">
             <div class="contact__item">
               <dt class="fo-caption">Email</dt>
-              <dd>{{ entry.candidate.email }}</dd>
+              <dd class="font-mono break-all">{{ entry.candidate.email }}</dd>
             </div>
             <div class="contact__item">
               <dt class="fo-caption">Phone</dt>
-              <dd>{{ entry.candidate.phone ?? 'Not supplied' }}</dd>
+              @if (entry.candidate.phone; as phone) {
+                <dd class="font-mono">{{ phone }}</dd>
+              } @else {
+                <dd class="text-muted">Not supplied</dd>
+              }
             </div>
           </dl>
 
@@ -61,7 +65,7 @@
         </div>
 
         <div class="entry__side">
-          <span class="fo-caption">Added {{ entry.createdAt | date: 'dd/MM/yyyy' }}</span>
+          <span class="fo-caption">Added <span class="fo-tabular font-mono">{{ entry.createdAt | date: 'dd/MM/yyyy' }}</span></span>
           <button matButton type="button" (click)="remove(entry)">Remove</button>
         </div>
       </li>
