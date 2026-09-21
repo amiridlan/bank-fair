@@ -1,0 +1,86 @@
+<app-page-header
+  title="Floor plan"
+  description="Drag an employer onto a booth, or select a booth and use Assign employer."
+>
+  <div slot="actions" class="actions">
+    <button
+      matButton="filled"
+      type="button"
+      [disabled]="!selectedBoothId()"
+      (click)="openAssignDialog()"
+    >
+      Assign employer
+    </button>
+    <a matButton="outlined" [routerLink]="['/staff/fairs', fairId()]">Back to fair</a>
+  </div>
+</app-page-header>
+
+@if (store.isLoading()) {
+  <app-skeleton [count]="5" [height]="80" label="Loading floor plan" />
+} @else if (store.hasError()) {
+  <app-error-state heading="Couldn't load the floor plan" [error]="store.error()" (retry)="retry()" />
+} @else if (store.hasNoBooths()) {
+  <app-empty-state
+    icon="grid_off"
+    heading="No floor plan yet for this fair"
+    message="Booths appear here once the layout is set up."
+  />
+} @else {
+  <div class="layout" cdkDropListGroup>
+    <section class="grid-panel" aria-labelledby="grid-heading">
+      <div class="grid-panel__head">
+        <h2 id="grid-heading">Booths</h2>
+        <span class="fo-caption fo-tabular">
+          {{ store.assignedCount() }} of {{ store.booths().length }} assigned
+        </span>
+      </div>
+
+      <div class="grid">
+        @for (row of store.rows(); track $index) {
+          @for (booth of row; track booth.id) {
+            <div
+              class="grid__cell"
+              cdkDropList
+              [cdkDropListData]="booth"
+              (cdkDropListDropped)="onDrop($event, booth)"
+            >
+              <app-booth-tile
+                [booth]="booth"
+                [selected]="selectedBoothId() === booth.id"
+                [pending]="store.pendingBoothId() === booth.id"
+                (activated)="selectBooth($event)"
+              />
+            </div>
+          }
+        }
+      </div>
+
+      <p class="fo-caption">
+        Select a booth to enable <strong>Assign employer</strong>. Every drag action has a
+        keyboard equivalent.
+      </p>
+    </section>
+
+    <section class="side" aria-labelledby="unassigned-heading">
+      <h2 id="unassigned-heading">Without a booth</h2>
+
+      @if (store.unassignedEmployers().length === 0) {
+        <p class="side__empty fo-caption">All confirmed employers have booths.</p>
+      } @else {
+        <ul class="side__list">
+          @for (employer of store.unassignedEmployers(); track employer.id) {
+            <li cdkDrag [cdkDragData]="employer">
+              <span class="chip">
+                <mat-icon class="chip__grip" aria-hidden="true">drag_indicator</mat-icon>
+                <span>
+                  <span class="chip__name">{{ employer.name }}</span>
+                  <span class="chip__meta fo-caption">{{ employer.industry }}</span>
+                </span>
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+}

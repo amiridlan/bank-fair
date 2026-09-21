@@ -1,0 +1,60 @@
+:host {
+  display: block;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-1);
+  width: 100%;
+  /* Square-ish and above the 44px touch-target minimum. */
+  min-height: 72px;
+  padding: var(--fo-space-2);
+  border: 1px solid var(--fo-primary);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-surface-raised);
+  color: var(--fo-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--fo-motion-fast) var(--fo-motion-easing),
+    border-color var(--fo-motion-fast) var(--fo-motion-easing);
+}
+
+/* Empty booths read as outlines; assigned ones as solid-bordered cards. */
+.tile--empty {
+  border-style: dashed;
+  border-color: var(--fo-border-strong);
+}
+
+.tile--selected {
+  background: var(--fo-primary-subtle);
+  border-color: var(--fo-primary);
+  border-style: solid;
+}
+
+.tile--pending {
+  opacity: 0.6;
+}
+
+.tile__code {
+  color: var(--fo-text-muted);
+}
+
+.tile__name {
+  /* Truncate to two lines rather than stretching the grid. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--fo-caption-size);
+  line-height: var(--fo-caption-line);
+  font-weight: 500;
+  color: var(--fo-ink);
+}
+
+.tile__free {
+  color: var(--fo-text-muted);
+}

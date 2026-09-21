@@ -1,0 +1,110 @@
+.actions {
+  display: flex;
+  gap: var(--fo-space-2);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--fo-space-5);
+  align-items: start;
+}
+
+.grid-panel,
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-3);
+  padding: var(--fo-space-4);
+  background: var(--fo-surface-raised);
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-md);
+}
+
+.grid-panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--fo-space-3);
+}
+
+.grid {
+  display: grid;
+  /* 8 columns, matching the seeded A1–E8 layout. */
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: var(--fo-space-2);
+}
+
+.side__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.side__empty {
+  margin: 0;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: var(--fo-space-2);
+  padding: var(--fo-space-2);
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-surface-raised);
+  cursor: grab;
+}
+
+.chip__grip {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  color: var(--fo-text-muted);
+}
+
+.chip__name {
+  display: block;
+  font-weight: 500;
+  color: var(--fo-ink);
+}
+
+.chip__meta {
+  display: block;
+}
+
+/* Drop target feedback while a drag is in progress. */
+:host ::ng-deep .cdk-drop-list-receiving .tile,
+:host ::ng-deep .cdk-drop-list-dragging .tile {
+  border-color: var(--fo-primary);
+}
+
+:host ::ng-deep .cdk-drag-preview {
+  box-shadow: var(--fo-shadow-overlay);
+  border-radius: var(--fo-radius-sm);
+}
+
+:host ::ng-deep .cdk-drag-animating {
+  transition: transform var(--fo-motion-base) var(--fo-motion-easing);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host ::ng-deep .cdk-drag-animating {
+    transition: none;
+  }
+}
+
+@media (max-width: 1279px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
