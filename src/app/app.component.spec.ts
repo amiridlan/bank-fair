@@ -65,6 +65,35 @@ describe('App routing', () => {
     expect(router.url).toBe('/staff/dashboard');
   });
 
+  it('renders the employer pipeline board with every column', async () => {
+    auth.switchUser('u-staff-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/staff/employers']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    for (const column of ['Lead', 'Proposal', 'Confirmed', 'Paid', 'Lost']) {
+      expect(text).toContain(column);
+    }
+  });
+
+  it('renders the floor plan grid for a fair', async () => {
+    auth.switchUser('u-staff-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/staff/fairs/fair-01/floor-plan']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Floor plan');
+    // Booth codes come from the seeded grid, so this also proves the two
+    // parallel requests resolved and merged.
+    expect(text).toContain('A-01');
+  });
+
   it('shows the not-found page for an unknown URL', async () => {
     const fixture = TestBed.createComponent(AppComponent);
 
