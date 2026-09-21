@@ -1,4 +1,11 @@
-import type { Candidate, FairRegistration, InterviewSlot, Shortlist } from '../../models';
+import type {
+  Candidate,
+  Employer,
+  FairApplication,
+  FairRegistration,
+  InterviewSlot,
+  Shortlist,
+} from '../../models';
 import { klTimestamp } from './kl-time';
 import { SeededRandom } from './random';
 
@@ -148,4 +155,48 @@ export function seedFairRegistrations(
       consentedAt: registeredAt,
     })),
   );
+}
+
+/**
+ * Pending applications from employers not yet attending `fair-02`, plus one
+ * already-decided pair so the queue's filters have something to show.
+ *
+ * Employers already carrying a fair in `fairIds` are treated as approved
+ * historically — they are at the fair, which is the only evidence the seed
+ * has — so no application row is invented for them.
+ */
+export function seedFairApplications(
+  employers: readonly Employer[],
+  now: number,
+): FairApplication[] {
+  const appliedAt = klTimestamp(-5, 10, 30, now);
+  const decidedAt = klTimestamp(-3, 14, 0, now);
+
+  const candidates = employers
+    .filter((employer) => !employer.fairIds.includes('fair-02'))
+    .filter((employer) => employer.stage !== 'lost')
+    .slice(0, 6);
+
+  return candidates.map((employer, index) => {
+    const base = {
+      id: `app-seed-${employer.id}`,
+      fairId: 'fair-02',
+      employerId: employer.id,
+      employerName: employer.name,
+      appliedAt,
+    };
+
+    if (index === 4) {
+      return { ...base, status: 'approved' as const, decidedAt, rejectionReason: null };
+    }
+    if (index === 5) {
+      return {
+        ...base,
+        status: 'rejected' as const,
+        decidedAt,
+        rejectionReason: 'The fair is full for this industry. Try the next one.',
+      };
+    }
+    return { ...base, status: 'pending' as const, decidedAt: null, rejectionReason: null };
+  });
 }
