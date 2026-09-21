@@ -40,7 +40,7 @@ import { RoleSwitcherComponent } from './role-switcher.component';
 
       <span class="bar__spacer"></span>
 
-      @if (auth.isHiringManager()) {
+      @if (auth.isEmployer()) {
         <app-active-fair-picker
           [fairs]="fairs()"
           [selectedFairId]="auth.activeFairId()"

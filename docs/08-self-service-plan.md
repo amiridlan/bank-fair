@@ -100,4 +100,11 @@ The button says **Import from LinkedIn**, because that is what the person is doi
 
 ## Facts discovered
 
-<!-- Each phase appends what it learned, as docs/06 and docs/07 do. -->
+### S1
+
+- **The rename was the easy half; the ternary was the real bug waiting to happen.** `items()` in the side nav was `isStaff() ? STAFF_NAV : EMPLOYER_NAV`, which is correct with two roles and silently wrong with three — a job seeker would have been handed the employer's menu, every link of which `roleGuard` blocks. It is a `Record<Role, …>` now, so the compiler names a forgotten role instead of picking one. The same change was made to the switcher's labels.
+- **A stale id in `sessionStorage` cannot strand anyone.** Demo user ids changed (`u-hm-1` → `u-emp-1`), so anyone mid-session carries an id that no longer exists. `restoreUser()` already falls back to the first demo user for an unknown id — the "stale or tampered id" case the T2 tests cover — so the rename needed no migration step.
+- **`ROLE_HOME` points `job_seeker` at `/me`, which does not exist yet.** That is deliberate: the record is exhaustive over `Role`, which is what makes the compiler catch a missed role, and no demo user has the role until S2 builds the pages behind it. Adding the user before the pages would have shipped a switcher entry that lands on a 404.
+- **Phase records were left alone.** `docs/06` and `docs/07` still say "hiring manager" because they describe what happened at the time. The living specs — `docs/01`, `02`, `04`, `05` and `CLAUDE.md` — were updated.
+- **236 existing tests passed unchanged**, which is the real proof a rename is safe. Three new ones cover the nav record, including that a role with no pages renders an empty nav rather than someone else's.
+- **Cost:** initial total 637.99 kB → 638.19 kB.

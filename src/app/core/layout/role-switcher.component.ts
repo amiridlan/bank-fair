@@ -9,9 +9,16 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { AuthStore } from '../auth/auth.store';
-import type { User } from '../models';
+import type { Role, User } from '../models';
 import { ApiService } from '../http/api.service';
 import { DemoSettingsService } from '../mock-api/demo-settings.service';
+
+/** Exhaustive over `Role`, so a new role cannot quietly render as a blank. */
+const ROLE_LABEL: Readonly<Record<Role, string>> = {
+  staff: 'Staff',
+  employer: 'Employer',
+  job_seeker: 'Job seeker',
+};
 
 /**
  * Switches the demo identity from the top bar.
@@ -89,8 +96,8 @@ export class RoleSwitcherComponent {
   protected readonly demoSettings = inject(DemoSettingsService);
   protected readonly resetting = signal(false);
 
-  protected roleLabel(role: string): string {
-    return role === 'staff' ? 'Staff' : 'Hiring manager';
+  protected roleLabel(role: Role): string {
+    return ROLE_LABEL[role];
   }
 
   /**

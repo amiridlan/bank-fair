@@ -42,7 +42,7 @@ export const routes: Routes = [
   {
     path: 'hiring',
     component: ShellComponent,
-    canMatch: [roleGuard('hiring_manager')],
+    canMatch: [roleGuard('employer')],
     children: [
       {
         path: 'talent-pool',

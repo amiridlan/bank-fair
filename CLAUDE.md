@@ -7,7 +7,8 @@ Instructions for Claude Code. Read this file fully before any task. Then read th
 FairOps is a career fair operations portal. It serves two roles:
 
 - **Staff** (career fair organiser team): manage fairs, booths, and the employer sales pipeline.
-- **Hiring manager** (employer client): browse the candidate talent pool, shortlist, and book interview slots.
+- **Employer** (employer client): browse the candidate talent pool, shortlist, and book interview slots. Called `hiring_manager` before S1.
+- **Job seeker** (candidate): registers for fairs and owns their own profile. Role exists from S1; pages arrive in S2.
 
 It is a **frontend-only demo** backed by a **mock HTTP API** with dummy data. A Laravel 12 + PostgreSQL backend will replace the mock later, so the frontend must talk to it only through `HttpClient`.
 

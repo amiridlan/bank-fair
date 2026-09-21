@@ -15,7 +15,8 @@ The goal is a polished, deployable demo that shows:
 | Role | Who | Main goal |
 |---|---|---|
 | `staff` | Organiser team (ops, employer liaison, sales) | Fill every booth, track each employer's status, run fair day smoothly |
-| `hiring_manager` | Employer client who bought a booth | Leave the fair with a shortlist and booked interviews |
+| `employer` | Employer client who bought a booth | Leave the fair with a shortlist and booked interviews |
+| `job_seeker` | Candidate attending a fair | Register for the fairs worth their time, without retyping their CV |
 
 A role switcher in the top bar changes the active role. This is **mock auth for the demo only**.
 
@@ -29,8 +30,8 @@ The architecture must allow more roles later (for example, `candidate`, `univers
 | M2 | Fairs | staff | List, filter, and view fairs; fair detail page with tabs |
 | M3 | Floor plan | staff | Grid of booths per fair; drag an employer onto a booth to assign it |
 | M4 | Employer pipeline | staff | Kanban board: Lead → Proposal → Confirmed → Paid (+ Lost); employer detail drawer; add/edit employer form |
-| M5 | Talent pool | hiring_manager | Filterable, sortable, paginated candidate table; candidate profile drawer; shortlist |
-| M6 | Interview slots | hiring_manager | Slot grid per fair day; book a shortlisted candidate into a slot; cancel booking |
+| M5 | Talent pool | employer | Filterable, sortable, paginated candidate table; candidate profile drawer; shortlist |
+| M6 | Interview slots | employer | Slot grid per fair day; book a shortlisted candidate into a slot; cancel booking |
 | M7 | Shell | both | Top bar, side nav (role-aware), role switcher, "Reset demo data" |
 
 ## Out of scope (MVP)

@@ -5,18 +5,26 @@ import { matchRoute } from './index';
 
 const NOW = Date.parse('2026-09-21T04:00:00Z');
 
-const STAFF: User = { id: 'u-staff-1', name: 'Farah Iskandar', role: 'staff', employerId: null };
+const STAFF: User = {
+  id: 'u-staff-1',
+  name: 'Farah Iskandar',
+  role: 'staff',
+  employerId: null,
+  candidateId: null,
+};
 const HM_ONE: User = {
-  id: 'u-hm-1',
+  id: 'u-emp-1',
   name: 'Daniel Lim',
-  role: 'hiring_manager',
+  role: 'employer',
   employerId: 'emp-001',
+  candidateId: null,
 };
 const HM_TWO: User = {
-  id: 'u-hm-2',
+  id: 'u-emp-2',
   name: 'Priya Nair',
-  role: 'hiring_manager',
+  role: 'employer',
   employerId: 'emp-002',
+  candidateId: null,
 };
 
 /** Drives a request through the same route table the interceptor uses. */

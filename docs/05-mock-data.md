@@ -12,21 +12,21 @@
 
 | Entity | Count | Notes |
 |---|---|---|
-| Users | 3 | 1 staff, 2 hiring managers (different employers) |
+| Users | 3 | 1 staff, 2 employers (different companies). A job-seeker user arrives with its pages in S2 |
 | Fairs | 5 | See below |
 | Booths | 40 per fair (5 rows × 8 cols; rows A–E) | Row A = platinum, B = premium, C–E = standard |
 | Employers | 60 | Spread across all stages |
 | Candidates | 300 | Enough to make pagination and filters meaningful |
-| Shortlists | 6 | For hiring manager 1, so the demo is not empty |
-| Interview slots | 21 per fair day (10:00–17:00, 20 min), seeded **only for `emp-001` and `emp-002`** across `fair-01`–`fair-03` | ~250 records. 3 pre-booked for hiring manager 1. Seeding all 60 employers would be ~7,000 records that nothing in the demo ever reads; the handler generates slots on demand if another employer is requested |
+| Shortlists | 6 | For employer 1, so the demo is not empty |
+| Interview slots | 21 per fair day (10:00–17:00, 20 min), seeded **only for `emp-001` and `emp-002`** across `fair-01`–`fair-03` | ~250 records. 3 pre-booked for employer 1. Seeding all 60 employers would be ~7,000 records that nothing in the demo ever reads; the handler generates slots on demand if another employer is requested |
 
 ## Users
 
 | id | name | role | employerId |
 |---|---|---|---|
 | `u-staff-1` | Farah Iskandar | staff | null |
-| `u-hm-1` | Daniel Lim | hiring_manager | `emp-001` (Paid, has booth in the next fair) |
-| `u-hm-2` | Priya Nair | hiring_manager | `emp-002` (Confirmed, no booth yet) |
+| `u-emp-1` | Daniel Lim | employer | `emp-001` (Paid, has booth in the next fair) |
+| `u-emp-2` | Priya Nair | employer | `emp-002` (Confirmed, no booth yet) |
 
 ## Fairs
 

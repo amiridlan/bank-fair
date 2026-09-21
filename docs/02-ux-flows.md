@@ -10,7 +10,7 @@ These are **not** research-based personas. Each lists how to validate it.
 - **Blocker (assumed):** Status lives in spreadsheets and email threads; floor plans are edited by hand.
 - **Validate by:** Asking how bookings and booth allocation are managed today.
 
-### Hiring manager — employer client — PROTO-PERSONA
+### Employer — employer client — PROTO-PERSONA
 - **Context:** Busy HR or line manager. Uses the portal in short sessions in the week before the fair.
 - **Goal:** Arrive at the fair with a shortlist and interviews already booked.
 - **Blocker (assumed):** Meets candidates cold at the booth with no pre-screening.
@@ -73,7 +73,7 @@ These are **not** research-based personas. Each lists how to validate it.
 **Errors:** 422 → map to fields. Other → form stays open, error banner at top, Save re-enabled.
 **Exit:** Closing a dirty form asks "Discard changes?".
 
-### F4 — Find and shortlist candidates (hiring manager)
+### F4 — Find and shortlist candidates (employer)
 **Goal:** A shortlist for the fair · **Entry:** `/hiring/talent-pool` · **Success:** Candidate appears in Shortlist.
 
 1. Filters: search (name/skill), university, field of study, graduation year, min CGPA. Filters sync to URL query params (shareable, survive refresh).
@@ -84,7 +84,7 @@ These are **not** research-based personas. Each lists how to validate it.
 **Overflow:** Pagination; skills chips truncate to 3 + "+N".
 **Privacy:** Email/phone masked until shortlisted.
 
-### F5 — Book an interview slot (hiring manager)
+### F5 — Book an interview slot (employer)
 1. `/hiring/interviews` → choose fair (defaults to next upcoming) → slot grid, 20-min slots, 10:00–17:00.
 2. Click an open slot → dialog: select a shortlisted candidate → Book.
 3. Booked slot shows candidate name; click to Cancel (confirm dialog).

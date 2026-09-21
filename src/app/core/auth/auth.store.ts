@@ -18,15 +18,23 @@ import type { Role, User } from '../models';
 
 /** The fixed demo cast. Ids match the seed data in docs/05-mock-data.md. */
 export const DEMO_USERS: readonly User[] = [
-  { id: 'u-staff-1', name: 'Farah Iskandar', role: 'staff', employerId: null },
-  { id: 'u-hm-1', name: 'Daniel Lim', role: 'hiring_manager', employerId: 'emp-001' },
-  { id: 'u-hm-2', name: 'Priya Nair', role: 'hiring_manager', employerId: 'emp-002' },
+  { id: 'u-staff-1', name: 'Farah Iskandar', role: 'staff', employerId: null, candidateId: null },
+  { id: 'u-emp-1', name: 'Daniel Lim', role: 'employer', employerId: 'emp-001', candidateId: null },
+  { id: 'u-emp-2', name: 'Priya Nair', role: 'employer', employerId: 'emp-002', candidateId: null },
 ];
 
-/** Where each role lands when it has no route of its own to go to. */
+/**
+ * Where each role lands when it has no route of its own to go to.
+ *
+ * `job_seeker` has no pages yet and no demo user, so `/me` is unreachable
+ * until S2 builds it. The key exists because the record is exhaustive over
+ * `Role`, which is what makes the compiler catch a missed role rather than
+ * letting one fall through to a wrong home.
+ */
 export const ROLE_HOME: Readonly<Record<Role, string>> = {
   staff: '/staff/dashboard',
-  hiring_manager: '/hiring/talent-pool',
+  employer: '/hiring/talent-pool',
+  job_seeker: '/me',
 };
 
 /**
@@ -83,10 +91,14 @@ export class AuthStore {
 
   readonly role = computed<Role>(() => this._user().role);
   readonly isStaff = computed(() => this.role() === 'staff');
-  readonly isHiringManager = computed(() => this.role() === 'hiring_manager');
+  readonly isEmployer = computed(() => this.role() === 'employer');
+  readonly isJobSeeker = computed(() => this.role() === 'job_seeker');
 
-  /** The employer this user acts for, or `null` for staff. */
+  /** The employer this user acts for, or `null` for staff and job seekers. */
   readonly employerId = computed(() => this._user().employerId);
+
+  /** The candidate record a job seeker owns, or `null` for everyone else. */
+  readonly candidateId = computed(() => this._user().candidateId);
 
   /** Where the current role should be sent when it has no destination. */
   readonly homeRoute = computed(() => ROLE_HOME[this.role()]);

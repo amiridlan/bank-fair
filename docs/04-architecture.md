@@ -77,7 +77,7 @@ export const routes: Routes = [
   {
     path: 'hiring',
     component: ShellComponent,
-    canMatch: [roleGuard('hiring_manager')],
+    canMatch: [roleGuard('employer')],
     children: [
       { path: 'talent-pool', loadChildren: () => import('./features/talent-pool/talent-pool.routes') },
       { path: 'shortlist', loadChildren: () => import('./features/shortlist/shortlist.routes') },
@@ -94,7 +94,7 @@ export const routes: Routes = [
 - Talent pool filters live in query params; the page reads them and calls the store.
 - **Active fair.** `Shortlist` and `InterviewSlot` are both scoped to a fair, but the talent-pool
   filters are not. The shell owns an **active-fair picker** (top bar, hiring-manager role only),
-  defaulting to that hiring manager's next upcoming fair. `AuthStore` exposes it as a signal;
+  defaulting to that employer's next upcoming fair. `AuthStore` exposes it as a signal;
   talent pool, shortlist and interviews all read it. Built in Phase 1b, used from Phase 5a.
 
 ## State management
@@ -207,7 +207,7 @@ In the mock, the current employer for hiring-manager requests comes from `AuthSt
 
 ```ts
 // src/app/core/models/*.model.ts
-export type Role = 'staff' | 'hiring_manager';
+export type Role = 'staff' | 'employer' | 'job_seeker';
 export type FairStatus = 'draft' | 'open' | 'live' | 'completed';
 export type EmployerStage = 'lead' | 'proposal' | 'confirmed' | 'paid' | 'lost';
 export type BoothPackage = 'standard' | 'premium' | 'platinum';

@@ -63,7 +63,7 @@ describe('error handling through the real interceptor chain', () => {
   it('surfaces a duplicate shortlist as a 409 rather than an error state', async () => {
     // Shortlists are scoped to the acting employer, and the seeded ones belong
     // to the first hiring manager. As staff the list comes back empty.
-    TestBed.inject(AuthStore).switchUser('u-hm-1');
+    TestBed.inject(AuthStore).switchUser('u-emp-1');
     const store = TestBed.inject(ShortlistStore);
     await store.load('fair-01');
 

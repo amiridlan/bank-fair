@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthStore } from '../auth/auth.store';
+import type { Role } from '../models';
 
 interface NavItem {
   readonly label: string;
@@ -16,14 +17,28 @@ const STAFF_NAV: readonly NavItem[] = [
   { label: 'Employers', icon: 'apartment', route: '/staff/employers' },
 ];
 
-const HIRING_NAV: readonly NavItem[] = [
+const EMPLOYER_NAV: readonly NavItem[] = [
   { label: 'Talent pool', icon: 'groups', route: '/hiring/talent-pool' },
   { label: 'Shortlist', icon: 'bookmark', route: '/hiring/shortlist' },
   { label: 'Interviews', icon: 'calendar_month', route: '/hiring/interviews' },
 ];
 
 /**
- * Role-aware navigation. Only the active role's routes are listed — the other
+ * A record over `Role`, not a ternary.
+ *
+ * With two roles `isStaff() ? a : b` was fine. With three it silently sends
+ * the odd one out to the wrong menu, whereas an exhaustive record makes the
+ * compiler name the role that was forgotten. `job_seeker` is empty until S2
+ * builds its pages.
+ */
+const NAV_BY_ROLE: Readonly<Record<Role, readonly NavItem[]>> = {
+  staff: STAFF_NAV,
+  employer: EMPLOYER_NAV,
+  job_seeker: [],
+};
+
+/**
+ * Role-aware navigation. Only the active role's routes are listed — another
  * role's URLs are blocked by `roleGuard` anyway, so showing them would just
  * offer dead ends.
  *
@@ -118,7 +133,5 @@ export class SideNavComponent {
   /** Lets the shell close the mobile drawer after a link is followed. */
   readonly navigated = output<void>();
 
-  protected readonly items = computed<readonly NavItem[]>(() =>
-    this.auth.isStaff() ? STAFF_NAV : HIRING_NAV,
-  );
+  protected readonly items = computed<readonly NavItem[]>(() => NAV_BY_ROLE[this.auth.role()]);
 }

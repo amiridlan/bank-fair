@@ -48,7 +48,7 @@ describe('App routing', () => {
   });
 
   it('sends a hiring manager who opens a staff URL back to their own home', async () => {
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
     const fixture = TestBed.createComponent(AppComponent);
 
     await router.navigate(['/staff/employers']);
@@ -97,7 +97,7 @@ describe('App routing', () => {
   });
 
   it('renders the talent pool table for a hiring manager', async () => {
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
     const fixture = TestBed.createComponent(AppComponent);
 
     await router.navigate(['/hiring/talent-pool']);
@@ -114,7 +114,7 @@ describe('App routing', () => {
   it('shortlists from the table row without opening the drawer', async () => {
     // Triaging 300 candidates through the drawer was a three-step round trip
     // each (docs/07 UX-4), so the row carries the action itself.
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
     const fixture = TestBed.createComponent(AppComponent);
 
     await router.navigate(['/hiring/talent-pool']);
@@ -139,7 +139,7 @@ describe('App routing', () => {
     // Ragged rows had no rhythm to scan down (docs/07 UX-3). jsdom does not
     // lay out, so this asserts the structural cause instead: one line per
     // cell, every cell truncating rather than wrapping.
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
     const fixture = TestBed.createComponent(AppComponent);
 
     await router.navigate(['/hiring/talent-pool']);
@@ -157,7 +157,7 @@ describe('App routing', () => {
   });
 
   it('applies a filter taken from the URL query string', async () => {
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
     const fixture = TestBed.createComponent(AppComponent);
 
     await router.navigate(['/hiring/talent-pool'], {
@@ -175,7 +175,7 @@ describe('App routing', () => {
   });
 
   it('opens the candidate drawer from a deep link', async () => {
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
     const fixture = TestBed.createComponent(AppComponent);
 
     await router.navigate(['/hiring/talent-pool', 'cand-001']);
@@ -189,7 +189,7 @@ describe('App routing', () => {
   });
 
   it('renders the interview slot grid for the active fair', async () => {
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
     auth.setActiveFair('fair-01');
     const fixture = TestBed.createComponent(AppComponent);
 
@@ -206,7 +206,7 @@ describe('App routing', () => {
   });
 
   it('renders slot times in Malaysian time, not the viewer’s', async () => {
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
     auth.setActiveFair('fair-01');
     const fixture = TestBed.createComponent(AppComponent);
 
@@ -270,7 +270,7 @@ describe('App routing', () => {
     it('stays put when the role is unchanged', async () => {
       // Both hiring managers see the same screens, and the second exists to
       // show them empty. Jumping to their home would hide that.
-      auth.switchUser('u-hm-1');
+      auth.switchUser('u-emp-1');
       const fixture = TestBed.createComponent(AppComponent);
       await router.navigate(['/hiring/shortlist']);
       await fixture.whenStable();
@@ -279,7 +279,7 @@ describe('App routing', () => {
       await switchTo(fixture, 'Priya Nair');
 
       expect(router.url).toBe('/hiring/shortlist');
-      expect(auth.user().id).toBe('u-hm-2');
+      expect(auth.user().id).toBe('u-emp-2');
     });
   });
 

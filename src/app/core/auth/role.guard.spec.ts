@@ -36,7 +36,7 @@ describe('roleGuard', () => {
   });
 
   it('redirects a hiring manager away from the staff section', () => {
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
 
     const result = runGuard(roleGuard('staff'));
 
@@ -47,13 +47,13 @@ describe('roleGuard', () => {
   it('redirects staff away from the hiring section', () => {
     auth.switchUser('u-staff-1');
 
-    const result = runGuard(roleGuard('hiring_manager'));
+    const result = runGuard(roleGuard('employer'));
 
     expect(router.serializeUrl(result as UrlTree)).toBe('/staff/dashboard');
   });
 
   it('sends the root path to the current role home', () => {
-    auth.switchUser('u-hm-2');
+    auth.switchUser('u-emp-2');
 
     const result = runGuard(roleHomeRedirectGuard);
 
@@ -76,9 +76,9 @@ describe('AuthStore', () => {
   });
 
   it('exposes the employer a hiring manager acts for', () => {
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
 
-    expect(auth.isHiringManager()).toBe(true);
+    expect(auth.isEmployer()).toBe(true);
     expect(auth.employerId()).toBe('emp-001');
   });
 
@@ -89,12 +89,12 @@ describe('AuthStore', () => {
   });
 
   it('clears the active fair when the identity changes', () => {
-    auth.switchUser('u-hm-1');
+    auth.switchUser('u-emp-1');
     auth.setActiveFair('fair-02');
     expect(auth.activeFairId()).toBe('fair-02');
 
     // fair-02 means nothing to a different employer.
-    auth.switchUser('u-hm-2');
+    auth.switchUser('u-emp-2');
     expect(auth.activeFairId()).toBeNull();
   });
 
@@ -109,22 +109,22 @@ describe('AuthStore', () => {
     }
 
     it('restores the chosen identity on reload', () => {
-      auth.switchUser('u-hm-2');
+      auth.switchUser('u-emp-2');
 
-      expect(reload().user().id).toBe('u-hm-2');
+      expect(reload().user().id).toBe('u-emp-2');
     });
 
     it('restores the active fair too, so a reload books against the same one', () => {
-      auth.switchUser('u-hm-1');
+      auth.switchUser('u-emp-1');
       auth.setActiveFair('fair-03');
 
       expect(reload().activeFairId()).toBe('fair-03');
     });
 
     it('forgets the active fair when the identity changes', () => {
-      auth.switchUser('u-hm-1');
+      auth.switchUser('u-emp-1');
       auth.setActiveFair('fair-03');
-      auth.switchUser('u-hm-2');
+      auth.switchUser('u-emp-2');
 
       expect(reload().activeFairId()).toBeNull();
     });
@@ -150,8 +150,8 @@ describe('AuthStore', () => {
       try {
         const store = reload();
         expect(store.user().id).toBe('u-staff-1');
-        expect(() => store.switchUser('u-hm-1')).not.toThrow();
-        expect(store.user().id).toBe('u-hm-1');
+        expect(() => store.switchUser('u-emp-1')).not.toThrow();
+        expect(store.user().id).toBe('u-emp-1');
       } finally {
         Storage.prototype.getItem = getItem;
         Storage.prototype.setItem = setItem;

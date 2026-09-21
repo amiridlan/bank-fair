@@ -116,7 +116,7 @@ export class ShellComponent {
     // Only hiring managers get the picker, and only they need a fair scope.
     // Re-runs on a role switch, which clears the previously active fair.
     effect(() => {
-      if (this.auth.isHiringManager()) {
+      if (this.auth.isEmployer()) {
         void this.fairContext.ensureLoaded();
       }
     });
