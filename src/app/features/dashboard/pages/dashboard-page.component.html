@@ -1,0 +1,89 @@
+<app-page-header
+  title="Dashboard"
+  description="Booth fill, registrations and pipeline value across every active fair."
+/>
+
+<!-- KPI row -->
+<section class="kpis" aria-label="Key figures">
+  @if (store.isLoading()) {
+    <app-skeleton [count]="4" [height]="104" label="Loading key figures" />
+  } @else if (store.hasError()) {
+    <app-error-state
+      heading="Couldn't load the key figures"
+      [error]="store.error()"
+      (retry)="retry()"
+    />
+  } @else if (store.summary(); as summary) {
+    <app-kpi-card
+      label="Active fairs"
+      [value]="summary.upcomingFairs.value"
+      [deltaPct]="summary.upcomingFairs.deltaPct"
+    />
+    <app-kpi-card
+      label="Booth fill rate"
+      [value]="summary.boothFillRate.value * 100"
+      suffix="%"
+      format="1.0-0"
+      [deltaPct]="summary.boothFillRate.deltaPct"
+      deltaCaption="vs last fair"
+    />
+    <app-kpi-card
+      label="Registrations"
+      [value]="summary.registrations.value"
+      [deltaPct]="summary.registrations.deltaPct"
+      deltaCaption="vs last fair"
+    />
+    <app-kpi-card
+      label="Pipeline value"
+      [value]="summary.pipelineValueMyr.value"
+      prefix="RM "
+      [deltaPct]="summary.pipelineValueMyr.deltaPct"
+    />
+  }
+</section>
+
+<div class="charts">
+  <!-- Booth fill -->
+  <section class="panel" aria-labelledby="booth-fill-heading">
+    <h2 id="booth-fill-heading">Booths assigned per fair</h2>
+
+    @if (store.isLoading()) {
+      <app-skeleton [count]="1" [height]="260" label="Loading booth fill" />
+    } @else if (store.hasError()) {
+      <app-error-state
+        heading="Couldn't load booth fill"
+        [error]="store.error()"
+        (retry)="retry()"
+      />
+    } @else if (store.hasNoActiveFairs()) {
+      <app-empty-state
+        icon="event_busy"
+        heading="No active fairs"
+        message="Booth fill appears once a fair is open or live."
+      />
+    } @else {
+      @defer (on viewport) {
+        <app-booth-fill-chart [points]="store.boothFillByFair()" />
+      } @placeholder {
+        <app-skeleton [count]="1" [height]="260" label="Chart loading" />
+      }
+    }
+  </section>
+
+  <!-- Pipeline -->
+  <section class="panel" aria-labelledby="pipeline-heading">
+    <h2 id="pipeline-heading">Pipeline value by stage</h2>
+
+    @if (store.isLoading()) {
+      <app-skeleton [count]="1" [height]="260" label="Loading pipeline" />
+    } @else if (store.hasError()) {
+      <app-error-state heading="Couldn't load the pipeline" [error]="store.error()" (retry)="retry()" />
+    } @else {
+      @defer (on viewport) {
+        <app-pipeline-chart [points]="store.pipelineByStage()" />
+      } @placeholder {
+        <app-skeleton [count]="1" [height]="260" label="Chart loading" />
+      }
+    }
+  </section>
+</div>
