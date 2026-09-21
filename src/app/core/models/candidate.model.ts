@@ -22,3 +22,24 @@ export interface Candidate {
   readonly isContactVisible: boolean;
   readonly fairIds: readonly string[];
 }
+
+/**
+ * Fields a job seeker may write to their own record via
+ * `PATCH /candidates/{id}`.
+ *
+ * `fairIds` and `isContactVisible` are absent on purpose. Registration is what
+ * puts someone at a fair, with consent recorded against it, and masking is the
+ * API's call — a profile form that could set either would route around both.
+ */
+export interface CandidateProfileInput {
+  readonly fullName: string;
+  readonly headline: string;
+  readonly university: string;
+  readonly fieldOfStudy: string;
+  readonly qualification: Qualification;
+  readonly graduationYear: number;
+  readonly cgpa: number | null;
+  readonly email: string;
+  readonly phone: string | null;
+  readonly skills: readonly string[];
+}

@@ -1,6 +1,6 @@
 import type { MockHandler } from '../mock-response';
 import { assignBooth } from './booths.handler';
-import { getCandidate, listCandidates } from './candidates.handler';
+import { getCandidate, listCandidates, updateCandidate } from './candidates.handler';
 import { getDashboardSummary, resetDemo } from './dashboard.handler';
 import {
   createEmployer,
@@ -53,6 +53,7 @@ const ROUTES: readonly MockRoute[] = [
   { method: 'PATCH', pattern: '/employers/:id', handler: updateEmployer },
 
   { method: 'GET', pattern: '/candidates/:id', handler: getCandidate },
+  { method: 'PATCH', pattern: '/candidates/:id', handler: updateCandidate },
   { method: 'GET', pattern: '/candidates', handler: listCandidates },
 
   { method: 'GET', pattern: '/shortlists', handler: listShortlists },
