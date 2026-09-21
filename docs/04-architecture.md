@@ -91,6 +91,10 @@ export const routes: Routes = [
 - Enable `withComponentInputBinding()` so route params bind to `input()`s.
 - Enable `withViewTransitions()` only if it does not break reduced-motion handling.
 - Talent pool filters live in query params; the page reads them and calls the store.
+- **Active fair.** `Shortlist` and `InterviewSlot` are both scoped to a fair, but the talent-pool
+  filters are not. The shell owns an **active-fair picker** (top bar, hiring-manager role only),
+  defaulting to that hiring manager's next upcoming fair. `AuthStore` exposes it as a signal;
+  talent pool, shortlist and interviews all read it. Built in Phase 1b, used from Phase 5a.
 
 ## State management
 
@@ -178,7 +182,7 @@ Base URL: `/api`. JSON. Snake_case on the wire; **convert to camelCase in `ApiSe
 
 | Method | Path | Query / body | Returns |
 |---|---|---|---|
-| GET | `/dashboard/summary` | — | KPIs object |
+| GET | `/dashboard/summary` | — | `DashboardSummary` (see Data models) |
 | GET | `/fairs` | `status`, `city` | Fair[] |
 | GET | `/fairs/{id}` | — | Fair |
 | GET | `/fairs/{id}/booths` | — | Booth[] |
@@ -250,6 +254,17 @@ export interface InterviewSlot {
   id: string; fairId: string; employerId: string;
   startTime: string; endTime: string;
   candidateId: string | null; candidateName: string | null;
+}
+
+export interface KpiValue { value: number; deltaPct: number | null; }   // deltaPct: -1..1, null = no baseline
+
+export interface DashboardSummary {
+  upcomingFairs: KpiValue;        // count of fairs with status 'open' or 'live'
+  boothFillRate: KpiValue;        // 0..1 across 'open' and 'live' fairs
+  registrations: KpiValue;        // total across those fairs
+  pipelineValueMyr: KpiValue;     // sum of dealValueMyr, stage >= proposal, excluding 'lost'
+  boothFillByFair: readonly { fairId: string; fairName: string; boothTotal: number; boothAssigned: number; }[];
+  pipelineByStage: readonly { stage: EmployerStage; count: number; valueMyr: number; }[];
 }
 
 export interface Paginated<T> { data: readonly T[]; meta: { currentPage: number; perPage: number; total: number; lastPage: number; }; }
