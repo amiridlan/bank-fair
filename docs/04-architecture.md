@@ -49,8 +49,9 @@ src/
 │           ├── pages/           # routed components
 │           └── components/      # presentational components (inputs/outputs only)
 ├── environments/
-│   ├── environment.ts           # { production: false, apiBaseUrl: '/api', useMockApi: true }
-│   └── environment.development.ts
+│   ├── environment.model.ts     # the Environment interface (never file-replaced)
+│   ├── environment.ts           # { production: true, apiBaseUrl: '/api', useMockApi: true }
+│   └── environment.development.ts  # production: false; swapped in by fileReplacements
 └── styles/                      # _tokens.scss, _theme-colors.scss
 ```
 

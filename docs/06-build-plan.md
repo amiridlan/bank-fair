@@ -26,6 +26,13 @@ Agreed before Phase 1a. Later sessions start with fresh context, so they are rec
 - TypeScript 6 enables `strict` by default; `tsconfig.json` sets it explicitly anyway.
 - npm 10 cannot resolve this dependency graph (`edgesOut` arborist bug). Use `npm ci`, or npm ≥ 11 for `npm install`.
 
+### Facts discovered during Phase 1b
+
+- `ng generate @angular/material:theme-color --directory=src/styles` writes `src/styles_theme-colors.scss` (no path separator) and exits 1 even though the file is correct. Move it into place afterwards.
+- The `Environment` interface must live in its own file. `fileReplacements` swaps `environment.ts` for `environment.development.ts`, so a type declared in `environment.ts` would leave the development file importing its own replacement.
+- `CanMatchFn` takes three arguments in Angular 22 (`route`, `segments`, `currentSnapshot`).
+- The initial-bundle warning budget is **600kB** (raw), raised from Angular's generic 500kB default. The shell uses Material sidenav, toolbar, menu and snackbar on every route, which puts the floor near 520kB raw / 122kB transferred. The 1MB error budget is unchanged. Revisit in Phase 7.
+
 ---
 
 ## Phase 0 — Docs ✅
