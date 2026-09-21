@@ -74,35 +74,7 @@ import { DemoSettingsService } from '../mock-api/demo-settings.service';
       </button>
     </mat-menu>
   `,
-  styles: `
-    .switcher__trigger {
-      color: var(--fo-text-on-ink);
-    }
-
-    .switcher__name {
-      max-width: 14ch;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .switcher__caption {
-      padding: var(--fo-space-2) var(--fo-space-4);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .switcher__role {
-      margin-left: auto;
-      padding-left: var(--fo-space-3);
-    }
-
-    @media (max-width: 767px) {
-      .switcher__name {
-        display: none;
-      }
-    }
-  `,
+  styleUrl: './role-switcher.component.scss',
 })
 export class RoleSwitcherComponent {
   private readonly api = inject(ApiService);

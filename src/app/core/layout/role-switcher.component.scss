@@ -1,0 +1,36 @@
+// Material colours the button label from its own theme token, which resolves
+// to the dark on-surface colour — 1.07:1 against the ink toolbar. Overriding
+// the token from here does not take effect, so the colour is set directly on
+// the elements this component owns, which beats inheritance outright.
+.switcher__trigger {
+  color: var(--fo-text-on-ink);
+
+  .switcher__name,
+  mat-icon {
+    color: var(--fo-text-on-ink);
+  }
+}
+
+.switcher__name {
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.switcher__caption {
+  padding: var(--fo-space-2) var(--fo-space-4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.switcher__role {
+  margin-left: auto;
+  padding-left: var(--fo-space-3);
+}
+
+@media (max-width: 767px) {
+  .switcher__name {
+    display: none;
+  }
+}

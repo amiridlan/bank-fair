@@ -51,33 +51,7 @@ import { RoleSwitcherComponent } from './role-switcher.component';
       <app-role-switcher />
     </mat-toolbar>
   `,
-  styles: `
-    .bar {
-      display: flex;
-      align-items: center;
-      gap: var(--fo-space-2);
-      height: var(--fo-topbar-height);
-      min-height: var(--fo-topbar-height);
-      padding: 0 var(--fo-space-4);
-      background: var(--fo-ink);
-      color: var(--fo-text-on-ink);
-    }
-
-    .bar__brand {
-      font-family: var(--fo-font-brand);
-      font-size: var(--fo-h2-size);
-      font-weight: 700;
-      letter-spacing: -0.01em;
-    }
-
-    .bar__spacer {
-      flex: 1 1 auto;
-    }
-
-    .bar__menu {
-      color: var(--fo-text-on-ink);
-    }
-  `,
+  styleUrl: './top-bar.component.scss',
 })
 export class TopBarComponent {
   protected readonly auth = inject(AuthStore);

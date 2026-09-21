@@ -1,0 +1,32 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--fo-space-2);
+  height: var(--fo-topbar-height);
+  min-height: var(--fo-topbar-height);
+  padding: 0 var(--fo-space-4);
+  background: var(--fo-ink);
+  color: var(--fo-text-on-ink);
+}
+
+.bar__brand {
+  font-family: var(--fo-font-brand);
+  font-size: var(--fo-h2-size);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.bar__spacer {
+  flex: 1 1 auto;
+}
+
+// Material colours a button's label and icons from its own theme token, which
+// resolves to the dark on-surface colour — 1.07:1 against this toolbar. The
+// colour is therefore set directly on the elements, which beats inheritance.
+.bar__menu {
+  color: var(--fo-text-on-ink);
+
+  mat-icon {
+    color: var(--fo-text-on-ink);
+  }
+}

@@ -52,30 +52,7 @@ import type { Fair } from '../models';
       </mat-menu>
     }
   `,
-  styles: `
-    .picker__trigger {
-      color: var(--fo-text-on-ink);
-    }
-
-    .picker__name {
-      max-width: 18ch;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .picker__caption {
-      padding: var(--fo-space-2) var(--fo-space-4);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    @media (max-width: 767px) {
-      .picker__name {
-        display: none;
-      }
-    }
-  `,
+  styleUrl: './active-fair-picker.component.scss',
 })
 export class ActiveFairPickerComponent {
   readonly fairs = input<readonly Fair[]>([]);

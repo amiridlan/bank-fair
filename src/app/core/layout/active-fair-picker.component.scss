@@ -1,0 +1,31 @@
+// Material colours the button label from its own theme token, which resolves
+// to the dark on-surface colour — 1.07:1 against the ink toolbar. Overriding
+// the token from here does not take effect, so the colour is set directly on
+// the elements this component owns, which beats inheritance outright.
+.picker__trigger {
+  color: var(--fo-text-on-ink);
+
+  .picker__name,
+  mat-icon {
+    color: var(--fo-text-on-ink);
+  }
+}
+
+.picker__name {
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker__caption {
+  padding: var(--fo-space-2) var(--fo-space-4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 767px) {
+  .picker__name {
+    display: none;
+  }
+}
