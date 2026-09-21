@@ -1,0 +1,77 @@
+<app-page-header
+  title="Interviews"
+  [description]="
+    fairContext.activeFair()
+      ? 'Twenty-minute slots for ' + fairContext.activeFair()!.name + '.'
+      : 'Book shortlisted candidates into slots on fair day.'
+  "
+>
+  <div slot="actions" class="actions">
+    @if (hasActiveFair() && !store.hasNoSlots()) {
+      <span class="fo-caption fo-tabular">
+        {{ store.bookedCount() }} of {{ store.slots().length }} booked
+      </span>
+    }
+    <a matButton="outlined" routerLink="/hiring/shortlist">View shortlist</a>
+  </div>
+</app-page-header>
+
+@if (!hasActiveFair()) {
+  <app-empty-state
+    icon="event"
+    heading="Choose a fair first"
+    message="Pick an active fair in the top bar — interview slots are per fair."
+  />
+} @else if (store.isLoading()) {
+  <app-skeleton [count]="7" [height]="64" label="Loading interview slots" />
+} @else if (store.hasError()) {
+  <app-error-state
+    heading="Couldn't load your interview schedule"
+    [error]="store.error()"
+    (retry)="retry()"
+  />
+} @else if (store.hasNoSlots()) {
+  <app-empty-state
+    icon="event_busy"
+    heading="No slots for this fair"
+    message="Interview slots appear once the fair schedule is published."
+  />
+} @else {
+  @if (shortlist.count() === 0) {
+    <p class="hint" role="status">
+      <mat-icon class="hint__icon" aria-hidden="true">info</mat-icon>
+      Interviews are booked from your shortlist.
+      <a routerLink="/hiring/talent-pool">Browse the talent pool</a> to add candidates first.
+    </p>
+  }
+
+  <ul class="grid">
+    @for (slot of store.slots(); track slot.id) {
+      <li>
+        <button
+          type="button"
+          class="slot"
+          [class.slot--booked]="slot.candidateId"
+          [class.slot--pending]="store.pendingSlotId() === slot.id"
+          [attr.aria-label]="slotAriaLabel(slot)"
+          (click)="onSlot(slot)"
+        >
+          <span class="slot__time fo-mono">{{ slot.startTime | date: 'h:mm a' }}</span>
+
+          @if (slot.candidateName; as name) {
+            <span class="slot__name">{{ name }}</span>
+            <span class="slot__state fo-caption">
+              <mat-icon class="slot__icon" aria-hidden="true">event_available</mat-icon>
+              Booked
+            </span>
+          } @else {
+            <span class="slot__state fo-caption">
+              <mat-icon class="slot__icon" aria-hidden="true">add</mat-icon>
+              Open
+            </span>
+          }
+        </button>
+      </li>
+    }
+  </ul>
+}

@@ -1,0 +1,95 @@
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--fo-space-3);
+}
+
+.hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--fo-space-2);
+  margin: 0 0 var(--fo-space-4);
+  padding: var(--fo-space-3);
+  border: 1px solid var(--fo-info);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-info-subtle);
+  color: var(--fo-info);
+}
+
+.hint__icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--fo-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-1);
+  width: 100%;
+  min-height: 84px;
+  padding: var(--fo-space-3);
+  border: 1px dashed var(--fo-border-strong);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-surface-raised);
+  color: var(--fo-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--fo-motion-fast) var(--fo-motion-easing),
+    background-color var(--fo-motion-fast) var(--fo-motion-easing);
+}
+
+.slot:hover {
+  border-color: var(--fo-primary);
+}
+
+/* Booked slots are solid and tinted; state is also written out in text, so
+   the distinction never rests on colour alone. */
+.slot--booked {
+  border-style: solid;
+  border-color: var(--fo-success);
+  background: var(--fo-success-subtle);
+}
+
+.slot--pending {
+  opacity: 0.6;
+}
+
+.slot__time {
+  color: var(--fo-text-muted);
+}
+
+.slot__name {
+  font-weight: 500;
+  color: var(--fo-ink);
+  overflow-wrap: anywhere;
+}
+
+.slot__state {
+  display: flex;
+  align-items: center;
+  gap: var(--fo-space-1);
+  margin-top: auto;
+}
+
+.slot--booked .slot__state {
+  color: var(--fo-success);
+}
+
+.slot__icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+}
