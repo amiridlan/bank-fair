@@ -1,4 +1,5 @@
 import type { Employer, FairApplication } from '../../models';
+import { PACKAGE_PRICE_MYR } from '../seed/seed-employers';
 import {
   type MockHandler,
   conflict,
@@ -85,10 +86,10 @@ export const createApplication: MockHandler = ({ db, body, currentUser, now }) =
 /**
  * `PATCH /fair-applications/{id}` — staff approve or reject.
  *
- * Approving adds the fair to the employer's `fairIds`, which is what makes
- * them assignable to a booth on the floor plan. That link is the whole point
- * of the queue: an approval that changed nothing downstream would be a
- * rubber stamp.
+ * Approving adds the fair to the employer's `fairIds` and advances their
+ * pipeline stage to `confirmed`. That second half is what makes them
+ * assignable to a booth: the floor plan offers only `confirmed` and `paid`
+ * employers, so an approval that left a lead a lead would be a rubber stamp.
  */
 export const decideApplication: MockHandler = ({ db, params, body, currentUser, now }) => {
   if (currentUser.role !== 'staff') {
@@ -127,20 +128,38 @@ export const decideApplication: MockHandler = ({ db, params, body, currentUser, 
   db.fairApplications[index] = decided;
 
   if (status === 'approved') {
-    addEmployerToFair(db.employers, current.employerId, current.fairId);
+    acceptEmployer(db.employers, current.employerId, current.fairId);
   }
 
   return ok(decided);
 };
 
-function addEmployerToFair(employers: Employer[], employerId: string, fairId: string): void {
+/**
+ * Puts an approved employer on the fair and moves them to `confirmed`.
+ *
+ * `paid` is further along than `confirmed`, so it is never walked back — an
+ * employer who has already paid for one fair does not lose that by being
+ * accepted for another. Approving a previously `lost` employer revives them,
+ * which is why `lostReason` is cleared: the model requires it to be null for
+ * every stage but `lost`.
+ */
+function acceptEmployer(employers: Employer[], employerId: string, fairId: string): void {
   const index = employers.findIndex((employer) => employer.id === employerId);
-  if (index === -1 || employers[index].fairIds.includes(fairId)) {
+  if (index === -1) {
     return;
   }
 
+  const current = employers[index];
+  const stage = current.stage === 'paid' ? 'paid' : 'confirmed';
+
   employers[index] = {
-    ...employers[index],
-    fairIds: [...employers[index].fairIds, fairId],
+    ...current,
+    fairIds: current.fairIds.includes(fairId) ? current.fairIds : [...current.fairIds, fairId],
+    stage,
+    lostReason: null,
+    // Mirrors `PATCH /employers/{id}`: confirmed and paid both carry the
+    // package price, and a deal value without a package would be invented.
+    dealValueMyr:
+      current.boothPackage !== null ? PACKAGE_PRICE_MYR[current.boothPackage] : null,
   };
 }

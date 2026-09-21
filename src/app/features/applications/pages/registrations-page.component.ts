@@ -65,14 +65,14 @@ export default class RegistrationsPageComponent {
   }
 
   /**
-   * Approving puts the employer on the fair, which other staff are working
-   * from, so it asks first rather than being a one-click action in a list.
+   * Approving puts the employer on the fair AND moves them to `confirmed` on
+   * the sales pipeline, which is what makes them seatable on the floor plan.
    *
-   * It does NOT seat them: the floor plan offers only employers whose sales
-   * stage has reached confirmed or paid, and an applicant is typically still
-   * a lead. Advancing the pipeline off the back of an approval would move a
-   * sales deal nobody agreed to move — and would put an employer who has not
-   * paid onto a booth. The wording below says what approval actually did.
+   * It therefore changes two shared views other staff are working from, so it
+   * names both in the confirmation rather than being a one-click action in a
+   * list. (Approval moving the pipeline is a demo decision, taken because a
+   * demo should show the whole path; a real deal would be confirmed when it
+   * is signed, not when an application is accepted.)
    */
   protected async approve(application: FairApplication): Promise<void> {
     const fair = this.fairName(application.fairId);
@@ -81,7 +81,7 @@ export default class RegistrationsPageComponent {
         .open(ConfirmDialogComponent, {
           data: {
             title: `Approve ${application.employerName}?`,
-            message: `They will be attending ${fair}. Seating them on the floor plan still waits on the sales pipeline.`,
+            message: `They will be attending ${fair}, move to Confirmed on the pipeline, and can then be assigned a booth on the floor plan.`,
             confirmLabel: 'Approve',
             cancelLabel: 'Not yet',
           },

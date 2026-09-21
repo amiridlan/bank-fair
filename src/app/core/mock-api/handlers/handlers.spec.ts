@@ -901,8 +901,10 @@ describe('fair applications', () => {
     expect(db.fairApplications.find((e) => e.id === pending.id)!.status).toBe('pending');
   });
 
-  it('approves, and puts the employer on the fair', () => {
+  it('approves, putting the employer on the fair and confirming them', () => {
     const pending = anyPending();
+    const before = db.employers.find((e) => e.id === pending.employerId)!;
+    expect(before.stage).not.toBe('confirmed');
 
     const result = call(db, 'PATCH', `/fair-applications/${pending.id}`, {
       body: { status: 'approved' },
@@ -910,9 +912,50 @@ describe('fair applications', () => {
 
     expect(result.status).toBe(200);
     expect(data<{ status: string }>(result).status).toBe('approved');
-    // The link that makes the approval mean something: without it they are
-    // not assignable to a booth and the decision changed nothing.
-    expect(db.employers.find((e) => e.id === pending.employerId)!.fairIds).toContain(pending.fairId);
+
+    // Both halves matter. `fairIds` puts them at the fair; the stage is what
+    // the floor plan's side list gates on, so without it the approval would
+    // not make them seatable and the decision would change nothing visible.
+    const after = db.employers.find((e) => e.id === pending.employerId)!;
+    expect(after.fairIds).toContain(pending.fairId);
+    expect(after.stage).toBe('confirmed');
+    expect(after.lostReason).toBeNull();
+  });
+
+  it('does not walk a paid employer back to confirmed', () => {
+    // `paid` is further along. Being accepted for a second fair should not
+    // cost an employer the deal they already closed.
+    const pending = anyPending();
+    const index = db.employers.findIndex((e) => e.id === pending.employerId);
+    db.employers[index] = { ...db.employers[index], stage: 'paid', boothPackage: 'premium' };
+
+    call(db, 'PATCH', `/fair-applications/${pending.id}`, { body: { status: 'approved' } });
+
+    expect(db.employers[index].stage).toBe('paid');
+  });
+
+  it('gives a confirmed employer the deal value its package implies', () => {
+    const pending = anyPending();
+    const index = db.employers.findIndex((e) => e.id === pending.employerId);
+    db.employers[index] = { ...db.employers[index], boothPackage: 'standard', dealValueMyr: null };
+
+    call(db, 'PATCH', `/fair-applications/${pending.id}`, { body: { status: 'approved' } });
+
+    // The same rule PATCH /employers/{id} applies: confirmed carries the
+    // package price, and a value with no package would be invented.
+    expect(db.employers[index].dealValueMyr).toBeGreaterThan(0);
+  });
+
+  it('leaves the pipeline alone on a rejection', () => {
+    const pending = anyPending();
+    const index = db.employers.findIndex((e) => e.id === pending.employerId);
+    const stage = db.employers[index].stage;
+
+    call(db, 'PATCH', `/fair-applications/${pending.id}`, {
+      body: { status: 'rejected', rejectionReason: 'Full for this industry.' },
+    });
+
+    expect(db.employers[index].stage).toBe(stage);
   });
 
   it('refuses a rejection with no reason', () => {
