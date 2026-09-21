@@ -1,0 +1,62 @@
+<app-page-header title="Fairs" description="Every career fair, past and planned.">
+  <div slot="filters" class="filters">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Status</mat-label>
+      <mat-select
+        [value]="store.filters().status"
+        (valueChange)="setFilter('status', $event)"
+      >
+        <mat-option [value]="null">All statuses</mat-option>
+        @for (option of statuses; track option) {
+          <mat-option [value]="option">{{ option | titlecase }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>City</mat-label>
+      <mat-select [value]="store.filters().city" (valueChange)="setFilter('city', $event)">
+        <mat-option [value]="null">All cities</mat-option>
+        @for (option of store.cities(); track option) {
+          <mat-option [value]="option">{{ option }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (store.hasActiveFilters()) {
+      <button matButton type="button" (click)="clearFilters()">Clear filters</button>
+    }
+  </div>
+</app-page-header>
+
+@if (store.isLoading()) {
+  <div class="grid">
+    <app-skeleton [count]="1" [height]="196" label="Loading fairs" />
+    <app-skeleton [count]="1" [height]="196" label="" />
+    <app-skeleton [count]="1" [height]="196" label="" />
+  </div>
+} @else if (store.hasError()) {
+  <app-error-state heading="Couldn't load fairs" [error]="store.error()" (retry)="retry()" />
+} @else if (store.isEmpty()) {
+  @if (store.hasActiveFilters()) {
+    <app-empty-state
+      icon="filter_alt_off"
+      heading="No fairs match these filters"
+      message="Try a different status or city."
+      actionLabel="Clear filters"
+      (action)="clearFilters()"
+    />
+  } @else {
+    <app-empty-state
+      icon="event_busy"
+      heading="No fairs yet"
+      message="Fairs you create will be listed here."
+    />
+  }
+} @else {
+  <div class="grid">
+    @for (fair of store.fairs(); track fair.id) {
+      <app-fair-card [fair]="fair" />
+    }
+  </div>
+}
