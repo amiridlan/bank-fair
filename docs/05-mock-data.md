@@ -18,7 +18,7 @@
 | Employers | 60 | Spread across all stages |
 | Candidates | 300 | Enough to make pagination and filters meaningful |
 | Shortlists | 6 | For hiring manager 1, so the demo is not empty |
-| Interview slots | 21 per employer per fair day (10:00–17:00, 20 min) | 3 pre-booked for hiring manager 1 |
+| Interview slots | 21 per fair day (10:00–17:00, 20 min), seeded **only for `emp-001` and `emp-002`** across `fair-01`–`fair-03` | ~250 records. 3 pre-booked for hiring manager 1. Seeding all 60 employers would be ~7,000 records that nothing in the demo ever reads; the handler generates slots on demand if another employer is requested |
 
 ## Users
 

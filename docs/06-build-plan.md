@@ -8,6 +8,26 @@ Every phase prompt ends with the same instruction, so it is written once here:
 
 ---
 
+## Locked decisions
+
+Agreed before Phase 1a. Later sessions start with fresh context, so they are recorded here rather than left in a chat thread.
+
+| # | Decision | Where it lands |
+|---|---|---|
+| D1 | The Angular project is named **`bank-fair`**, matching the repo. Netlify publishes `dist/bank-fair/browser` | Phase 1a |
+| D2 | Interview slots are seeded only for `emp-001` and `emp-002` across `fair-01`–`fair-03`; other employers are generated on demand | Phase 2, `docs/05` |
+| D3 | An **active-fair picker** in the top bar (hiring-manager role) scopes shortlists and interviews; defaults to the next upcoming fair | Phase 1b, `docs/04` |
+| D4 | `/dashboard/summary` is a **single endpoint** returning `DashboardSummary` | Phase 1b (model) / Phase 3 (use), `docs/04` |
+
+### Facts discovered during Phase 1a
+
+- Angular 22 requires **Node ≥ 22.22.3**, not 22.12.0. The cloud VM ships 22.22.2 — see `docs/00` troubleshooting.
+- `ng new` generates **Vitest 4 + jsdom** via `@angular/build:unit-test`, not Karma/Jasmine. `npm test -- --watch=false` still works.
+- TypeScript 6 enables `strict` by default; `tsconfig.json` sets it explicitly anyway.
+- npm 10 cannot resolve this dependency graph (`edgesOut` arborist bug). Use `npm ci`, or npm ≥ 11 for `npm install`.
+
+---
+
 ## Phase 0 — Docs ✅
 `CLAUDE.md` + `docs/` uploaded to the repo `main` branch.
 
@@ -21,13 +41,13 @@ Split into two sessions to keep each one focused.
 
 **Prompt**
 > Read CLAUDE.md and docs/04-architecture.md. Do Phase 1a:
-> 1. Check `node -v`. If below 22.12.0, stop and tell me.
-> 2. Scaffold Angular 22 **in the repo root** (keep CLAUDE.md and docs/): `npx -y @angular/cli@22 new fairops --directory . --skip-git --style=scss --ssr=false --defaults`. If the CLI refuses a non-empty directory, scaffold into a temp folder and move the files in.
+> 1. Check `node -v`. If below 22.22.3, stop and tell me.
+> 2. Scaffold Angular 22 **in the repo root** (keep CLAUDE.md and docs/): `npx -y @angular/cli@22 new bank-fair --directory . --skip-git --style=scss --ssr=false --defaults`. If the CLI refuses a non-empty directory, scaffold into a temp folder and move the files in.
 > 3. Add Angular Material + CDK (`npx ng add @angular/material --skip-confirmation --defaults`), `ng2-charts`, `chart.js`, and angular-eslint (`npx ng add @angular-eslint/schematics --skip-confirmation`).
 > 4. Create `.mcp.json` registering the Angular CLI MCP server: `{"mcpServers":{"angular-cli":{"command":"npx","args":["-y","@angular/cli@22","mcp"]}}}`.
 > 5. Create `.claude/settings.json` with a SessionStart hook (matcher `startup|resume`) running `bash "$CLAUDE_PROJECT_DIR"/scripts/cloud-session-start.sh`. The script exits 0 unless `CLAUDE_CODE_REMOTE=true`, then runs `npm ci` only if `package.json` exists and `node_modules` is missing. It must always exit 0.
-> 6. Create `.nvmrc` containing `22`, and add `"engines": { "node": ">=22.12.0" }` to package.json.
-> 7. Create `netlify.toml`: build command `npm run build`, publish `dist/fairops/browser`, SPA redirect `/* → /index.html 200`, and security headers (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Permissions-Policy` disabling camera/microphone/geolocation). Leave CSP for Phase 7.
+> 6. Create `.nvmrc` containing `22`, and add `"engines": { "node": ">=22.22.3" }` to package.json.
+> 7. Create `netlify.toml`: build command `npm run build`, publish `dist/bank-fair/browser`, SPA redirect `/* → /index.html 200`, and security headers (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Permissions-Policy` disabling camera/microphone/geolocation). Leave CSP for Phase 7.
 > 8. Add a README stub (project name, one-line description, "built with Angular 22").
 >
 > Standard ending.
@@ -98,19 +118,36 @@ Split into two sessions to keep each one focused.
 
 ---
 
-## Phase 5 — Talent pool, Shortlist, Interviews (Day 5)
+## Phase 5a — Talent pool & Shortlist (Day 5)
+
+Phase 5 was split in two: three modules plus URL-param state, debounced search, server-side pagination and deep-linked drawers is roughly double any other phase.
 
 **Prompt**
-> Read CLAUDE.md and docs/02 flows F4, F5. Implement M5 Talent pool, Shortlist view, and M6 Interviews: filters synced to URL query params, debounced search, server-side sort/pagination with mat-table, deep-linkable profile drawer, contact masking until shortlisted, 409 handling for slot conflicts. Store tests.
+> Read CLAUDE.md and docs/02 flow F4. Implement M5 Talent pool and the Shortlist view: filters synced to URL query params, debounced search, server-side sort/pagination with mat-table, deep-linkable profile drawer, contact masking until shortlisted, 409 on duplicate shortlist. Shortlists scope to the active fair from the top-bar picker (D3). Store tests.
 >
 > Standard ending.
 
-**Check on preview:** apply filters, copy the URL into a new tab (same results); shortlist a candidate and see contact details unmask; book and cancel a slot.
+**Check on preview:** apply filters, copy the URL into a new tab (same results); shortlist a candidate and see contact details unmask.
 
 **Concepts to explain**
 - Query params as state (shareable, refresh-safe)
 - Debouncing search input
 - Server-side vs client-side pagination
+
+---
+
+## Phase 5b — Interview slots (Day 5)
+
+**Prompt**
+> Read CLAUDE.md and docs/02 flow F5. Implement M6 Interviews: slot grid per fair day (20-min slots, 10:00–17:00) for the active fair, book a shortlisted candidate into an open slot, cancel with a confirm dialog, 409 handling that refreshes the grid, and the "shortlist candidates first" branch when the shortlist is empty. Store tests.
+>
+> Standard ending.
+
+**Check on preview:** book a slot and cancel it; open Interviews with an empty shortlist and confirm the branch.
+
+**Concepts to explain**
+- Handling a 409 conflict as a normal outcome, not an error state
+- Deriving a slot grid from times rather than storing a grid
 
 ---
 

@@ -16,7 +16,8 @@ It is a **frontend-only demo** backed by a **mock HTTP API** with dummy data. A 
 This project is developed with **Claude Code on the web** (cloud sessions at claude.ai/code). The developer has no local machine setup.
 
 - Each session runs in a fresh Ubuntu 24.04 VM with the repo cloned. Node.js 22 is on `PATH`.
-- **Angular 22 requires Node.js ≥ 22.12.0.** Check `node -v` at the start of Phase 1. If it is lower, stop and tell the developer to add a Node install to the environment setup script (see `docs/00-cloud-setup.md`).
+- **Angular 22 requires Node.js ≥ 22.22.3** (the CLI hard-fails below it — this is higher than the ≥ 22.12.0 originally assumed). The cloud VM currently ships **22.22.2**, one patch short. Check `node -v` at the start of every session; if it is lower, tell the developer to add the Node install to the environment setup script (see `docs/00-cloud-setup.md`).
+- **npm 10 cannot install this dependency graph** (`Cannot read properties of null (reading 'edgesOut')`, an arborist peer-resolution bug hit by vitest's peers). Use `npm ci` — it reifies straight from `package-lock.json` and is unaffected. Only `npm install` needs npm ≥ 11.
 - The developer **cannot view `localhost`**. Never ask them to open `http://localhost:4200`. Verify your work with `npm run build`, `npm test`, and lint instead. The developer reviews the UI through the **Netlify deploy preview** on the pull request.
 - Do not leave long-running processes (like `ng serve`) running at the end of a task.
 - Network access is the "Trusted" allowlist: npm registry, GitHub, and Google Fonts work; most other domains do not.
@@ -41,14 +42,14 @@ This project is developed with **Claude Code on the web** (cloud sessions at cla
 - Angular Material 3 + Angular CDK (drag-drop)
 - ng2-charts + chart.js for dashboard charts
 - npm
-- Tests: the test runner that `ng new` generates by default
+- Tests: **Vitest 4** with jsdom, via the `@angular/build:unit-test` builder (what `ng new` generates in Angular 22 — no longer Karma/Jasmine)
 
 ## Commands
 
 ```bash
 npm run build                  # production build — must pass before every push
 npm test -- --watch=false      # unit tests, single run (never leave watch mode running)
-npx ng lint                    # lint (after angular-eslint is added)
+npm run lint                   # lint (angular-eslint)
 npx ng <command>               # use the project-local CLI; do not rely on a global install
 ```
 
