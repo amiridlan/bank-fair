@@ -41,3 +41,19 @@
     # URL, but cannot execute. Revisit if the app ever gains a server that
     # can issue nonces.
     Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+
+# The pdf.js worker that the profile import loads (docs/08 S4).
+#
+# It is started as a MODULE worker, and a module script is rejected outright
+# unless it arrives with a JavaScript MIME type — the failure looks like a
+# broken worker, not a wrong header, so it is pinned rather than inferred.
+# The CSP needs no worker-src: the file is same-origin and falls back to
+# script-src 'self', verified against these exact headers.
+[[headers]]
+  for = "/pdf-worker/*"
+  [headers.values]
+    Content-Type = "text/javascript; charset=utf-8"
+    # NOT immutable: the filename carries no content hash, so a year-long
+    # cache would pin a stale worker through a pdfjs-dist upgrade. An hour,
+    # revalidated, is enough for a file this size.
+    Cache-Control = "public, max-age=3600, must-revalidate"
