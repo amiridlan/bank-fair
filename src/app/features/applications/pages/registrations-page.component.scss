@@ -1,0 +1,30 @@
+// A pressed filter button needs to read as pressed. Material's text button has
+// no selected state, and aria-pressed alone is invisible, so the tint comes
+// from the project's own token rather than a utility — a utility on a Material
+// button loses to Material's unlayered styles (CLAUDE.md).
+.filter--on {
+  background: var(--fo-primary-subtle);
+  color: var(--fo-ink);
+}
+
+.state {
+  padding: var(--fo-space-2) var(--fo-space-3);
+  border-radius: var(--fo-radius-sm);
+}
+
+.state--ok {
+  background: var(--fo-success-subtle);
+  color: var(--fo-success);
+}
+
+.state--no {
+  background: var(--fo-error-subtle);
+  color: var(--fo-error);
+}
+
+.state__icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  flex: none;
+}

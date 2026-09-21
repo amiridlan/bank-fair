@@ -1,0 +1,28 @@
+.state {
+  padding: var(--fo-space-2) var(--fo-space-3);
+  border-radius: var(--fo-radius-sm);
+}
+
+// Each state carries an icon and a sentence as well as a colour, so none of
+// them depends on colour alone (docs/03).
+.state--ok {
+  background: var(--fo-success-subtle);
+  color: var(--fo-success);
+}
+
+.state--wait {
+  background: var(--fo-warning-subtle);
+  color: var(--fo-warning);
+}
+
+.state--no {
+  background: var(--fo-error-subtle);
+  color: var(--fo-error);
+}
+
+.state__icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  flex: none;
+}

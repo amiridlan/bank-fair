@@ -36,6 +36,10 @@ export const routes: Routes = [
         path: 'employers',
         loadChildren: () => import('./features/employers/employers.routes'),
       },
+      {
+        path: 'registrations',
+        loadChildren: () => import('./features/applications/registrations.routes'),
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
@@ -55,6 +59,10 @@ export const routes: Routes = [
       {
         path: 'interviews',
         loadChildren: () => import('./features/interviews/interviews.routes'),
+      },
+      {
+        path: 'fairs',
+        loadChildren: () => import('./features/applications/applications.routes'),
       },
       { path: '', redirectTo: 'talent-pool', pathMatch: 'full' },
     ],

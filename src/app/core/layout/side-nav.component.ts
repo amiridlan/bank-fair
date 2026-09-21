@@ -15,12 +15,14 @@ const STAFF_NAV: readonly NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', route: '/staff/dashboard' },
   { label: 'Fairs', icon: 'event', route: '/staff/fairs' },
   { label: 'Employers', icon: 'apartment', route: '/staff/employers' },
+  { label: 'Registrations', icon: 'how_to_reg', route: '/staff/registrations' },
 ];
 
 const EMPLOYER_NAV: readonly NavItem[] = [
   { label: 'Talent pool', icon: 'groups', route: '/hiring/talent-pool' },
   { label: 'Shortlist', icon: 'bookmark', route: '/hiring/shortlist' },
   { label: 'Interviews', icon: 'calendar_month', route: '/hiring/interviews' },
+  { label: 'Fairs', icon: 'event', route: '/hiring/fairs' },
 ];
 
 /**

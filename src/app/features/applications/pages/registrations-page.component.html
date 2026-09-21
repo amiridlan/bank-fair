@@ -1,0 +1,122 @@
+<app-page-header
+  title="Registrations"
+  description="Employers waiting to be accepted for a fair. Approving one puts them on its floor plan."
+>
+  <div slot="filters" class="flex flex-wrap items-center gap-3">
+    <div class="flex gap-2" role="group" aria-label="Filter applications">
+      <button
+        matButton
+        type="button"
+        [class.filter--on]="filter() === 'pending'"
+        [attr.aria-pressed]="filter() === 'pending'"
+        (click)="filter.set('pending')"
+      >
+        Awaiting review ({{ store.pendingCount() }})
+      </button>
+      <button
+        matButton
+        type="button"
+        [class.filter--on]="filter() === 'decided'"
+        [attr.aria-pressed]="filter() === 'decided'"
+        (click)="filter.set('decided')"
+      >
+        Decided
+      </button>
+    </div>
+  </div>
+</app-page-header>
+
+@if (store.isLoading()) {
+  <app-skeleton [count]="4" [height]="120" label="Loading applications" />
+} @else if (store.hasError()) {
+  <app-error-state
+    heading="Couldn't load the applications"
+    [error]="store.error()"
+    (retry)="retry()"
+  />
+} @else if (isEmptyForFilter()) {
+  @if (filter() === 'pending') {
+    <app-empty-state
+      icon="inbox"
+      heading="Nothing waiting for review"
+      message="Applications from employers land here as soon as they apply."
+      actionLabel="Show decided applications"
+      (action)="filter.set('decided')"
+    />
+  } @else {
+    <app-empty-state
+      icon="fact_check"
+      heading="Nothing decided yet"
+      message="Approved and turned-down applications are kept here."
+    />
+  }
+} @else {
+  <ul class="m-0 grid list-none grid-cols-1 gap-4 p-0 xl:grid-cols-2">
+    @for (application of visible(); track application.id) {
+      <li class="flex flex-col gap-3 rounded-md border border-border bg-raised p-4">
+        <div class="min-w-0">
+          <h2 class="m-0 text-h2">{{ application.employerName }}</h2>
+          <p class="fo-caption m-0">{{ fairName(application.fairId) }}</p>
+        </div>
+
+        <dl class="m-0 flex flex-wrap gap-x-6 gap-y-2">
+          <div>
+            <dt class="fo-caption">Applied</dt>
+            <dd class="fo-tabular m-0 font-mono">
+              {{ application.appliedAt | date: 'dd/MM/yyyy' }}
+            </dd>
+          </div>
+          @if (application.decidedAt; as decidedAt) {
+            <div>
+              <dt class="fo-caption">Decided</dt>
+              <dd class="fo-tabular m-0 font-mono">{{ decidedAt | date: 'dd/MM/yyyy' }}</dd>
+            </div>
+          }
+        </dl>
+
+        @switch (application.status) {
+          @case ('pending') {
+            <div class="flex flex-wrap justify-end gap-2">
+              <button
+                matButton
+                type="button"
+                [disabled]="store.busyId() === application.id"
+                (click)="reject(application)"
+              >
+                Turn down
+              </button>
+              <button
+                matButton="filled"
+                type="button"
+                [disabled]="store.busyId() === application.id"
+                (click)="approve(application)"
+              >
+                Approve
+              </button>
+            </div>
+          }
+          @case ('approved') {
+            <!-- Icon and sentence as well as colour: no state here is carried
+                 by colour alone (docs/03, WCAG 1.4.1). -->
+            <div class="state state--ok fo-caption flex items-start gap-2">
+              <mat-icon class="state__icon" aria-hidden="true">check_circle</mat-icon>
+              <span>
+                <strong>Approved</strong> — attending this fair. The floor plan seats employers
+                from the Confirmed stage onward.
+              </span>
+            </div>
+          }
+          @case ('rejected') {
+            <div class="state state--no fo-caption flex items-start gap-2">
+              <mat-icon class="state__icon" aria-hidden="true">block</mat-icon>
+              <span>
+                <strong>Turned down.</strong>
+                {{ application.rejectionReason }}
+              </span>
+            </div>
+          }
+        }
+      </li>
+    }
+  </ul>
+}

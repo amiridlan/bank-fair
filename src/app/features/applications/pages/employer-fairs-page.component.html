@@ -1,0 +1,101 @@
+<app-page-header
+  title="Fairs"
+  description="Apply to attend a career fair. The organisers review each application."
+/>
+
+@if (store.isLoading()) {
+  <app-skeleton [count]="3" [height]="160" label="Loading fairs" />
+} @else if (store.hasError()) {
+  <app-error-state heading="Couldn't load the fairs" [error]="store.error()" (retry)="retry()" />
+} @else if (hasNoOpenFairs()) {
+  <app-empty-state
+    icon="event_busy"
+    heading="No fairs are open for applications"
+    message="New fairs open a few weeks before they run."
+  />
+} @else {
+  <ul class="m-0 grid list-none grid-cols-1 gap-4 p-0 xl:grid-cols-2">
+    @for (fair of store.openFairs(); track fair.id) {
+      <li class="flex flex-col gap-3 rounded-md border border-border bg-raised p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h2 class="m-0 text-h2">{{ fair.name }}</h2>
+            <p class="fo-caption m-0">{{ fair.venue }}, {{ fair.city }}</p>
+          </div>
+          <app-status-chip kind="fair" [status]="fair.status" />
+        </div>
+
+        <dl class="m-0 flex flex-wrap gap-x-6 gap-y-2">
+          <div>
+            <dt class="fo-caption">Dates</dt>
+            <dd class="fo-tabular m-0 font-mono">
+              {{ fair.startDate | date: 'dd/MM/yyyy' }}
+              @if (isMultiDay(fair)) {
+                – {{ fair.endDate | date: 'dd/MM/yyyy' }}
+              }
+            </dd>
+          </div>
+          <div>
+            <dt class="fo-caption">Booths taken</dt>
+            <dd class="fo-tabular m-0 font-mono">
+              {{ fair.boothAssigned }}/{{ fair.boothTotal }}
+            </dd>
+          </div>
+        </dl>
+
+        @if (applicationFor(fair.id); as application) {
+          @switch (application.status) {
+            @case ('approved') {
+              <p class="state state--ok fo-caption m-0 flex items-center gap-2">
+                <mat-icon class="state__icon" aria-hidden="true">check_circle</mat-icon>
+                You are attending this fair
+              </p>
+            }
+            @case ('pending') {
+              <p class="state state--wait fo-caption m-0 flex items-center gap-2">
+                <mat-icon class="state__icon" aria-hidden="true">hourglass_top</mat-icon>
+                Applied
+                <span class="fo-tabular font-mono">
+                  {{ application.appliedAt | date: 'dd/MM/yyyy' }}
+                </span>
+                — awaiting review
+              </p>
+            }
+            @case ('rejected') {
+              <!-- The reason is shown, not hidden: being turned down without
+                   being told why leaves nothing to act on. -->
+              <div class="state state--no fo-caption flex items-start gap-2">
+                <mat-icon class="state__icon" aria-hidden="true">block</mat-icon>
+                <span>
+                  <strong>Not accepted for this fair.</strong>
+                  {{ application.rejectionReason }}
+                </span>
+              </div>
+              <div class="flex justify-end">
+                <button
+                  matButton="filled"
+                  type="button"
+                  [disabled]="store.busyId() === fair.id"
+                  (click)="apply(fair)"
+                >
+                  Apply again
+                </button>
+              </div>
+            }
+          }
+        } @else {
+          <div class="flex justify-end">
+            <button
+              matButton="filled"
+              type="button"
+              [disabled]="store.busyId() === fair.id"
+              (click)="apply(fair)"
+            >
+              Apply to attend
+            </button>
+          </div>
+        }
+      </li>
+    }
+  </ul>
+}
