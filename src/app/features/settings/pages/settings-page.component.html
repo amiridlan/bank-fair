@@ -1,0 +1,74 @@
+<app-page-header
+  title="Settings"
+  description="Demo controls for this portal. Nothing here changes a real account."
+/>
+
+<div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+  <section
+    class="flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
+    aria-labelledby="identity-heading"
+  >
+    <h2 id="identity-heading" class="text-h2">You are signed in as</h2>
+
+    <dl class="m-0 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div>
+        <dt class="fo-caption">Name</dt>
+        <dd class="m-0 font-medium text-ink">{{ auth.user().name }}</dd>
+      </div>
+      <div>
+        <dt class="fo-caption">Role</dt>
+        <dd class="m-0">{{ roleLabel() }}</dd>
+      </div>
+    </dl>
+
+    <!-- Stated on the page, not only in a code comment: anyone clicking
+         around this demo should know the identity is not a real sign-in. -->
+    <p class="notice fo-caption m-0 flex items-start gap-2">
+      <mat-icon class="notice__icon" aria-hidden="true">info</mat-icon>
+      <span>
+        This is a demo identity, not a sign-in. Use <strong>{{ auth.user().name }}</strong> in the
+        top bar to switch between the demo users. Real accounts arrive with the backend.
+      </span>
+    </p>
+  </section>
+
+  <section
+    class="flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
+    aria-labelledby="demo-heading"
+  >
+    <h2 id="demo-heading" class="text-h2">Demo data</h2>
+
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0">
+        <p class="m-0 font-medium text-ink">Simulate errors</p>
+        <p class="fo-caption m-0">
+          Makes roughly one request in five fail, so the error and Retry states can be seen on
+          demand rather than waited for.
+        </p>
+      </div>
+      <mat-slide-toggle
+        [checked]="demoSettings.simulateErrors()"
+        (change)="toggleSimulatedErrors($event.checked)"
+      >
+        <span class="fo-sr-only">Simulate errors</span>
+      </mat-slide-toggle>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="flex flex-col gap-3">
+      <div>
+        <p class="m-0 font-medium text-ink">Reset demo data</p>
+        <p class="fo-caption m-0">
+          Puts every fair, employer, candidate and booking back to the seeded data and reloads
+          the page. There is no undo.
+        </p>
+      </div>
+      <div class="flex justify-end">
+        <button matButton="outlined" type="button" [disabled]="resetting()" (click)="resetDemoData()">
+          <app-busy-label [busy]="resetting()">Reset demo data</app-busy-label>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

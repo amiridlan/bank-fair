@@ -40,6 +40,10 @@ export const routes: Routes = [
         path: 'registrations',
         loadChildren: () => import('./features/applications/registrations.routes'),
       },
+      {
+        path: 'settings',
+        loadChildren: () => import('./features/settings/settings.routes'),
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
@@ -63,6 +67,10 @@ export const routes: Routes = [
       {
         path: 'fairs',
         loadChildren: () => import('./features/applications/applications.routes'),
+      },
+      {
+        path: 'settings',
+        loadChildren: () => import('./features/settings/settings.routes'),
       },
       { path: '', redirectTo: 'talent-pool', pathMatch: 'full' },
     ],

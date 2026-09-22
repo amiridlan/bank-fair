@@ -1,0 +1,20 @@
+.notice {
+  padding: var(--fo-space-3);
+  border: 1px solid var(--fo-info);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-info-subtle);
+  color: var(--fo-info);
+}
+
+.notice__icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  flex: none;
+}
+
+.divider {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--fo-border);
+}

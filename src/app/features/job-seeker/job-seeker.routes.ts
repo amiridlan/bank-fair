@@ -11,6 +11,11 @@ const routes: Routes = [
     title: 'My profile · BankFair',
     loadComponent: () => import('./pages/seeker-profile-page.component'),
   },
+  {
+    // Its own chunk, shared with the other two roles' settings routes.
+    path: 'settings',
+    loadChildren: () => import('../settings/settings.routes'),
+  },
   { path: '', redirectTo: 'fairs', pathMatch: 'full' },
 ];
 
