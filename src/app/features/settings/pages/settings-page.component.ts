@@ -14,6 +14,7 @@ import type { Role } from '../../../core/models';
 import { BusyLabelComponent } from '../../../shared/ui/busy-label.component';
 import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
+import { ActivityLogComponent } from '../components/activity-log.component';
 
 /** Exhaustive over `Role`, so a new role cannot render as a blank. */
 const ROLE_LABEL: Readonly<Record<Role, string>> = {
@@ -39,6 +40,7 @@ const ROLE_LABEL: Readonly<Record<Role, string>> = {
     MatButtonModule,
     MatIconModule,
     MatSlideToggleModule,
+    ActivityLogComponent,
     BusyLabelComponent,
     PageHeaderComponent,
   ],

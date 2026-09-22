@@ -29,7 +29,14 @@ function render(user: User = STAFF, role: Role = 'staff') {
     imports: [SettingsPageComponent],
     providers: [
       provideRouter([]),
-      { provide: AuthStore, useValue: { user: signal(user), role: signal(role) } },
+      {
+        provide: AuthStore,
+        useValue: {
+          user: signal(user),
+          role: signal(role),
+          isStaff: () => role === 'staff',
+        },
+      },
       {
         provide: ApiService,
         useValue: {

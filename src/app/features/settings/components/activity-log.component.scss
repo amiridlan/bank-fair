@@ -1,0 +1,102 @@
+.filter {
+  min-width: 11rem;
+}
+
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-sm);
+  overflow: hidden;
+}
+
+.log__row {
+  display: grid;
+  grid-template-columns: 7rem 1fr auto;
+  gap: var(--fo-space-4);
+  padding: var(--fo-space-3);
+  border-top: 1px solid var(--fo-border);
+}
+
+.log__row:first-child {
+  border-top: 0;
+}
+
+.log__when {
+  color: var(--fo-text-muted);
+  font-size: var(--fo-caption-size);
+  line-height: var(--fo-caption-line);
+}
+
+.log__what {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.log__summary {
+  font-weight: 500;
+  color: var(--fo-ink);
+}
+
+.log__label {
+  color: var(--fo-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.log__changes {
+  margin: var(--fo-space-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.log__field {
+  font-weight: 500;
+}
+
+.log__field::after {
+  content: ': ';
+}
+
+.log__redacted {
+  color: var(--fo-text-muted);
+  font-style: italic;
+}
+
+.log__lock {
+  width: 12px;
+  height: 12px;
+  font-size: 12px;
+  vertical-align: -1px;
+}
+
+.log__who {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Below the table breakpoint the three columns stack; a 7rem timestamp column
+   beside a wrapped sentence is unreadable on a phone. */
+@media (max-width: 767px) {
+  .log__row {
+    grid-template-columns: 1fr;
+    gap: var(--fo-space-1);
+  }
+
+  .log__when {
+    order: -1;
+  }
+
+  .log__when br {
+    display: none;
+  }
+
+  .log__who {
+    text-align: left;
+  }
+}

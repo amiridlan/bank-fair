@@ -72,3 +72,15 @@
     </div>
   </section>
 </div>
+
+<!-- Staff only, matching the API: every role's writes are recorded, only
+     staff read them back (docs/09 L1). The endpoint's 404 is the real guard;
+     this only avoids rendering a section that would always fail. -->
+@if (auth.isStaff()) {
+  <section
+    class="mt-4 flex flex-col gap-4 rounded-md border border-border bg-raised p-4"
+    aria-labelledby="activity-heading"
+  >
+    <app-activity-log />
+  </section>
+}

@@ -1,0 +1,88 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div class="min-w-0">
+    <h2 id="activity-heading" class="text-h2">Activity</h2>
+    <p class="fo-caption m-0">
+      Every change made in this session, newest first, whoever made it.
+    </p>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter">
+      <mat-label>Show</mat-label>
+      <mat-select [value]="store.entity()" (valueChange)="onEntity($event)">
+        @for (option of entityOptions(); track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button matButton type="button" (click)="refresh()">
+      <mat-icon aria-hidden="true">refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+</div>
+
+@if (store.isLoading()) {
+  <app-skeleton [count]="4" [height]="56" label="Loading activity" />
+} @else if (store.hasError()) {
+  <app-error-state
+    heading="Couldn't load the activity log"
+    [error]="store.error()"
+    (retry)="refresh()"
+  />
+} @else if (store.isEmpty()) {
+  <app-empty-state
+    icon="history"
+    heading="Nothing has changed yet"
+    message="The log covers this browser session, so it starts empty after a reload or a reset. Approve an application, move an employer or assign a booth, and it will be listed here."
+  />
+} @else {
+  <ol class="log">
+    @for (entry of store.entries(); track entry.id) {
+      <li class="log__row">
+        <span class="fo-tabular log__when font-mono">
+          {{ entry.at | date: 'dd/MM/yyyy' }}<br />
+          {{ entry.at | date: 'h:mm a' }}
+        </span>
+
+        <span class="log__what">
+          <span class="log__summary">{{ summary(entry) }}</span>
+          <span class="log__label">{{ entry.entityLabel }}</span>
+
+          @if (entry.changes.length > 0) {
+            <ul class="log__changes fo-caption">
+              @for (change of entry.changes; track change.field) {
+                <li>
+                  <span class="log__field">{{ fieldLabel(change.field) }}</span>
+                  @if (change.redacted) {
+                    <!-- The values were never written to the log, so there is
+                         nothing here to reveal (docs/09 L2). -->
+                    <span class="log__redacted">
+                      changed — value not recorded
+                      <mat-icon class="log__lock" aria-hidden="true">lock</mat-icon>
+                    </span>
+                  } @else {
+                    {{ changeText(change.from, change.to) }}
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </span>
+
+        <span class="log__who fo-caption">
+          {{ entry.actorName }}
+        </span>
+      </li>
+    }
+  </ol>
+}
+
+@if (!store.isLoading() && !store.hasError()) {
+  <p class="fo-caption m-0">
+    Reads are not logged, and the log is cleared by a reload or a demo reset. It is kept in the
+    browser, so it is a demonstration of an audit trail rather than one — a real log is a table
+    only the server can write to, and nothing in the browser can reach.
+  </p>
+}
