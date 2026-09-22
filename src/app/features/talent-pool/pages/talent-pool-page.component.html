@@ -178,9 +178,11 @@
                   [title]="shortlistLabel(candidate)"
                   (click)="toggleShortlist(candidate, $event)"
                 >
-                  <mat-icon>
-                    {{ shortlist.isShortlisted(candidate.id) ? 'bookmark' : 'bookmark_border' }}
-                  </mat-icon>
+                  <app-busy-label [busy]="shortlist.busyCandidateId() === candidate.id">
+                    <mat-icon>
+                      {{ shortlist.isShortlisted(candidate.id) ? 'bookmark' : 'bookmark_border' }}
+                    </mat-icon>
+                  </app-busy-label>
                 </button>
                 <!-- Nothing else said a row opens anything (docs/07 UX-10). -->
                 <mat-icon class="chevron" aria-hidden="true">chevron_right</mat-icon>

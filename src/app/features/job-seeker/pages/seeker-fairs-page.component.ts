@@ -17,6 +17,7 @@ import { SkeletonComponent } from '../../../shared/ui/skeleton.component';
 import { StatusChipComponent } from '../../../shared/ui/status-chip.component';
 import { ConsentDialogComponent } from '../components/consent.dialog';
 import { JobSeekerStore } from '../job-seeker.store';
+import { BusyLabelComponent } from '../../../shared/ui/busy-label.component';
 
 type FairFilter = 'all' | 'registered';
 
@@ -39,6 +40,8 @@ type FairFilter = 'all' | 'registered';
     PageHeaderComponent,
     SkeletonComponent,
     StatusChipComponent,
+  
+    BusyLabelComponent,
   ],
   templateUrl: './seeker-fairs-page.component.html',
   styleUrl: './seeker-fairs-page.component.scss',

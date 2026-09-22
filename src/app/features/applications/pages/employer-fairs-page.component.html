@@ -78,7 +78,7 @@
                   [disabled]="store.busyId() === fair.id"
                   (click)="apply(fair)"
                 >
-                  Apply again
+                  <app-busy-label [busy]="store.busyId() === fair.id">Apply again</app-busy-label>
                 </button>
               </div>
             }
@@ -91,7 +91,7 @@
               [disabled]="store.busyId() === fair.id"
               (click)="apply(fair)"
             >
-              Apply to attend
+              <app-busy-label [busy]="store.busyId() === fair.id">Apply to attend</app-busy-label>
             </button>
           </div>
         }

@@ -29,6 +29,7 @@ import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { SkeletonComponent } from '../../../shared/ui/skeleton.component';
 import { ShortlistStore } from '../../shortlist/shortlist.store';
 import { DEFAULT_FILTERS, type SortField, TalentPoolStore } from '../talent-pool.store';
+import { BusyLabelComponent } from '../../../shared/ui/busy-label.component';
 
 /** Kept in step with the seed data in docs/05. */
 const UNIVERSITIES: readonly string[] = [
@@ -103,6 +104,8 @@ const CGPA_OPTIONS: readonly number[] = [2.5, 3.0, 3.3, 3.5, 3.7];
     ErrorStateComponent,
     PageHeaderComponent,
     SkeletonComponent,
+  
+    BusyLabelComponent,
   ],
   templateUrl: './talent-pool-page.component.html',
   styleUrl: './talent-pool-page.component.scss',

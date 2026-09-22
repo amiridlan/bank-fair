@@ -21,6 +21,7 @@ import { SkeletonComponent } from '../../../shared/ui/skeleton.component';
 import { ImportProfileDialogComponent } from '../import/import-profile.dialog';
 import type { ImportedProfile } from '../import/profile-parser';
 import { JobSeekerStore } from '../job-seeker.store';
+import { BusyLabelComponent } from '../../../shared/ui/busy-label.component';
 
 const QUALIFICATIONS: readonly { value: Qualification; label: string }[] = [
   { value: 'diploma', label: 'Diploma' },
@@ -52,6 +53,8 @@ const QUALIFICATIONS: readonly { value: Qualification; label: string }[] = [
     ErrorStateComponent,
     PageHeaderComponent,
     SkeletonComponent,
+  
+    BusyLabelComponent,
   ],
   templateUrl: './seeker-profile-page.component.html',
   styleUrl: './seeker-profile-page.component.scss',

@@ -28,12 +28,21 @@ export class ApplicationsStore {
   private readonly _status = signal<LoadStatus>('idle');
   private readonly _error = signal<ApiError | null>(null);
   private readonly _busyId = signal<string | null>(null);
+  /**
+   * Which decision is in flight, not just which row.
+   *
+   * A card carries Approve and Turn down, and both are disabled while either
+   * runs. Keyed on the row alone they would both show a spinner, so the card
+   * would say two things are happening when one is.
+   */
+  private readonly _busyAction = signal<ApplicationStatus | null>(null);
 
   readonly applications = this._applications.asReadonly();
   readonly fairs = this._fairs.asReadonly();
   readonly status = this._status.asReadonly();
   readonly error = this._error.asReadonly();
   readonly busyId = this._busyId.asReadonly();
+  readonly busyAction = this._busyAction.asReadonly();
 
   readonly isLoading = computed(() => this._status() === 'loading');
   readonly hasError = computed(() => this._status() === 'error');
@@ -78,6 +87,7 @@ export class ApplicationsStore {
   /** An employer applies. Not optimistic: staff decide, so there is nothing to guess. */
   async apply(fairId: string): Promise<ApplyResult> {
     this._busyId.set(fairId);
+    this._busyAction.set('pending');
 
     try {
       const application = await firstValueFrom(
@@ -90,6 +100,7 @@ export class ApplicationsStore {
       return { error, conflict: error.status === 409 };
     } finally {
       this._busyId.set(null);
+      this._busyAction.set(null);
     }
   }
 
@@ -106,6 +117,7 @@ export class ApplicationsStore {
     rejectionReason: string | null = null,
   ): Promise<ApiError | null> {
     this._busyId.set(id);
+    this._busyAction.set(status);
 
     try {
       const decided = await firstValueFrom(
@@ -119,7 +131,13 @@ export class ApplicationsStore {
       return toApiError(err);
     } finally {
       this._busyId.set(null);
+      this._busyAction.set(null);
     }
+  }
+
+  /** True only for the row AND the action actually in flight. */
+  isBusy(id: string, action: ApplicationStatus): boolean {
+    return this._busyId() === id && this._busyAction() === action;
   }
 
   /** The employer's own application for a fair, whatever its state. */

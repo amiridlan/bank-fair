@@ -12,6 +12,7 @@ import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { SkeletonComponent } from '../../../shared/ui/skeleton.component';
 import { StatusChipComponent } from '../../../shared/ui/status-chip.component';
 import { ApplicationsStore } from '../applications.store';
+import { BusyLabelComponent } from '../../../shared/ui/busy-label.component';
 
 /**
  * An employer's view of the fairs they can attend, and where their
@@ -29,6 +30,8 @@ import { ApplicationsStore } from '../applications.store';
     PageHeaderComponent,
     SkeletonComponent,
     StatusChipComponent,
+  
+    BusyLabelComponent,
   ],
   templateUrl: './employer-fairs-page.component.html',
   styleUrl: './employer-fairs-page.component.scss',

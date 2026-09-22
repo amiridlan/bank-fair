@@ -83,7 +83,9 @@
                 [disabled]="store.busyId() === application.id"
                 (click)="reject(application)"
               >
-                Turn down
+                <app-busy-label [busy]="store.isBusy(application.id, 'rejected')">
+                  Turn down
+                </app-busy-label>
               </button>
               <button
                 matButton="filled"
@@ -91,7 +93,9 @@
                 [disabled]="store.busyId() === application.id"
                 (click)="approve(application)"
               >
-                Approve
+                <app-busy-label [busy]="store.isBusy(application.id, 'approved')">
+                  Approve
+                </app-busy-label>
               </button>
             </div>
           }

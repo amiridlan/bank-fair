@@ -90,7 +90,7 @@
               [disabled]="store.busyFairId() === fair.id"
               (click)="withdraw(fair)"
             >
-              Withdraw
+              <app-busy-label [busy]="store.busyFairId() === fair.id">Withdraw</app-busy-label>
             </button>
           </div>
         } @else {
@@ -101,7 +101,7 @@
               [disabled]="store.busyFairId() === fair.id"
               (click)="register(fair)"
             >
-              Register
+              <app-busy-label [busy]="store.busyFairId() === fair.id">Register</app-busy-label>
             </button>
           </div>
         }

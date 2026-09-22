@@ -15,6 +15,7 @@ import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { SkeletonComponent } from '../../../shared/ui/skeleton.component';
 import { ApplicationsStore } from '../applications.store';
 import { RejectReasonDialogComponent } from '../components/reject-reason.dialog';
+import { BusyLabelComponent } from '../../../shared/ui/busy-label.component';
 
 type QueueFilter = 'pending' | 'decided';
 
@@ -36,6 +37,8 @@ type QueueFilter = 'pending' | 'decided';
     ErrorStateComponent,
     PageHeaderComponent,
     SkeletonComponent,
+  
+    BusyLabelComponent,
   ],
   templateUrl: './registrations-page.component.html',
   styleUrl: './registrations-page.component.scss',

@@ -19,6 +19,7 @@ import { isValidationError } from '../../../core/http/api-error';
 import type { BoothPackage, CompanySize, Employer, EmployerInput } from '../../../core/models';
 import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog.component';
 import { EmployersStore } from '../employers.store';
+import { BusyLabelComponent } from '../../../shared/ui/busy-label.component';
 
 export interface EmployerFormData {
   /** Null when adding; the employer to edit otherwise. */
@@ -68,6 +69,8 @@ const MY_PHONE = /^\+60\s?1\d[-\s]?\d{3,4}\s?\d{4}$/;
     MatIconModule,
     MatInputModule,
     MatSelectModule,
+  
+    BusyLabelComponent,
   ],
   templateUrl: './employer-form.dialog.html',
   styleUrl: './employer-form.dialog.scss',

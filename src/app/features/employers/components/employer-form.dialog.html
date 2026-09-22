@@ -97,6 +97,6 @@
 <mat-dialog-actions align="end">
   <button matButton type="button" [disabled]="saving()" (click)="requestClose()">Cancel</button>
   <button matButton="filled" type="button" [disabled]="saving()" (click)="save()">
-    {{ saving() ? 'Saving…' : isEdit ? 'Save changes' : 'Add employer' }}
+    <app-busy-label [busy]="saving()">{{ isEdit ? 'Save changes' : 'Add employer' }}</app-busy-label>
   </button>
 </mat-dialog-actions>

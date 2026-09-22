@@ -13,6 +13,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { SkeletonComponent } from '../../../shared/ui/skeleton.component';
 import { ShortlistStore } from '../../shortlist/shortlist.store';
 import { TalentPoolStore } from '../talent-pool.store';
+import { BusyLabelComponent } from '../../../shared/ui/busy-label.component';
 
 /**
  * Candidate profile, shown as a right-hand drawer over the talent pool.
@@ -36,6 +37,8 @@ import { TalentPoolStore } from '../talent-pool.store';
     MatIconModule,
     MatInputModule,
     SkeletonComponent,
+  
+    BusyLabelComponent,
   ],
   templateUrl: './candidate-drawer.component.html',
   styleUrl: './candidate-drawer.component.scss',

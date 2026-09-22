@@ -90,7 +90,7 @@
           <textarea matInput rows="2" [value]="note()" (input)="onNote($event)"></textarea>
         </mat-form-field>
         <button matButton="filled" type="button" [disabled]="saving()" (click)="addToShortlist()">
-          {{ saving() ? 'Adding…' : 'Add to shortlist' }}
+          <app-busy-label [busy]="saving()">Add to shortlist</app-busy-label>
         </button>
       }
     </footer>
