@@ -40,6 +40,22 @@ Limits to state plainly, on the page as well as here: reads are not logged, the 
 
 ## Facts discovered
 
+### A3
+
+- **The recorder hangs off the route table, and a test proves it is complete.** `writeRoutes()` lists every non-GET route and the spec asserts each one carries a descriptor, so a new write endpoint cannot ship silently unlogged. Both of the guarantees that matter were mutation-tested rather than trusted: removing one route's descriptor fails the completeness test, and removing `email` from `REDACTED_FIELDS` fails the redaction test. A passing test that cannot fail is not evidence.
+- **The log is written by the engine, never by a handler.** Nothing in the app can add an entry or change one; entries appear only as a consequence of a request that already succeeded. That is the property that makes the log worth reading, and it is why recording sits in `runMockRequest` rather than in thirteen places.
+- **A refused write records nothing.** Only 2xx is logged, so a 422 or a 409 leaves no trace — it changed nothing, and a log of attempted writes is a different feature.
+- **The before-snapshot has to be taken before the handler runs**, which is also the only way a delete keeps its label: the row is gone by the time the entry is written, so `Registration for …` can only have come from the snapshot.
+- **The reset entry is written and then destroyed, and the UI now says so.** `POST /demo/reset` logs into the database it just created — the handler test proves it — but Settings reloads the page afterwards, and the whole mock database lives in memory, so the reload discards the log with everything else. Rather than leave an unexplained empty list, the empty state says the log covers this browser session. The first browser run of the reset is what caught this; the handler test alone said it worked.
+- **The limits were in the one branch that could not show them.** The paragraph explaining that reads are not logged and that the log is browser-only sat inside the loaded branch, so an empty log — exactly when someone most needs the explanation — rendered nothing. It is outside that branch now.
+- **A filter derived from what is on screen destroys itself.** `availableEntities` read the loaded entries, so choosing "Employer" left "Employer" as the only option and there was no way to reach another kind without going back through "Everything". What is in view is not what exists; the known kinds are learned from unfiltered loads only. Found in a browser after a harness failure I first assumed was my own.
+- **`name` is not redacted; `contactName` is.** On an employer, `name` is a company, which is not personal data. `contactName` is a person at that company, so it is. The distinction is in the code with the reason beside it, because it is exactly the sort of thing a later edit would flatten.
+- **A candidate entry is labelled by id, not by name.** Labelling it "Nurul Huda binti Ismail" would have written the name into the log through the back door, after taking care not to record it as a changed value.
+- **The log is capped at 200 entries.** It lives in memory beside the rest of the mock database, and a long session would otherwise grow it without limit.
+- **Verified in a browser, end to end:** the log starts empty; a staff approval is recorded as `Approved · Fair application` against `Farah Iskandar` with `status pending → approved`; a job seeker editing their own profile produces `email changed — value not recorded` and `full name changed — value not recorded` beside `university Asia Pacific University → Universiti Sains Malaysia`; and neither the new email nor the new name appears anywhere in the rendered log. A job seeker sees no Activity section at all, and `GET /audit-entries` answers them 404.
+- **Verified:** 18 pages at three viewports plus the populated log at three, 0 axe violations, 0 CSP violations, no horizontal overflow at 390px.
+- **Cost:** initial total 640.29 kB → 640.18 kB. The log's UI rides the existing Settings chunk.
+
 ### A2
 
 - **Settings is a second list, not a last item.** Pinned with `margin-top: auto` on its own `<ul>`, so anyone reading the nav as a list hears two groups rather than one list with a gap in the middle. Verified pinned to the bottom in all three nav shapes — full menu, 72px rail and mobile drawer.
