@@ -46,6 +46,8 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+  /* Positioning context for the pending spinner. */
+  position: relative;
   transition:
     border-color var(--fo-motion-fast) var(--fo-motion-easing),
     background-color var(--fo-motion-fast) var(--fo-motion-easing);
@@ -63,8 +65,17 @@
   background: var(--fo-success-subtle);
 }
 
+/* Faded AND spinning: a fade alone reads as "disabled", which is the opposite
+   of what a booking in flight means. */
 .slot--pending {
   opacity: 0.6;
+}
+
+.slot__spinner {
+  position: absolute;
+  inset-block-start: var(--fo-space-3);
+  inset-inline-end: var(--fo-space-3);
+  color: var(--fo-primary);
 }
 
 .slot__time {

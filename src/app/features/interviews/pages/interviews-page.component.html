@@ -80,6 +80,10 @@
         >
           <span class="slot__time fo-mono">{{ slot.startTime | date: 'h:mm a' }}</span>
 
+          @if (store.pendingSlotId() === slot.id) {
+            <span class="fo-spinner slot__spinner" aria-hidden="true"></span>
+          }
+
           @if (slot.candidateName; as name) {
             <span class="slot__name">{{ name }}</span>
             <span class="slot__state fo-caption">

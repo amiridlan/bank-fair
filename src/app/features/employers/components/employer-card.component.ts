@@ -66,7 +66,10 @@ import { PIPELINE_STAGES, STAGE_LABEL } from '../employers.store';
       <p class="card__meta fo-caption">{{ employer().contactName }}</p>
 
       @if (pending()) {
-        <p class="card__meta fo-caption">Saving…</p>
+        <p class="card__meta card__saving fo-caption">
+          <span class="fo-spinner" aria-hidden="true"></span>
+          Saving…
+        </p>
       }
 
       @if (employer().lostReason; as reason) {

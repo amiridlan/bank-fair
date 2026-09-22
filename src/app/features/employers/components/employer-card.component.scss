@@ -65,3 +65,12 @@
   border-top: 1px solid var(--fo-border);
   color: var(--fo-error);
 }
+
+/* The word plus the motion. "Saving…" alone was easy to miss on a card that
+   had just been dragged; the ring is what catches the eye. */
+.card__saving {
+  display: flex;
+  align-items: center;
+  gap: var(--fo-space-2);
+  color: var(--fo-primary);
+}

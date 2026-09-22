@@ -24,6 +24,10 @@ import type { Booth } from '../../../core/models';
       (click)="activated.emit(booth())"
     >
       <span class="tile__code fo-mono">{{ booth().code }}</span>
+      @if (pending()) {
+        <span class="fo-spinner tile__spinner" aria-hidden="true"></span>
+      }
+
       @if (booth().employerName; as name) {
         <span class="tile__name">{{ name }}</span>
       } @else {
