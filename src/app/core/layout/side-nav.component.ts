@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
@@ -44,6 +45,20 @@ const NAV_BY_ROLE: Readonly<Record<Role, readonly NavItem[]>> = {
 };
 
 /**
+ * Settings sits at the bottom, away from the working pages.
+ *
+ * Its route differs per role only because each role's section is behind its
+ * own `roleGuard`; the page itself is one component. Keyed by role for the
+ * same reason as the menus above — the compiler names a role that was
+ * forgotten rather than sending it somewhere its guard will refuse.
+ */
+const SETTINGS_BY_ROLE: Readonly<Record<Role, NavItem>> = {
+  staff: { label: 'Settings', icon: 'settings', route: '/staff/settings' },
+  employer: { label: 'Settings', icon: 'settings', route: '/hiring/settings' },
+  job_seeker: { label: 'Settings', icon: 'settings', route: '/me/settings' },
+};
+
+/**
  * Role-aware navigation. Only the active role's routes are listed — another
  * role's URLs are blocked by `roleGuard` anyway, so showing them would just
  * offer dead ends.
@@ -54,33 +69,51 @@ const NAV_BY_ROLE: Readonly<Record<Role, readonly NavItem[]>> = {
 @Component({
   selector: 'app-side-nav',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, RouterLink, RouterLinkActive],
+  imports: [NgTemplateOutlet, MatIconModule, RouterLink, RouterLinkActive],
   template: `
     <nav class="nav" [class.nav--rail]="rail()" aria-label="Main">
       <ul class="nav__list">
         @for (item of items(); track item.route) {
           <li>
-            <a
-              class="nav__link"
-              [routerLink]="item.route"
-              routerLinkActive="nav__link--active"
-              [routerLinkActiveOptions]="{ exact: false }"
-              [attr.aria-label]="rail() ? item.label : null"
-              [title]="rail() ? item.label : ''"
-              (click)="navigated.emit()"
-            >
-              <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
-              @if (!rail()) {
-                <span class="nav__label">{{ item.label }}</span>
-              }
-            </a>
+            <ng-container [ngTemplateOutlet]="link" [ngTemplateOutletContext]="{ $implicit: item }" />
           </li>
         }
       </ul>
+
+      <!-- A second list rather than a last item: it is pushed to the bottom,
+           and a separate <ul> keeps that a grouping rather than a gap in the
+           middle of one list for anyone reading it as a list. -->
+      <ul class="nav__list nav__list--end">
+        <li>
+          <ng-container
+            [ngTemplateOutlet]="link"
+            [ngTemplateOutletContext]="{ $implicit: settings() }"
+          />
+        </li>
+      </ul>
     </nav>
+
+    <ng-template #link let-item>
+      <a
+        class="nav__link"
+        [routerLink]="item.route"
+        routerLinkActive="nav__link--active"
+        [routerLinkActiveOptions]="{ exact: false }"
+        [attr.aria-label]="rail() ? item.label : null"
+        [title]="rail() ? item.label : ''"
+        (click)="navigated.emit()"
+      >
+        <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+        @if (!rail()) {
+          <span class="nav__label">{{ item.label }}</span>
+        }
+      </a>
+    </ng-template>
   `,
   styles: `
     .nav {
+      display: flex;
+      flex-direction: column;
       height: 100%;
       padding: var(--fo-space-3) var(--fo-space-2);
       background: var(--fo-surface-raised);
@@ -128,6 +161,14 @@ const NAV_BY_ROLE: Readonly<Record<Role, readonly NavItem[]>> = {
       justify-content: center;
       padding: 0;
     }
+
+    /* Pushed to the bottom, with a rule above it so it reads as a separate
+       group rather than the tail of the main menu. */
+    .nav__list--end {
+      margin-top: auto;
+      padding-top: var(--fo-space-3);
+      border-top: 1px solid var(--fo-border);
+    }
   `,
 })
 export class SideNavComponent {
@@ -140,4 +181,5 @@ export class SideNavComponent {
   readonly navigated = output<void>();
 
   protected readonly items = computed<readonly NavItem[]>(() => NAV_BY_ROLE[this.auth.role()]);
+  protected readonly settings = computed<NavItem>(() => SETTINGS_BY_ROLE[this.auth.role()]);
 }
