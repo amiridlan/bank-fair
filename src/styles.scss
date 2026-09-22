@@ -163,3 +163,36 @@ html {
   white-space: nowrap;
   border: 0;
 }
+
+// Working indicator, shared by the busy button label and the pending states on
+// booth tiles, interview slots and pipeline cards.
+//
+// One class rather than four copies of the same twelve lines, and it lives
+// here — unlayered, like the other `.fo-*` helpers — so it beats a utility
+// rather than losing to one.
+//
+// It draws in `currentColor`, so it reads correctly on a filled button, a
+// tinted tile and a white card without being told about any of them.
+.fo-spinner {
+  display: block;
+  inline-size: 16px;
+  block-size: 16px;
+  border: 2px solid currentColor;
+  border-block-start-color: transparent;
+  border-radius: 50%;
+  animation: fo-spin 0.7s linear infinite;
+}
+
+@keyframes fo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Slowed rather than stopped: a still ring reads as a broken icon, whereas the
+// point of this element is to say that something is happening.
+@media (prefers-reduced-motion: reduce) {
+  .fo-spinner {
+    animation-duration: 2.4s;
+  }
+}
