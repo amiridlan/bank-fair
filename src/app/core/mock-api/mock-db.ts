@@ -1,4 +1,5 @@
 import type {
+  AuditEntry,
   Booth,
   Candidate,
   Employer,
@@ -42,6 +43,12 @@ export interface MockDb {
   interviewSlots: InterviewSlot[];
   fairRegistrations: FairRegistration[];
   fairApplications: FairApplication[];
+  /**
+   * Written by the engine, never by a handler (docs/09 A3). Empty at seed:
+   * the log records what happened in this session, and inventing history
+   * would make it a fiction rather than a record.
+   */
+  auditEntries: AuditEntry[];
 }
 
 /**
@@ -89,6 +96,7 @@ export function buildMockDb(now: number = Date.now()): MockDb {
     fairRegistrations: seedFairRegistrations(candidates, now),
     // A few pending applications, so the staff queue opens with work in it.
     fairApplications: seedFairApplications(employers, now),
+    auditEntries: [],
   };
 }
 
