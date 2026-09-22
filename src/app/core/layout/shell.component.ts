@@ -7,6 +7,7 @@ import { map } from 'rxjs';
 
 import { AuthStore } from '../auth/auth.store';
 import { FairContextStore } from '../fairs/fair-context.store';
+import { RouteProgressComponent } from './route-progress.component';
 import { SideNavComponent } from './side-nav.component';
 import { TopBarComponent } from './top-bar.component';
 
@@ -25,7 +26,13 @@ const TABLET = '(min-width: 768px) and (max-width: 1279px)';
 @Component({
   selector: 'app-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatSidenavModule, RouterOutlet, SideNavComponent, TopBarComponent],
+  imports: [
+    MatSidenavModule,
+    RouteProgressComponent,
+    RouterOutlet,
+    SideNavComponent,
+    TopBarComponent,
+  ],
   template: `
     <a class="fo-skip-link" href="#main-content">Skip to main content</a>
 
@@ -50,6 +57,9 @@ const TABLET = '(min-width: 768px) and (max-width: 1279px)';
            the keyboard. Without it a keyboard-only user cannot scroll a page
            whose content exceeds the viewport (WCAG 2.1.1). -->
       <mat-sidenav-content tabindex="0">
+        <!-- Inside the scrolling content, above the routed page: it marks the
+             region that is about to change, not the whole frame. -->
+        <app-route-progress />
         <main id="main-content" class="shell__content" tabindex="-1">
           <router-outlet />
         </main>
