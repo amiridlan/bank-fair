@@ -1,4 +1,5 @@
 import type { User } from '../models';
+import { type AuditRecord, recordAudit } from './audit';
 import { matchRoute } from './handlers';
 import { getMockDb } from './mock-db';
 import { type MockResult, serverError } from './mock-response';
@@ -22,6 +23,13 @@ export interface MockRequest {
   readonly isProduction: boolean;
 }
 
+/** Stands in for a response when the id can only come from route params. */
+const EMPTY_RESULT: MockResult = { status: 0, body: null };
+
+function snapshot(record: AuditRecord | null): AuditRecord | null {
+  return record ? { ...record } : null;
+}
+
 export function runMockRequest(request: MockRequest): MockResult {
   const match = matchRoute(request.method, request.path);
 
@@ -32,8 +40,18 @@ export function runMockRequest(request: MockRequest): MockResult {
     return { status: 404, body: { message: 'Not found.' } };
   }
 
+  const now = Date.now();
+
+  // Snapshotted BEFORE the handler runs, and copied, because handlers replace
+  // rows rather than mutating them — but a copy costs nothing and makes that
+  // a property of this code rather than a promise made elsewhere.
+  const before: AuditRecord | null =
+    match.audit && request.method !== 'GET'
+      ? snapshot(match.audit.find(getMockDb(), match.audit.idOf(match.params, EMPTY_RESULT) ?? ''))
+      : null;
+
   try {
-    return match.handler({
+    const result = match.handler({
       method: request.method,
       path: request.path,
       params: match.params,
@@ -41,8 +59,27 @@ export function runMockRequest(request: MockRequest): MockResult {
       body: request.body,
       db: getMockDb(),
       currentUser: request.currentUser,
-      now: Date.now(),
+      now,
     });
+
+    if (match.audit) {
+      // getMockDb() again, not the reference passed to the handler: POST
+      // /demo/reset replaces the whole database, and the entry belongs in the
+      // one that now exists rather than the one just discarded.
+      recordAudit({
+        db: getMockDb(),
+        descriptor: match.audit,
+        method: request.method,
+        path: request.path,
+        params: match.params,
+        result,
+        before,
+        actor: request.currentUser,
+        now,
+      });
+    }
+
+    return result;
   } catch (error: unknown) {
     // A handler bug should look like a server fault, not crash the app.
     if (!request.isProduction) {
