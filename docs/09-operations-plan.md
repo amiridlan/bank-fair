@@ -40,6 +40,19 @@ Limits to state plainly, on the page as well as here: reads are not logged, the 
 
 ## Facts discovered
 
+### A2
+
+- **Settings is a second list, not a last item.** Pinned with `margin-top: auto` on its own `<ul>`, so anyone reading the nav as a list hears two groups rather than one list with a gap in the middle. Verified pinned to the bottom in all three nav shapes — full menu, 72px rail and mobile drawer.
+- **One page, three routes.** Each role's section sits behind its own `roleGuard`, so a single `/settings` would 404 for two roles out of three. `SETTINGS_BY_ROLE` is a record over `Role` for the same reason the menus are: the compiler names a role that was forgotten instead of sending it somewhere its guard refuses.
+- **Moving the demo controls made the app smaller.** They were the only user of `MatDividerModule` in the initial bundle, so taking them out of the role menu dropped the initial total from 641.56 kB to **640.29 kB** — below where A1 left it, while adding a whole page.
+- **Reset now asks first.** In the menu it was a single click that threw away everything done in the session, with no undo and no confirmation. It uses the existing destructive confirm dialog, which the browser check confirms renders red (`rgb(185, 28, 28)`).
+- **The reset was verified by reversing a change, not by watching for a reload.** Approve an application (queue 4 → 3), reset, and the queue reads 4 again. A page that reloads proves nothing about whether the data went back.
+- **The nav spec had to learn the difference between the two lists.** Its `labels()` helper read every `.nav__label` in the component, so Settings silently joined three existing expectations. Scoping it to the main list keeps those tests about the main menu, and four new ones cover the end section: that it holds Settings for every role, that each role gets the route its guard allows, and that Settings stays *out* of the main menu.
+- **`@angular/animations` is not installed**, so `provideNoopAnimations()` cannot be used in a spec here. Material components render in tests without it.
+- **The accessible name is "Settings", not "settingsSettings".** `mat-icon` renders its name as a ligature in the text content; it is `aria-hidden`, so the computed name excludes it — checked through `getByRole` with an exact name rather than by reading `textContent`, which is what made it look wrong in the first place.
+- **Verified:** 18 pages at three viewports, 0 axe violations, 0 CSP violations, 0 console errors. In a browser, for all three roles: Settings sits below the main menu, lands on the right route, names the current identity, and the role menu now holds identities only.
+- **Cost:** initial total 641.56 kB → 640.29 kB. Settings is a 30.76 kB lazy chunk shared by all three roles.
+
 ### A1
 
 - **Material's progress components do not fit the budget.** `mat-progress-bar` + `mat-progress-spinner` in the shell: 639.79 → **661.34 kB**, past the 650 kB warning. The bar on its own: 651.74 kB, still past it. The CSS replacements cost 1.77 kB together. This is the fallback named in the plan, taken because a measurement said so rather than because it felt likely.
