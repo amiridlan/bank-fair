@@ -1,7 +1,9 @@
 import type { User } from '../../models';
-import { type MockDb, buildMockDb } from '../mock-db';
+import { MAX_AUDIT_ENTRIES } from '../audit';
+import { type MockDb, buildMockDb, getMockDb, resetMockDb } from '../mock-db';
+import { runMockRequest } from '../mock-engine';
 import type { MockContext, MockResult } from '../mock-response';
-import { matchRoute } from './index';
+import { matchRoute, writeRoutes } from './index';
 
 const NOW = Date.parse('2026-09-21T04:00:00Z');
 
@@ -1116,5 +1118,267 @@ describe('editing your own profile', () => {
     patch({ ...VALID, cgpa: 3.666666 });
 
     expect(db.candidates.find((c) => c.id === 'cand-001')!.cgpa).toBe(3.67);
+  });
+});
+
+describe('audit log', () => {
+  // No local db: these go through the engine, which reads the module-level
+  // one, so the shared instance is the only one that matters here.
+
+  /** Drives a request through the engine, which is what records entries. */
+  function request(method: string, path: string, options: { body?: unknown; user?: User } = {}) {
+    const url = new URL(path, 'http://mock.local');
+    return runMockRequest({
+      method,
+      path: url.pathname,
+      query: url.searchParams,
+      body: options.body ?? null,
+      currentUser: options.user ?? STAFF,
+      isProduction: true,
+    });
+  }
+
+  const log = () => getMockDb().auditEntries;
+
+  beforeEach(() => resetMockDb(NOW));
+
+  it('logs every write route, so a new endpoint cannot ship unlogged', () => {
+    // The point of hanging this off the route table rather than calling it
+    // from inside each handler: a handler that forgets is an invisible hole,
+    // and this makes it a failing test instead.
+    const unlogged = writeRoutes().filter((route) => !route.audited);
+
+    expect(unlogged).toEqual([]);
+  });
+
+  it('records who did it, not just what happened', () => {
+    const pending = getMockDb().fairApplications.find((entry) => entry.status === 'pending')!;
+
+    request('PATCH', `/fair-applications/${pending.id}`, { body: { status: 'approved' } });
+
+    const entry = log().at(-1)!;
+    expect(entry.actorId).toBe(STAFF.id);
+    expect(entry.actorName).toBe(STAFF.name);
+    expect(entry.actorRole).toBe('staff');
+  });
+
+  it('logs an employer’s write as well as a staff one', () => {
+    // L1: every role is recorded. Scoping the recording by role would leave
+    // holes exactly where a demo gets questioned.
+    const fair = getMockDb().fairs.find((f) => f.status === 'open' || f.status === 'live')!;
+
+    request('POST', '/fair-applications', { user: HM_ONE, body: { fairId: fair.id } });
+
+    expect(log().at(-1)?.actorRole).toBe('employer');
+  });
+
+  it('logs a job seeker’s write too', () => {
+    request('PATCH', '/candidates/cand-001', {
+      user: SEEKER,
+      body: {
+        fullName: 'Ahmad Zaki',
+        headline: 'Student',
+        university: 'Universiti Malaya',
+        fieldOfStudy: 'Software Engineering',
+        qualification: 'degree',
+        graduationYear: 2027,
+        cgpa: 3.5,
+        email: 'ahmad@example.com',
+        phone: null,
+        skills: ['TypeScript'],
+      },
+    });
+
+    expect(log().at(-1)?.actorRole).toBe('job_seeker');
+  });
+
+  it('sharpens the action past "updated" where it would hide the point', () => {
+    const pending = getMockDb().fairApplications.find((entry) => entry.status === 'pending')!;
+
+    request('PATCH', `/fair-applications/${pending.id}`, {
+      body: { status: 'rejected', rejectionReason: 'Full for this industry.' },
+    });
+
+    expect(log().at(-1)?.action).toBe('rejected');
+  });
+
+  it('records a booth assignment as assigned, and clearing it as cleared', () => {
+    const booth = getMockDb().booths.find((entry) => entry.employerId === null)!;
+    const employer = getMockDb().employers.find((entry) => entry.fairIds.includes(booth.fairId))!;
+
+    request('PATCH', `/booths/${booth.id}`, { body: { employerId: employer.id } });
+    expect(log().at(-1)?.action).toBe('assigned');
+
+    request('PATCH', `/booths/${booth.id}`, { body: { employerId: null } });
+    expect(log().at(-1)?.action).toBe('cleared');
+  });
+
+  it('records what a field changed from and to', () => {
+    const employer = getMockDb().employers.find((entry) => entry.stage === 'lead')!;
+
+    request('PATCH', `/employers/${employer.id}`, { body: { stage: 'proposal' } });
+
+    const change = log().at(-1)!.changes.find((c) => c.field === 'stage')!;
+    expect(change.from).toBe('lead');
+    expect(change.to).toBe('proposal');
+    expect(change.redacted).toBe(false);
+  });
+
+  it('never stores the value of a personal field', () => {
+    // L2. The log says the field changed and stops there — an audit log is a
+    // second store of whatever it copies, and these are the values the
+    // masking rules exist to contain.
+    request('PATCH', '/candidates/cand-001', {
+      user: SEEKER,
+      body: {
+        fullName: 'Someone Else Entirely',
+        headline: 'Student',
+        university: 'Universiti Malaya',
+        fieldOfStudy: 'Software Engineering',
+        qualification: 'degree',
+        graduationYear: 2027,
+        cgpa: 3.5,
+        email: 'brand.new@example.com',
+        phone: '019-8887777',
+        skills: ['TypeScript'],
+      },
+    });
+
+    const entry = log().at(-1)!;
+    const personal = entry.changes.filter((c) =>
+      ['fullName', 'email', 'phone'].includes(c.field),
+    );
+
+    expect(personal.length).toBeGreaterThan(0);
+    for (const change of personal) {
+      expect(change.redacted).toBe(true);
+      expect(change.from).toBeNull();
+      expect(change.to).toBeNull();
+    }
+    // And nowhere else in the entry either.
+    expect(JSON.stringify(entry)).not.toContain('brand.new@example.com');
+    expect(JSON.stringify(entry)).not.toContain('019-8887777');
+  });
+
+  it('records a business field on the same request it redacts a personal one', () => {
+    request('PATCH', '/candidates/cand-001', {
+      user: SEEKER,
+      body: {
+        fullName: 'Renamed Person',
+        headline: 'Student',
+        university: 'Universiti Teknologi Malaysia',
+        fieldOfStudy: 'Software Engineering',
+        qualification: 'degree',
+        graduationYear: 2027,
+        cgpa: 3.5,
+        email: 'ahmad@example.com',
+        phone: null,
+        skills: ['TypeScript'],
+      },
+    });
+
+    const entry = log().at(-1)!;
+    expect(entry.changes.find((c) => c.field === 'university')?.to).toBe(
+      'Universiti Teknologi Malaysia',
+    );
+    expect(entry.changes.find((c) => c.field === 'fullName')?.redacted).toBe(true);
+  });
+
+  it('does not label a candidate entry with their name', () => {
+    request('PATCH', '/candidates/cand-001', {
+      user: SEEKER,
+      body: {
+        fullName: 'Private Name Here',
+        headline: 'Student',
+        university: 'Universiti Malaya',
+        fieldOfStudy: 'Software Engineering',
+        qualification: 'degree',
+        graduationYear: 2027,
+        cgpa: 3.5,
+        email: 'ahmad@example.com',
+        phone: null,
+        skills: ['TypeScript'],
+      },
+    });
+
+    expect(log().at(-1)?.entityLabel).toBe('Candidate cand-001');
+  });
+
+  it('records nothing for a refused write', () => {
+    const before = log().length;
+
+    // 422: no reason given for a rejection.
+    const pending = getMockDb().fairApplications.find((entry) => entry.status === 'pending')!;
+    request('PATCH', `/fair-applications/${pending.id}`, { body: { status: 'rejected' } });
+
+    expect(log()).toHaveLength(before);
+  });
+
+  it('records nothing for a read', () => {
+    const before = log().length;
+    request('GET', '/employers');
+
+    expect(log()).toHaveLength(before);
+  });
+
+  it('keeps the label of something that was deleted', () => {
+    const registration = getMockDb().fairRegistrations.find((r) => r.candidateId === 'cand-001')!;
+
+    request('DELETE', `/fair-registrations/${registration.id}`, { user: SEEKER });
+
+    const entry = log().at(-1)!;
+    expect(entry.action).toBe('deleted');
+    // The row is gone, so the label can only have come from the snapshot
+    // taken before the handler ran.
+    expect(entry.entityLabel).toContain('Registration for');
+  });
+
+  it('logs the reset into the database the reset created', () => {
+    // A log that simply emptied would look like a log that lost its contents.
+    request('PATCH', `/employers/${getMockDb().employers[0].id}`, { body: { stage: 'proposal' } });
+    expect(log().length).toBeGreaterThan(0);
+
+    request('POST', '/demo/reset');
+
+    expect(log()).toHaveLength(1);
+    expect(log()[0].action).toBe('reset');
+  });
+
+  it('caps the log rather than growing without limit', () => {
+    const employer = getMockDb().employers[0];
+    for (let i = 0; i < MAX_AUDIT_ENTRIES + 10; i++) {
+      request('PATCH', `/employers/${employer.id}`, {
+        body: { stage: i % 2 === 0 ? 'proposal' : 'lead' },
+      });
+    }
+
+    expect(log()).toHaveLength(MAX_AUDIT_ENTRIES);
+  });
+
+  it('shows staff the log, newest first', () => {
+    request('PATCH', `/employers/${getMockDb().employers[0].id}`, { body: { stage: 'proposal' } });
+    request('PATCH', `/employers/${getMockDb().employers[1].id}`, { body: { stage: 'proposal' } });
+
+    const rows = data<readonly { entityLabel: string }[]>(request('GET', '/audit-entries'));
+    expect(rows[0].entityLabel).toBe(getMockDb().employers[1].name);
+  });
+
+  it('hides the log from everyone else', () => {
+    // 404, not 403: it does not confirm the log is there.
+    expect(request('GET', '/audit-entries', { user: HM_ONE }).status).toBe(404);
+    expect(request('GET', '/audit-entries', { user: SEEKER }).status).toBe(404);
+  });
+
+  it('filters by entity and by action', () => {
+    const employer = getMockDb().employers.find((entry) => entry.stage === 'lead')!;
+    request('PATCH', `/employers/${employer.id}`, { body: { stage: 'proposal' } });
+    const pending = getMockDb().fairApplications.find((entry) => entry.status === 'pending')!;
+    request('PATCH', `/fair-applications/${pending.id}`, { body: { status: 'approved' } });
+
+    const employers = data<readonly unknown[]>(request('GET', '/audit-entries?entity=employer'));
+    const approvals = data<readonly unknown[]>(request('GET', '/audit-entries?action=approved'));
+
+    expect(employers.length).toBeGreaterThan(0);
+    expect(approvals).toHaveLength(1);
   });
 });
