@@ -1,0 +1,96 @@
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--fo-space-3);
+}
+
+.head__title {
+  margin: 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-5);
+}
+
+.body__section {
+  margin: 0 0 var(--fo-space-3);
+  font-size: var(--fo-body-size);
+  line-height: var(--fo-body-line);
+  color: var(--fo-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.body__error {
+  color: var(--fo-error);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--fo-space-3);
+  margin: 0;
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  dt,
+  dd {
+    margin: 0;
+  }
+
+  dd {
+    font-weight: 500;
+    color: var(--fo-ink);
+  }
+}
+
+.fact--wide {
+  grid-column: 1 / -1;
+}
+
+.reason {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--fo-space-2);
+  margin: var(--fo-space-3) 0 0;
+  padding: var(--fo-space-3);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-error-subtle);
+  color: var(--fo-error);
+}
+
+.reason__icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  flex: none;
+}
+
+.notes {
+  margin: var(--fo-space-3) 0 0;
+  padding: var(--fo-space-3);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-surface);
+  color: var(--fo-text);
+}
+
+// mat-dialog-actions is a row by default, which is right for two buttons.
+// Only the padding and rule are this component's to set.
+.foot {
+  gap: var(--fo-space-2);
+  padding: var(--fo-space-4);
+  border-top: 1px solid var(--fo-border);
+}
+
+@media (min-width: 768px) {
+  .facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

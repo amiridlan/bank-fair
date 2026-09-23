@@ -3,7 +3,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { type ApiError, toApiError } from '../../core/http/api-error';
 import { ApiService } from '../../core/http/api.service';
-import type { ApplicationStatus, Fair, FairApplication } from '../../core/models';
+import type { ApplicationStatus, Employer, Fair, FairApplication } from '../../core/models';
 import { isOpenForSignup } from '../../core/fairs/fair-timing';
 
 export type LoadStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -29,6 +29,10 @@ export class ApplicationsStore {
   private readonly _status = signal<LoadStatus>('idle');
   private readonly _error = signal<ApiError | null>(null);
   private readonly _busyId = signal<string | null>(null);
+
+  /** The employer behind the application whose detail is open. */
+  private readonly _employer = signal<Employer | null>(null);
+  private readonly _employerStatus = signal<LoadStatus>('idle');
   /**
    * Which decision is in flight, not just which row.
    *
@@ -44,6 +48,8 @@ export class ApplicationsStore {
   readonly error = this._error.asReadonly();
   readonly busyId = this._busyId.asReadonly();
   readonly busyAction = this._busyAction.asReadonly();
+  readonly employer = this._employer.asReadonly();
+  readonly employerStatus = this._employerStatus.asReadonly();
 
   readonly isLoading = computed(() => this._status() === 'loading');
   readonly hasError = computed(() => this._status() === 'error');
@@ -137,6 +143,38 @@ export class ApplicationsStore {
       this._busyId.set(null);
       this._busyAction.set(null);
     }
+  }
+
+  /** One application by id, for the detail modal. */
+  applicationById(id: string): FairApplication | null {
+    return this._applications().find((entry) => entry.id === id) ?? null;
+  }
+
+  /**
+   * Loads the employer behind an application.
+   *
+   * Separate from `load()` because the list does not need it: the queue card
+   * shows the name the application already carries, and fetching every
+   * applicant's full record to render a list would be a request per row.
+   */
+  async loadEmployer(employerId: string): Promise<void> {
+    this._employerStatus.set('loading');
+    this._employer.set(null);
+
+    try {
+      this._employer.set(
+        await firstValueFrom(this.api.get<Employer>(`/employers/${employerId}`)),
+      );
+      this._employerStatus.set('success');
+    } catch {
+      // The application still renders without it; the modal says so.
+      this._employerStatus.set('error');
+    }
+  }
+
+  clearEmployer(): void {
+    this._employer.set(null);
+    this._employerStatus.set('idle');
   }
 
   /** True only for the row AND the action actually in flight. */

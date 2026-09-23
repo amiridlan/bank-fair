@@ -1,0 +1,133 @@
+<div class="head" mat-dialog-title>
+  <h2 class="head__title">
+    {{ application()?.employerName ?? 'Application' }}
+  </h2>
+  <button matIconButton type="button" aria-label="Close application detail" (click)="close()">
+    <mat-icon aria-hidden="true">close</mat-icon>
+  </button>
+</div>
+
+<!-- tabindex so the detail can be scrolled from the keyboard once it is tall
+     enough to scroll (axe: scrollable-region-focusable). -->
+<mat-dialog-content class="body" tabindex="0">
+  @if (isLoading()) {
+    <p class="m-0">Loading the application…</p>
+  } @else if (application(); as application) {
+    <section aria-labelledby="application-heading">
+      <h3 id="application-heading" class="body__section">This application</h3>
+
+      <dl class="facts">
+        <div class="fact">
+          <dt class="fo-caption">Fair</dt>
+          <dd>{{ fairName(application.fairId) }}</dd>
+        </div>
+        <div class="fact">
+          <dt class="fo-caption">Status</dt>
+          <dd>{{ statusLabel(application.status) }}</dd>
+        </div>
+        <div class="fact">
+          <dt class="fo-caption">Applied</dt>
+          <dd class="fo-tabular font-mono">{{ application.appliedAt | date: 'dd/MM/yyyy' }}</dd>
+        </div>
+        @if (application.decidedAt; as decidedAt) {
+          <div class="fact">
+            <dt class="fo-caption">Decided</dt>
+            <dd class="fo-tabular font-mono">{{ decidedAt | date: 'dd/MM/yyyy' }}</dd>
+          </div>
+        }
+      </dl>
+
+      @if (application.rejectionReason; as reason) {
+        <p class="reason fo-caption">
+          <mat-icon class="reason__icon" aria-hidden="true">block</mat-icon>
+          <span><strong>Reason given:</strong> {{ reason }}</span>
+        </p>
+      }
+    </section>
+
+    <section aria-labelledby="employer-heading">
+      <h3 id="employer-heading" class="body__section">The employer</h3>
+
+      @switch (store.employerStatus()) {
+        @case ('loading') {
+          <p class="m-0">Loading the employer record…</p>
+        }
+        @case ('error') {
+          <!-- The application above still stands; only the extra detail is
+               missing, so this says that rather than blanking the dialog. -->
+          <p class="body__error m-0" role="alert">
+            Couldn’t load this employer’s record. The application details above are still
+            correct.
+          </p>
+        }
+        @default {
+          @if (store.employer(); as employer) {
+            <dl class="facts">
+              <div class="fact">
+                <dt class="fo-caption">Industry</dt>
+                <dd>{{ employer.industry }}</dd>
+              </div>
+              <div class="fact">
+                <dt class="fo-caption">Company size</dt>
+                <dd>{{ employer.companySize }}</dd>
+              </div>
+              <div class="fact">
+                <dt class="fo-caption">Pipeline stage</dt>
+                <dd class="capitalize">{{ employer.stage }}</dd>
+              </div>
+              <div class="fact">
+                <dt class="fo-caption">Booth package</dt>
+                <dd>{{ employer.boothPackage ?? 'Not chosen' }}</dd>
+              </div>
+              <div class="fact">
+                <dt class="fo-caption">Deal value</dt>
+                <dd class="fo-tabular font-mono">
+                  @if (employer.dealValueMyr; as value) {
+                    RM {{ value | number: '1.0-0' }}
+                  } @else {
+                    —
+                  }
+                </dd>
+              </div>
+              <div class="fact">
+                <dt class="fo-caption">Contact</dt>
+                <dd>{{ employer.contactName }}</dd>
+              </div>
+              <div class="fact fact--wide">
+                <dt class="fo-caption">Email</dt>
+                <dd class="font-mono break-all">{{ employer.contactEmail }}</dd>
+              </div>
+              @if (employer.contactPhone; as phone) {
+                <div class="fact">
+                  <dt class="fo-caption">Phone</dt>
+                  <dd class="font-mono">{{ phone }}</dd>
+                </div>
+              }
+            </dl>
+
+            @if (otherFairs().length > 0) {
+              <p class="fo-caption m-0 mt-3">
+                <strong>Also attending:</strong> {{ otherFairs().join(', ') }}
+              </p>
+            }
+
+            @if (employer.notes; as notes) {
+              <p class="notes fo-caption">{{ notes }}</p>
+            }
+          }
+        }
+      }
+    </section>
+  } @else {
+    <p class="body__error m-0" role="alert">This application could not be found.</p>
+  }
+</mat-dialog-content>
+
+<!-- Outside the scrolling content, so the decision stays reachable without
+     scrolling to the bottom of a long record. -->
+@if (isPending()) {
+  <mat-dialog-actions class="foot">
+    <button matButton type="button" (click)="decide('reject')">Turn down</button>
+    <button matButton="filled" type="button" (click)="decide('approve')">Approve</button>
+  </mat-dialog-actions>
+}
