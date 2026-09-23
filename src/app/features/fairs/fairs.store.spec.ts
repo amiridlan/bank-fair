@@ -167,3 +167,92 @@ describe('FairsStore', () => {
     expect(store.selectedError()?.status).toBe(404);
   });
 });
+
+describe('FairsStore grouping', () => {
+  let store: FairsStore;
+  let http: HttpTestingController;
+
+  /** Dates relative to now, so the groups do not rot as the calendar moves. */
+  const day = 24 * 60 * 60 * 1000;
+  const at = (offsetDays: number) => new Date(Date.now() + offsetDays * day).toISOString();
+
+  function row(id: string, status: string, startOffset: number, endOffset: number) {
+    return {
+      id,
+      name: id,
+      venue: 'MITEC',
+      city: 'Kuala Lumpur',
+      start_date: at(startOffset),
+      end_date: at(endOffset),
+      status,
+      booth_total: 40,
+      booth_assigned: 10,
+      registrations: 100,
+      check_ins: 0,
+    };
+  }
+
+  const ROWS = [
+    row('future-far', 'draft', 90, 90),
+    row('ended-open', 'open', -8, -7), // dates passed, never closed out
+    row('live-now', 'live', 0, 1),
+    row('completed-old', 'completed', -180, -179),
+    row('future-soon', 'open', 21, 22),
+    row('completed-recent', 'completed', -60, -59),
+  ];
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    store = TestBed.inject(FairsStore);
+    http = TestBed.inject(HttpTestingController);
+
+    const loading = store.load();
+    http.expectOne((r) => r.url === '/fairs').flush({ data: ROWS });
+    await loading;
+  });
+
+  afterEach(() => http.verify());
+
+  it('puts live and future fairs in Current, live first', () => {
+    expect(store.currentFairs().map((fair) => fair.id)).toEqual([
+      'live-now',
+      'future-soon',
+      'future-far',
+    ]);
+  });
+
+  it('separates a fair that ended without being closed out from the archive', () => {
+    // The whole reason Past exists. Its status still says open, so grouping by
+    // status alone would leave it sitting in Current; grouping by date alone
+    // would file it with the completed fairs and hide that it needs closing.
+    expect(store.pastFairs().map((fair) => fair.id)).toEqual(['ended-open']);
+    expect(store.completeFairs().map((fair) => fair.id)).not.toContain('ended-open');
+  });
+
+  it('puts completed fairs in Complete, newest first', () => {
+    expect(store.completeFairs().map((fair) => fair.id)).toEqual([
+      'completed-recent',
+      'completed-old',
+    ]);
+  });
+
+  it('files every fair in exactly one group', () => {
+    const grouped = [
+      ...store.currentFairs(),
+      ...store.pastFairs(),
+      ...store.completeFairs(),
+    ].map((fair) => fair.id);
+
+    expect(grouped).toHaveLength(ROWS.length);
+    expect(new Set(grouped).size).toBe(ROWS.length);
+  });
+
+  it('keeps a two-day fair current on its second day', () => {
+    // By end date, not start: sorting a fair already under way behind ones
+    // that have not begun would bury the one people are at.
+    const running = store.currentFairs().find((fair) => fair.id === 'live-now');
+    expect(running).toBeDefined();
+  });
+});

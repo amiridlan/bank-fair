@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { type ApiError, toApiError } from '../../core/http/api-error';
 import { ApiService } from '../../core/http/api.service';
 import type { Fair, FairStatus } from '../../core/models';
+import { hasEnded } from '../../core/fairs/fair-timing';
 
 export type LoadStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -19,6 +20,24 @@ export const NO_FILTERS: FairFilters = { status: null, city: null };
  * signals, public readonly ones, and every API call wrapped so an error lands
  * on a signal rather than escaping.
  */
+type FairBucket = 'current' | 'past' | 'complete';
+
+/** Which group a fair belongs to. The ended rule is shared — see fair-timing. */
+function bucketOf(fair: Fair, now: number): FairBucket {
+  if (fair.status === 'completed') {
+    return 'complete';
+  }
+  return hasEnded(fair, now) ? 'past' : 'current';
+}
+
+/** The two backward-looking groups read newest first. */
+function byEndDateDesc(fairs: readonly Fair[], bucket: FairBucket): readonly Fair[] {
+  const now = Date.now();
+  return [...fairs]
+    .filter((fair) => bucketOf(fair, now) === bucket)
+    .sort((a, b) => b.endDate.localeCompare(a.endDate));
+}
+
 @Injectable({ providedIn: 'root' })
 export class FairsStore {
   private readonly api = inject(ApiService);
@@ -52,6 +71,39 @@ export class FairsStore {
   /** Cities present in the loaded set, for the filter dropdown. */
   readonly cities = computed(() =>
     [...new Set(this._fairs().map((fair) => fair.city))].sort((a, b) => a.localeCompare(b)),
+  );
+
+  /**
+   * Fairs still ahead or happening now, live ones first.
+   *
+   * "Future" is by end date, not start: a two-day fair on its second day is
+   * still current, and sorting by start would bury it under fairs that have
+   * not begun.
+   */
+  readonly currentFairs = computed<readonly Fair[]>(() => {
+    const now = Date.now();
+    return [...this._fairs()]
+      .filter((fair) => bucketOf(fair, now) === 'current')
+      .sort(
+        (a, b) =>
+          Number(b.status === 'live') - Number(a.status === 'live') ||
+          a.startDate.localeCompare(b.startDate),
+      );
+  });
+
+  /**
+   * Over, but never closed out.
+   *
+   * Separate from Complete on purpose: a fair whose dates have passed while
+   * its status still says open is work outstanding — booths to reconcile, a
+   * status somebody has to set — not an archive entry. Merging the two would
+   * hide exactly the fairs that need attention.
+   */
+  readonly pastFairs = computed<readonly Fair[]>(() => byEndDateDesc(this._fairs(), 'past'));
+
+  /** Closed out by staff. The archive. */
+  readonly completeFairs = computed<readonly Fair[]>(() =>
+    byEndDateDesc(this._fairs(), 'complete'),
   );
 
   /** The next fair a hiring manager would care about: live first, then soonest. */
