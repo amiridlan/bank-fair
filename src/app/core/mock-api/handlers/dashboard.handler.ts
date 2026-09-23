@@ -35,9 +35,14 @@ function kpi(value: number, deltaPct: number | null): KpiValue {
  * this dataset has. Where no comparison exists the delta is null rather than
  * zero, so the card can omit it instead of implying "no change".
  */
-export const getDashboardSummary: MockHandler = ({ db }) => {
+export const getDashboardSummary: MockHandler = ({ db, now }) => {
+  // Status AND dates. A fair whose dates have passed is not active however
+  // its status reads — staff do not always close one out the day it ends, and
+  // a card labelled "Active fairs" that counts last week's fair is wrong. The
+  // same rule groups the fair list into Current, Past and Complete.
   const activeFairs = db.fairs.filter(
-    (fair) => fair.status === 'open' || fair.status === 'live',
+    (fair) =>
+      (fair.status === 'open' || fair.status === 'live') && Date.parse(fair.endDate) >= now,
   );
   const previousFair = db.fairs.find((fair) => fair.status === 'completed') ?? null;
 

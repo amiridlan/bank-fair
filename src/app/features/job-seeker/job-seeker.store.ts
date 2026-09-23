@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { type ApiError, toApiError } from '../../core/http/api-error';
 import { ApiService } from '../../core/http/api.service';
 import type { Candidate, CandidateProfileInput, Fair, FairRegistration } from '../../core/models';
+import { isOpenForSignup } from '../../core/fairs/fair-timing';
 
 export type LoadStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -43,10 +44,11 @@ export class JobSeekerStore {
   readonly isLoading = computed(() => this._status() === 'loading');
   readonly hasError = computed(() => this._status() === 'error');
 
-  /** Only fairs still taking registrations are worth showing someone. */
-  readonly openFairs = computed(() =>
-    this._fairs().filter((fair) => fair.status === 'open' || fair.status === 'live'),
-  );
+  /**
+   * Only fairs still taking registrations are worth showing someone — and a
+   * fair whose dates have passed is not one, whatever its status still says.
+   */
+  readonly openFairs = computed(() => this._fairs().filter((fair) => isOpenForSignup(fair)));
 
   readonly registeredFairIds = computed(
     () => new Set(this._registrations().map((entry) => entry.fairId)),

@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { type ApiError, toApiError } from '../../core/http/api-error';
 import { ApiService } from '../../core/http/api.service';
 import type { ApplicationStatus, Fair, FairApplication } from '../../core/models';
+import { isOpenForSignup } from '../../core/fairs/fair-timing';
 
 export type LoadStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -55,10 +56,13 @@ export class ApplicationsStore {
   );
   readonly pendingCount = computed(() => this.pending().length);
 
-  /** Fairs still accepting applications. */
-  readonly openFairs = computed(() =>
-    this._fairs().filter((fair) => fair.status === 'open' || fair.status === 'live'),
-  );
+  /**
+   * Fairs still accepting applications.
+   *
+   * Not by status alone: a fair left open after its dates passed would sit
+   * here as something to apply to, which is an invitation nobody can accept.
+   */
+  readonly openFairs = computed(() => this._fairs().filter((fair) => isOpenForSignup(fair)));
 
   readonly fairName = computed(() => {
     const byId = new Map(this._fairs().map((fair) => [fair.id, fair.name]));
