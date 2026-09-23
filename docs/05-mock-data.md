@@ -14,7 +14,7 @@
 |---|---|---|
 | Users | 4 | 1 staff, 2 employers (different companies), 1 job seeker mapped onto `cand-001` |
 | Fairs | 5 | See below |
-| Booths | 40 per fair (5 rows × 8 cols; rows A–E) | Row A = platinum, B = premium, C–E = standard |
+| Booths | 40 per fair × 7 fairs = 280 (5 rows × 8 cols; rows A–E) | Row A = platinum, B = premium, C–E = standard |
 | Employers | 60 | Spread across all stages |
 | Candidates | 300 | Enough to make pagination and filters meaningful |
 | Shortlists | 6 | For employer 1, so the demo is not empty |
@@ -38,6 +38,13 @@
 | `fair-03` | Northern Tech & Semicon Career Fair | Penang convention venue | George Town | +45 days | open |
 | `fair-04` | Southern Graduate Career Fair | Johor Bahru convention venue | Johor Bahru | +90 days | draft |
 | `fair-05` | Graduate Career Fair (Previous) | MITEC | Kuala Lumpur | -60 → -59 days | completed |
+| `fair-06` | Sarawak Digital Careers Fair | Borneo Convention Centre Kuching | Kuching | -8 → -7 days | **open** |
+| `fair-07` | KL Engineering Careers Fair | Kuala Lumpur Convention Centre | Kuala Lumpur | -180 → -179 days | completed |
+
+`fair-06` is the interesting one: its dates have passed while its status still
+says open, because nobody closed it out. It is the reason the fair list groups
+into three rather than two — Past is a fair needing attention, Complete is an
+archive — and without it in the seed the Past group would never appear.
 
 Booth fill: **derived from the booths, not set per fair.**
 
@@ -48,10 +55,17 @@ The original targets (fair-01 ~95%, fair-02 ~70%, fair-03 ~40%, fair-04 0%, fair
 | Fair | Status | Fill | Eligible employers | Left unassigned |
 |---|---|---|---|---|
 | fair-01 | live | 26/40 (65%) | 30 | 4 |
-| fair-02 | open | 20/40 (50%) | 24 | 4 |
-| fair-03 | open | 6/40 (15%) | 10 | 4 |
+| fair-02 | open | 16/40 (40%) | 20 | 4 |
+| fair-03 | open | 14/40 (35%) | 18 | 4 |
 | fair-04 | draft | 0/40 (0%) | 0 | 0 |
 | fair-05 | completed | 28/40 (70%) | 28 | 0 |
+| fair-06 | open, ended | 7/40 (18%) | 11 | 4 |
+| fair-07 | completed | 28/40 (70%) | 28 | 0 |
+
+Adding `fair-06` and `fair-07` shifted every later draw from the shared seeded
+random, which is why fair-02 and fair-03 differ from the figures this table
+carried before. `fair-03`'s weight was raised from 0.4 to 0.65 to bring it back
+near the ~40% the original story wanted; it had fallen to 1/40.
 
 Each open fair deliberately keeps **4 committed employers without a booth**, because flow F1 is "drag an unassigned employer onto a booth" and a fully allocated fair would have nothing to demonstrate.
 
