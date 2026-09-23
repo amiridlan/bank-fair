@@ -31,7 +31,7 @@ Use the menu in the top right to switch between the four demo identities — no 
 ### Employer
 
 - **Talent pool** — 300 candidates, server-side sorted and paginated, with five filters and a debounced search. Shortlist straight from a row rather than opening each profile. Every filter is in the URL, so a filtered view can be shared or refreshed.
-- **Candidate profile** — a deep-linkable drawer. Contact details are masked until the candidate is shortlisted.
+- **Candidate profile** — a deep-linkable modal. The URL carries the candidate id, so a profile survives a refresh and the link can be shared. Contact details are masked until the candidate is shortlisted.
 - **Shortlist** — per fair, with full contact details and notes.
 - **Interviews** — twenty-minute slots from 10:00 to 17:00, per day of the fair. Book a shortlisted candidate; a slot taken in the meantime returns a conflict and refreshes the grid.
 - **Fairs** — apply to attend an open fair, see where the application stands, and read the reason if it was turned down. A rejection can be reapplied to; a pending one cannot.
