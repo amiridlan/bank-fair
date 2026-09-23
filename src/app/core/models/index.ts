@@ -1,6 +1,13 @@
 export type { Role, User } from './user.model';
 export type { Fair, FairStatus } from './fair.model';
 export type { Booth, BoothPackage } from './booth.model';
+export type { FairExhibitor } from './fair-exhibitor.model';
+export type {
+  EmploymentType,
+  ExperienceLevel,
+  FairJobOpening,
+  JobOpening,
+} from './job-opening.model';
 export type { CompanySize, Employer, EmployerInput, EmployerStage } from './employer.model';
 export type { AuditAction, AuditChange, AuditEntity, AuditEntry } from './audit-entry.model';
 export type { Candidate, CandidateProfileInput, Qualification } from './candidate.model';

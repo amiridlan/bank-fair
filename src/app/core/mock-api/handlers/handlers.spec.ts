@@ -1,6 +1,7 @@
 import type { User } from '../../models';
 import { MAX_AUDIT_ENTRIES } from '../audit';
 import { type MockDb, buildMockDb, getMockDb, resetMockDb } from '../mock-db';
+import { toSnakeCase } from '../../http/case-conversion';
 import { runMockRequest } from '../mock-engine';
 import type { MockContext, MockResult } from '../mock-response';
 import { matchRoute, writeRoutes } from './index';
@@ -1382,5 +1383,281 @@ describe('audit log', () => {
 
     expect(employers.length).toBeGreaterThan(0);
     expect(approvals).toHaveLength(1);
+  });
+});
+
+describe('fair exhibitors', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  interface Exhibitor {
+    employerId: string;
+    name: string;
+    boothCode: string;
+    openingCount: number;
+  }
+
+  it('lists one row per employer holding a booth at this fair', () => {
+    const exhibitors = data<Exhibitor[]>(call(db, 'GET', '/fairs/fair-01/exhibitors'));
+    const seated = db.booths.filter(
+      (booth) => booth.fairId === 'fair-01' && booth.employerId !== null,
+    );
+
+    expect(exhibitors).toHaveLength(seated.length);
+    expect(exhibitors.length).toBeGreaterThan(0);
+  });
+
+  it('carries NO commercial field, whatever the employer record holds', () => {
+    // The point of the projection (docs/11 J-D1): these cannot leak through a
+    // template because they are not in the object at all. If someone ever
+    // "simplifies" this handler to return the Employer, this fails.
+    const exhibitors = data<Record<string, unknown>[]>(
+      call(db, 'GET', '/fairs/fair-01/exhibitors'),
+    );
+
+    for (const field of [
+      'stage',
+      'dealValueMyr',
+      'contactEmail',
+      'contactPhone',
+      'contactName',
+      'lostReason',
+      'notes',
+    ]) {
+      expect(exhibitors.every((row) => !(field in row))).toBe(true);
+    }
+  });
+
+  it('excludes an employer tagged with the fair who has no booth', () => {
+    // `fairIds` includes leads who were never accepted. Listing from it would
+    // advertise companies that are not coming (docs/11 J-D3).
+    const seatedIds = new Set(
+      db.booths
+        .filter((booth) => booth.fairId === 'fair-01' && booth.employerId !== null)
+        .map((booth) => booth.employerId),
+    );
+    const taggedButUnseated = db.employers.filter(
+      (employer) => employer.fairIds.includes('fair-01') && !seatedIds.has(employer.id),
+    );
+    expect(taggedButUnseated.length).toBeGreaterThan(0); // the case exists in the seed
+
+    const listed = new Set(
+      data<Exhibitor[]>(call(db, 'GET', '/fairs/fair-01/exhibitors')).map(
+        (row) => row.employerId,
+      ),
+    );
+    for (const employer of taggedButUnseated) {
+      expect(listed.has(employer.id)).toBe(false);
+    }
+  });
+
+  it('counts only the openings advertised at this fair', () => {
+    const exhibitors = data<Exhibitor[]>(call(db, 'GET', '/fairs/fair-01/exhibitors'));
+    const row = exhibitors.find((entry) => entry.openingCount > 0)!;
+    const expected = db.jobOpenings.filter(
+      (opening) =>
+        opening.employerId === row.employerId && opening.fairIds.includes('fair-01'),
+    ).length;
+
+    expect(row.openingCount).toBe(expected);
+  });
+
+  it('404s an unknown fair', () => {
+    expect(call(db, 'GET', '/fairs/fair-99/exhibitors').status).toBe(404);
+  });
+
+  it('is readable by every role — there is nothing here to gate', () => {
+    for (const user of [STAFF, HM_ONE, SEEKER]) {
+      expect(call(db, 'GET', '/fairs/fair-01/exhibitors', { user }).status).toBe(200);
+    }
+  });
+});
+
+describe('fair job openings', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  interface Opening {
+    id: string;
+    title: string;
+    employerId: string;
+    employerName: string;
+    boothCode: string;
+    jobFunction: string;
+    employmentType: string;
+    experienceLevel: string;
+    salaryMinMyr: number | null;
+    salaryMaxMyr: number | null;
+  }
+
+  function list(path: string): Opening[] {
+    return data<Opening[]>(call(db, 'GET', path));
+  }
+
+  it('lists openings for employers with a booth here, denormalised', () => {
+    const openings = list('/fairs/fair-01/job-openings?per_page=200');
+
+    expect(openings.length).toBeGreaterThan(0);
+    for (const opening of openings) {
+      expect(opening.employerName).not.toBe('Unknown employer');
+      // The booth code is what a visitor uses to find the stand, so a row
+      // without one is useless.
+      expect(opening.boothCode).toMatch(/^[A-E]-\d{2}$/);
+    }
+  });
+
+  it('paginates, because a fair runs to hundreds of rows', () => {
+    const body = call(db, 'GET', '/fairs/fair-01/job-openings').body as {
+      data: unknown[];
+      meta: { total: number; perPage: number };
+    };
+
+    expect(body.meta.total).toBeGreaterThan(body.data.length);
+    expect(body.data).toHaveLength(body.meta.perPage);
+  });
+
+  it('filters by function, type and level', () => {
+    const all = list('/fairs/fair-01/job-openings?per_page=200');
+    const someFunction = all[0].jobFunction;
+
+    const byFunction = list(
+      `/fairs/fair-01/job-openings?per_page=200&function=${encodeURIComponent(someFunction)}`,
+    );
+    expect(byFunction.length).toBeGreaterThan(0);
+    expect(byFunction.every((row) => row.jobFunction === someFunction)).toBe(true);
+
+    const interns = list('/fairs/fair-01/job-openings?per_page=200&type=internship');
+    expect(interns.every((row) => row.employmentType === 'internship')).toBe(true);
+
+    const fresh = list('/fairs/fair-01/job-openings?per_page=200&level=fresh_graduate');
+    expect(fresh.every((row) => row.experienceLevel === 'fresh_graduate')).toBe(true);
+  });
+
+  it('excludes an opening whose employer has no booth at this fair', () => {
+    const seated = new Set(
+      db.booths
+        .filter((booth) => booth.fairId === 'fair-02' && booth.employerId !== null)
+        .map((booth) => booth.employerId),
+    );
+    const listed = list('/fairs/fair-02/job-openings?per_page=500');
+
+    expect(listed.every((row) => seated.has(row.employerId))).toBe(true);
+  });
+
+  it('leaves both salary ends null together when undisclosed', () => {
+    const openings = list('/fairs/fair-01/job-openings?per_page=200');
+    const undisclosed = openings.filter((row) => row.salaryMinMyr === null);
+
+    // The seed must actually produce the empty case, or the UI path for it
+    // would never be exercised (docs/11 J-D5).
+    expect(undisclosed.length).toBeGreaterThan(0);
+    expect(undisclosed.every((row) => row.salaryMaxMyr === null)).toBe(true);
+    expect(
+      openings
+        .filter((row) => row.salaryMinMyr !== null)
+        .every((row) => (row.salaryMaxMyr as number) > (row.salaryMinMyr as number)),
+    ).toBe(true);
+  });
+
+  it('404s an unknown fair', () => {
+    expect(call(db, 'GET', '/fairs/fair-99/job-openings').status).toBe(404);
+  });
+});
+
+describe('the employer pipeline is staff-only', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  // `/employers` returns stage, deal value, contact details and internal
+  // notes. It used to answer anyone (docs/11 J-D2).
+  it('404s the list for an employer and a job seeker', () => {
+    expect(call(db, 'GET', '/employers', { user: HM_ONE }).status).toBe(404);
+    expect(call(db, 'GET', '/employers', { user: SEEKER }).status).toBe(404);
+    expect(call(db, 'GET', '/employers', { user: STAFF }).status).toBe(200);
+  });
+
+  it('404s the detail for an employer and a job seeker', () => {
+    const id = db.employers[0].id;
+
+    // Even their own record: this endpoint is the sales view of them, not
+    // their profile.
+    expect(call(db, 'GET', `/employers/${id}`, { user: HM_ONE }).status).toBe(404);
+    expect(call(db, 'GET', `/employers/${id}`, { user: SEEKER }).status).toBe(404);
+    expect(call(db, 'GET', `/employers/${id}`, { user: STAFF }).status).toBe(200);
+  });
+
+  it('says only "Not found", so the refusal is indistinguishable from absence', () => {
+    expect(message(call(db, 'GET', '/employers', { user: SEEKER }))).toBe('Not found.');
+  });
+});
+
+/**
+ * The handler tests above call `matchRoute` and the handler directly. These go
+ * through `runMockRequest`, which is what the interceptor actually calls, and
+ * then apply `toSnakeCase` the way the interceptor does before the body
+ * reaches the wire.
+ *
+ * Worth the duplication for exactly one reason: the gate depends on
+ * `currentUser` being threaded from the auth store through the engine to the
+ * handler, and a test that hands the handler a user directly cannot show that
+ * happens.
+ */
+describe('through the engine, as the interceptor calls it', () => {
+  beforeEach(() => resetMockDb(NOW));
+
+  function request(method: string, path: string, user: User): MockResult {
+    const url = new URL(path, 'http://mock.local');
+    return runMockRequest({
+      method,
+      path: url.pathname,
+      query: url.searchParams,
+      body: null,
+      currentUser: user,
+      isProduction: true,
+    });
+  }
+
+  /** What the interceptor puts on the wire. */
+  function wire(result: MockResult): Record<string, unknown>[] {
+    return (toSnakeCase(result.body) as { data: Record<string, unknown>[] }).data;
+  }
+
+  it('refuses the employer pipeline to a job seeker end to end', () => {
+    expect(request('GET', '/employers', SEEKER).status).toBe(404);
+    expect(request('GET', '/employers/emp-001', SEEKER).status).toBe(404);
+    expect(request('GET', '/employers', STAFF).status).toBe(200);
+  });
+
+  it('puts no commercial field on the wire, in any casing', () => {
+    const rows = wire(request('GET', '/fairs/fair-01/exhibitors', SEEKER));
+    expect(rows.length).toBeGreaterThan(0);
+
+    // snake_case, because that is what crosses the wire — checking the
+    // camelCase names alone would miss a leak added after serialisation.
+    const forbidden = [
+      'stage',
+      'deal_value_myr',
+      'contact_email',
+      'contact_phone',
+      'contact_name',
+      'lost_reason',
+      'notes',
+    ];
+    const seen = new Set(rows.flatMap((row) => Object.keys(row)));
+    for (const field of forbidden) {
+      expect(seen.has(field)).toBe(false);
+    }
+    expect(seen.has('booth_code')).toBe(true);
+    expect(seen.has('opening_count')).toBe(true);
+  });
+
+  it('serves the job openings a seeker asks for', () => {
+    const result = request('GET', '/fairs/fair-01/job-openings?per_page=5', SEEKER);
+    const rows = wire(result);
+
+    expect(result.status).toBe(200);
+    expect(rows).toHaveLength(5);
+    expect(rows[0]['employer_name']).toBeTruthy();
+    expect(rows[0]['booth_code']).toBeTruthy();
   });
 });

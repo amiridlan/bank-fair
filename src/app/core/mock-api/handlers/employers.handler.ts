@@ -84,8 +84,27 @@ function validate(
   return errors;
 }
 
-/** `GET /employers` — `stage`, `fair_id` and `search` filters. */
-export const listEmployers: MockHandler = ({ db, query }) => {
+/**
+ * `GET /employers` — `stage`, `fair_id` and `search` filters. Staff only.
+ *
+ * The full record carries the sales pipeline: `stage`, `dealValueMyr`,
+ * `contactEmail`, `contactPhone`, `lostReason` and internal `notes`. None of
+ * that is a job seeker's or another employer's business, and the endpoint used
+ * to hand it to anyone who asked — `/employers?fair_id=X` is the obvious way
+ * to build a fair's exhibitor list, and it would have leaked the lot
+ * (docs/11 J-D2).
+ *
+ * Job seekers and employers read `/fairs/{id}/exhibitors` instead, which
+ * returns a projection with no commercial fields in it at all.
+ *
+ * 404 rather than 403, the same answer the rest of this API gives, so the
+ * response does not confirm what it is refusing.
+ */
+export const listEmployers: MockHandler = ({ db, query, currentUser }) => {
+  if (currentUser.role !== 'staff') {
+    return notFound('Not found.');
+  }
+
   const stage = query.get('stage');
   const fairId = query.get('fair_id');
   const search = query.get('search')?.toLowerCase().trim();
@@ -109,7 +128,12 @@ export const listEmployers: MockHandler = ({ db, query }) => {
   return okList(employers);
 };
 
-export const getEmployer: MockHandler = ({ db, params }) => {
+/** `GET /employers/{id}` — staff only, for the same reason as the list. */
+export const getEmployer: MockHandler = ({ db, params, currentUser }) => {
+  if (currentUser.role !== 'staff') {
+    return notFound('Not found.');
+  }
+
   const employer = db.employers.find((candidate) => candidate.id === params['id']);
   return employer ? ok(employer) : notFound('Employer not found.');
 };

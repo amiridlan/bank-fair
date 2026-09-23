@@ -7,6 +7,7 @@ import type {
   FairApplication,
   FairRegistration,
   InterviewSlot,
+  JobOpening,
   Shortlist,
   User,
 } from '../models';
@@ -16,6 +17,7 @@ import { seedBooths } from './seed/seed-booths';
 import { seedCandidates } from './seed/seed-candidates';
 import { seedEmployers } from './seed/seed-employers';
 import { seedFairs } from './seed/seed-fairs';
+import { seedJobOpenings } from './seed/seed-job-openings';
 import {
   applySeedBookings,
   seedFairApplications,
@@ -43,6 +45,7 @@ export interface MockDb {
   interviewSlots: InterviewSlot[];
   fairRegistrations: FairRegistration[];
   fairApplications: FairApplication[];
+  jobOpenings: JobOpening[];
   /**
    * Written by the engine, never by a handler (docs/09 A3). Empty at seed:
    * the log records what happened in this session, and inventing history
@@ -96,6 +99,9 @@ export function buildMockDb(now: number = Date.now()): MockDb {
     fairRegistrations: seedFairRegistrations(candidates, now),
     // A few pending applications, so the staff queue opens with work in it.
     fairApplications: seedFairApplications(employers, now),
+    // Drawn from its own random stream, so adding openings cannot shift any
+    // other seed's numbers. See seed-job-openings.ts.
+    jobOpenings: seedJobOpenings(employers, now),
     auditEntries: [],
   };
 }

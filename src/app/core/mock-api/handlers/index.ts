@@ -29,7 +29,13 @@ import {
   listShortlists,
   updateInterviewSlot,
 } from './engagements.handler';
-import { getFair, listFairBooths, listFairs } from './fairs.handler';
+import {
+  getFair,
+  listFairBooths,
+  listFairExhibitors,
+  listFairJobOpenings,
+  listFairs,
+} from './fairs.handler';
 
 interface MockRoute {
   readonly method: string;
@@ -162,6 +168,8 @@ const ROUTES: readonly MockRoute[] = [
   { method: 'GET', pattern: '/audit-entries', handler: listAuditEntries },
 
   { method: 'GET', pattern: '/fairs/:id/booths', handler: listFairBooths },
+  { method: 'GET', pattern: '/fairs/:id/exhibitors', handler: listFairExhibitors },
+  { method: 'GET', pattern: '/fairs/:id/job-openings', handler: listFairJobOpenings },
   { method: 'GET', pattern: '/fairs/:id', handler: getFair },
   { method: 'GET', pattern: '/fairs', handler: listFairs },
 

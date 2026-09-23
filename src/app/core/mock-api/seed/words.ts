@@ -266,3 +266,98 @@ export const HEADLINE_INTERESTS: readonly string[] = [
   'cloud infrastructure',
   'corporate finance',
 ];
+
+// ------------------------------------------------------------ job openings
+
+/**
+ * Job titles grouped by the function they belong to.
+ *
+ * Keyed by the broad family the Jobs filter offers, so a title and its
+ * function cannot drift apart — picking one picks the other.
+ */
+export const TITLES_BY_FUNCTION: Readonly<Record<string, readonly string[]>> = {
+  Engineering: [
+    'Graduate Software Engineer',
+    'Backend Engineer',
+    'Frontend Engineer',
+    'QA Engineer',
+    'DevOps Engineer',
+    'Process Engineer',
+    'Test Engineer',
+    'Hardware Design Engineer',
+    'Mechanical Design Engineer',
+    'Maintenance Engineer',
+  ],
+  'Data & Analytics': [
+    'Data Analyst',
+    'Graduate Data Scientist',
+    'Business Intelligence Analyst',
+    'Analytics Engineer',
+    'Actuarial Analyst',
+  ],
+  'Finance & Accounting': [
+    'Audit Associate',
+    'Tax Associate',
+    'Finance Executive',
+    'Treasury Analyst',
+    'Credit Analyst',
+    'Management Accountant',
+  ],
+  'Sales & Marketing': [
+    'Marketing Executive',
+    'Digital Marketing Executive',
+    'Brand Assistant',
+    'Sales Executive',
+    'Content Executive',
+  ],
+  Operations: [
+    'Supply Chain Executive',
+    'Operations Executive',
+    'Logistics Coordinator',
+    'Production Planner',
+    'Quality Assurance Executive',
+  ],
+  'People & Admin': [
+    'Human Resources Executive',
+    'Talent Acquisition Executive',
+    'Administrative Executive',
+  ],
+  Consulting: ['Associate Consultant', 'Business Analyst', 'Technology Consultant'],
+};
+
+/**
+ * Which candidate fields each job function draws its skills from.
+ *
+ * This is the join that makes the "matches your profile" marker work: an
+ * opening's skills come from the same `SKILLS_BY_FIELD` lists a candidate's do,
+ * so an overlap means something rather than being a coincidence of wording.
+ */
+export const FIELDS_BY_FUNCTION: Readonly<Record<string, readonly string[]>> = {
+  Engineering: [
+    'Computer Science',
+    'Software Engineering',
+    'Electrical & Electronic Engineering',
+    'Mechanical Engineering',
+    'Chemical Engineering',
+  ],
+  'Data & Analytics': ['Data Science', 'Computer Science', 'Actuarial Science'],
+  'Finance & Accounting': ['Accounting', 'Finance'],
+  'Sales & Marketing': ['Marketing', 'Business Administration'],
+  Operations: ['Business Administration', 'Mechanical Engineering'],
+  'People & Admin': ['Business Administration', 'Psychology'],
+  Consulting: ['Business Administration', 'Finance', 'Computer Science'],
+};
+
+/** Where the work is. Real Malaysian cities — places, not people. */
+export const JOB_LOCATIONS: readonly string[] = [
+  'Kuala Lumpur',
+  'Petaling Jaya',
+  'Cyberjaya',
+  'Shah Alam',
+  'George Town',
+  'Bayan Lepas',
+  'Johor Bahru',
+  'Kuching',
+  'Kota Kinabalu',
+  'Remote (Malaysia)',
+];

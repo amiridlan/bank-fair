@@ -143,7 +143,52 @@ the candidate dialog for the function and level tags.
 import and the openings list does not need one. No new dependency is required
 for any of this.
 
-## Risks
+## J1 — done
+
+Shipped as planned, with one decision corrected and three risks resolved. 381
+tests pass, lint clean, initial bundle unchanged at 640.69 kB.
+
+**The three risks, settled by measurement rather than argument:**
+
+- **The `/employers` gate breaking existing specs — not real.**
+  `employers.store.spec.ts` and `floor-plan.store.spec.ts` use
+  `provideHttpClientTesting`, which replaces the HTTP backend outright, so the
+  mock interceptor never runs in them. All 363 pre-existing tests passed
+  unchanged the moment the gate went in. The risk was written from reading the
+  store code without checking how its spec provides HTTP.
+- **Seed volume — over-estimated by half.** The plan guessed ~200 openings; the
+  seed produces **99** across 30 hiring employers, 87 of them visible at the
+  busiest fair. Well under the talent pool's 300, and
+  `/fairs/{id}/job-openings` is paginated regardless, so a fair's list never
+  renders more than a page at once. The `mock-engine` lazy chunk grew 34.77 kB
+  → 40.56 kB; the initial bundle did not move, because the seed has never been
+  in it.
+- **`Fair.description` touching staff surfaces — absorbed.** Adding a required
+  field only obliges the seed to supply one; every reader keeps compiling. All
+  seven fairs got a paragraph.
+
+**One thing checked that the plan had not thought to ask.** The exhibitor list
+counts distinct employers holding a booth, but the fair card counts booths. If
+one employer held two booths at a fair the two numbers would disagree in front
+of the user. They do not: at fair-01, 26 booths, 26 distinct employers, and
+`boothAssigned` is 26 — `buildMockDb` recomputes that field from the booths,
+which is why the literal `38` in `seed-fairs.ts` is not what ships.
+
+**A verification attempt that proved nothing, and what replaced it.** The first
+browser check called the endpoints with `fetch()` and got 200 from all three
+roles. That was not the gate failing — a raw `fetch` never reaches an Angular
+interceptor, so it was the static server returning `index.html` for every path.
+The real boundary is `runMockRequest`, which is what the interceptor calls and
+where `currentUser` is threaded through from the auth store. There is now a
+spec at that level, and it also applies `toSnakeCase` the way the interceptor
+does, so the leak check reads the keys that actually cross the wire rather than
+their camelCase names.
+
+**Mutation-checked.** Spreading the `Employer` into the exhibitor projection,
+adding a single `notes` field to it, and removing the staff gate each fail
+exactly the test written for them — at both the handler and the wire level.
+
+## Risks (as written before J1; see above for what became of them)
 
 - **The `/employers` gate may break existing specs.** `employers.store` and
   `floor-plan.store` specs construct requests without a role context. Expected,
