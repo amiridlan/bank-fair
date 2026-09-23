@@ -187,7 +187,7 @@ describe('ShortlistStore', () => {
     });
   });
 
-  it('finds the entry for a candidate, so the drawer can remove it', async () => {
+  it('finds the entry for a candidate, so the profile can remove it', async () => {
     await loadTwo();
 
     expect(store.entryForCandidate('cand-002')?.id).toBe('sl-002');

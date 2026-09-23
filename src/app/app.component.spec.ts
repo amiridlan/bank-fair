@@ -111,8 +111,8 @@ describe('App routing', () => {
     expect(text).toContain('300');
   });
 
-  it('shortlists from the table row without opening the drawer', async () => {
-    // Triaging 300 candidates through the drawer was a three-step round trip
+  it('shortlists from the table row without opening the profile', async () => {
+    // Triaging 300 candidates through the profile was a three-step round trip
     // each (docs/07 UX-4), so the row carries the action itself.
     auth.switchUser('u-emp-1');
     const fixture = TestBed.createComponent(AppComponent);
@@ -174,18 +174,53 @@ describe('App routing', () => {
     expect(cells.every((row) => row.includes('Data Science'))).toBe(true);
   });
 
-  it('opens the candidate drawer from a deep link', async () => {
+  it('opens the candidate profile from a deep link', async () => {
     auth.switchUser('u-emp-1');
     const fixture = TestBed.createComponent(AppComponent);
 
     await router.navigate(['/hiring/talent-pool', 'cand-001']);
     await fixture.whenStable();
     fixture.detectChanges();
+    await fixture.whenStable();
 
-    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    // The profile is a modal now, so it renders into the CDK overlay on the
+    // body rather than inside the fixture. The route is what still matters:
+    // a deep link has to land on an open profile.
+    const dialog = document.querySelector('mat-dialog-container');
+    expect(dialog).not.toBeNull();
+
+    const text = dialog?.textContent ?? '';
     expect(text).toContain('Skills');
     // Not shortlisted by emp-001, so contact stays locked.
     expect(text).toContain('Contact details unlock');
+  });
+
+  it('closing the profile returns to the list URL', async () => {
+    // Every dismissal — close button, Escape, backdrop — goes through the same
+    // afterClosed handler, so the URL and the dialog cannot disagree.
+    auth.switchUser('u-emp-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/hiring/talent-pool', 'cand-001']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const close = document.querySelector<HTMLButtonElement>(
+      'mat-dialog-container button[aria-label="Close candidate profile"]',
+    );
+    close?.click();
+
+    // Closing is three async hops — the dialog's exit, afterClosed, then the
+    // navigation — so one whenStable is not enough to settle them.
+    for (let i = 0; i < 20 && router.url !== '/hiring/talent-pool'; i++) {
+      await fixture.whenStable();
+      fixture.detectChanges();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    expect(router.url).toBe('/hiring/talent-pool');
+    expect(document.querySelector('mat-dialog-container')).toBeNull();
   });
 
   it('renders the interview slot grid for the active fair', async () => {
