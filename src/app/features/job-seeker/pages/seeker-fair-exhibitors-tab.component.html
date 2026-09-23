@@ -1,0 +1,48 @@
+@if (store.exhibitors().length === 0) {
+  <app-empty-state
+    icon="storefront"
+    heading="No employers confirmed yet"
+    message="Stands are booked in the weeks before a fair. Check back closer to the date."
+  />
+} @else {
+  <div class="head">
+    <p class="fo-caption m-0">
+      {{ store.exhibitorCount() }} employers, {{ store.openingCount() }} roles between them.
+      The code beside each name is their stand on the day.
+    </p>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search">
+      <mat-label>Search employers</mat-label>
+      <input
+        matInput
+        type="search"
+        [value]="search()"
+        (input)="onSearch($event)"
+        placeholder="Name, industry or booth"
+      />
+      <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+    </mat-form-field>
+  </div>
+
+  @if (visible().length === 0) {
+    <app-empty-state
+      icon="search_off"
+      heading="No employers match that"
+      message="Try part of a company name, an industry, or a booth code like A-04."
+      actionLabel="Clear search"
+      (action)="clearSearch()"
+    />
+  } @else {
+    <!-- aria-live so a screen reader hears the count change as the filter
+         narrows; without it, typing appears to do nothing. -->
+    <p class="fo-sr-only" aria-live="polite">
+      {{ visible().length }} of {{ store.exhibitorCount() }} employers shown
+    </p>
+
+    <ul class="grid">
+      @for (exhibitor of visible(); track exhibitor.employerId) {
+        <li><app-exhibitor-card [exhibitor]="exhibitor" /></li>
+      }
+    </ul>
+  }
+}

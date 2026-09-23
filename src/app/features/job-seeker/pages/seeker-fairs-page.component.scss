@@ -16,3 +16,15 @@
   height: 16px;
   font-size: 16px;
 }
+
+// A heading that is also a link. Inherits the heading's face and size and
+// takes the link colour, so it reads as the title it is rather than as body
+// copy that happens to be clickable.
+.fair-link {
+  color: var(--fo-primary);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

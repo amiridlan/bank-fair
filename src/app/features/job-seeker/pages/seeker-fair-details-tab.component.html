@@ -1,0 +1,106 @@
+@if (store.fair(); as fair) {
+  <div class="layout">
+    <section class="panel" aria-labelledby="about-heading">
+      <h2 id="about-heading" class="text-h2">About this fair</h2>
+      <p class="about m-0">{{ fair.description }}</p>
+
+      <dl class="facts">
+        <div class="fact" [class.fact--wide]="isMultiDay()">
+          <dt class="fo-caption">Dates</dt>
+          <dd class="fo-figure fo-figure--sm">
+            {{ fair.startDate | date: 'dd/MM' }}
+            @if (isMultiDay()) {
+              <span class="nowrap">
+                <span class="fo-figure__unit">–</span> {{ fair.endDate | date: 'dd/MM' }}
+              </span>
+            }
+            <span class="fo-figure__unit">{{ fair.startDate | date: 'yyyy' }}</span>
+          </dd>
+        </div>
+        <div class="fact">
+          <dt class="fo-caption">Doors open</dt>
+          <dd class="fo-figure fo-figure--sm">{{ fair.startDate | date: 'h:mm a' }}</dd>
+        </div>
+        <div class="fact">
+          <dt class="fo-caption">Employers attending</dt>
+          <dd class="fo-figure fo-figure--sm">{{ store.exhibitorCount() }}</dd>
+        </div>
+        <div class="fact">
+          <dt class="fo-caption">Roles advertised</dt>
+          <dd class="fo-figure fo-figure--sm">{{ store.openingCount() }}</dd>
+        </div>
+      </dl>
+
+      <dl class="where">
+        <div>
+          <dt class="fo-caption">Venue</dt>
+          <dd class="m-0">{{ fair.venue }}, {{ fair.city }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel" aria-labelledby="you-heading">
+      <h2 id="you-heading" class="text-h2">Your registration</h2>
+
+      @if (isRegistered()) {
+        @if (registration(); as entry) {
+          <p class="state state--ok m-0">
+            <mat-icon class="state__icon" aria-hidden="true">check_circle</mat-icon>
+            <span>
+              <strong>You are registered.</strong>
+              Employers at this fair can see your profile.
+            </span>
+          </p>
+
+          <dl class="facts facts--tight">
+            <div class="fact">
+              <dt class="fo-caption">Registered</dt>
+              <dd class="fo-tabular m-0 font-mono">
+                {{ entry.registeredAt | date: 'dd/MM/yyyy' }}
+              </dd>
+            </div>
+            <div class="fact">
+              <!-- Shown, not buried: consent recorded at a point in time is
+                   the whole reason a registration is a row rather than a flag
+                   (PDPA 2010). Someone should be able to see when they gave
+                   it. -->
+              <dt class="fo-caption">Consent given</dt>
+              <dd class="fo-tabular m-0 font-mono">
+                {{ entry.consentedAt | date: 'dd/MM/yyyy' }}
+              </dd>
+            </div>
+          </dl>
+
+          <div class="mt-auto flex justify-end">
+            <button matButton type="button" [disabled]="isBusy()" (click)="withdraw(fair)">
+              <app-busy-label [busy]="isBusy()">Withdraw</app-busy-label>
+            </button>
+          </div>
+        }
+      } @else if (canRegister()) {
+        <p class="fo-caption m-0">
+          Registering makes your profile visible to the employers at this fair, so they can
+          find you before the day. You can withdraw at any time while it is open.
+        </p>
+        <div class="mt-auto flex justify-end">
+          <button
+            matButton="filled"
+            type="button"
+            [disabled]="isBusy()"
+            (click)="register(fair)"
+          >
+            <app-busy-label [busy]="isBusy()">Register for this fair</app-busy-label>
+          </button>
+        </div>
+      } @else {
+        <p class="state state--shut m-0">
+          <mat-icon class="state__icon" aria-hidden="true">event_busy</mat-icon>
+          <span>
+            <strong>Registration is closed.</strong>
+            This fair has finished, so the employer list below is a record of who was there.
+          </span>
+        </p>
+      }
+    </section>
+  </div>
+}

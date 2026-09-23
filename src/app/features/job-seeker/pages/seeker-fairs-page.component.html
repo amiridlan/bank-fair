@@ -56,7 +56,12 @@
       <li class="flex flex-col gap-3 rounded-md border border-border bg-raised p-4">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <h2 class="m-0 text-h2">{{ fair.name }}</h2>
+            <h2 class="m-0 text-h2">
+              <!-- The name is the way in, rather than a separate "View"
+                   button: the card already carries Register and Withdraw, and
+                   a third action competing with those is one too many. -->
+              <a class="fair-link" [routerLink]="['/me/fairs', fair.id]">{{ fair.name }}</a>
+            </h2>
             <p class="fo-caption m-0">{{ fair.venue }}, {{ fair.city }}</p>
           </div>
           <app-status-chip kind="fair" [status]="fair.status" />

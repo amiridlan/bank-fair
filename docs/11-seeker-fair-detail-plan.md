@@ -104,7 +104,43 @@ job seeker gets 404 from `/employers`. A browser check that the response body
 for `/fairs/:id/exhibitors` contains no `dealValue`, `stage`, `contactEmail`,
 `contactPhone` or `notes` key at all.
 
-## J2 — The detail shell
+## J2 — done
+
+`/me/fairs/:fairId` with an Employers tab and a Details tab, reached by
+clicking a fair's name on the list. 393 tests, lint clean, initial bundle
+unchanged at 640.69 kB, axe-core clean on all six new states at 1440px and
+390px with no horizontal scroll.
+
+`''` redirects to `employers` for now. J3 replaces that one line with the Jobs
+tab, which breaks no URL that works today.
+
+**Register and withdraw moved into `FairRegistrationActions`.** Neither is a
+plain API call — registering collects consent first, withdrawing confirms
+first, both have a 409 path and both announce to a screen reader — and the
+Details tab needed the same behaviour the fair card already had. Same reasoning
+as `RegistrationDecisions` on the staff side, and the card now delegates to it
+too rather than keeping a second copy.
+
+**A bug found only by opening the page.** The shell guards against rendering a
+stale fair under a new heading by checking `loadedId() === fairId()`. But a
+failed load clears `loadedId`, so `!isCurrent()` stays true afterwards — and
+with the skeleton tested before the error branch, a fair that 404s sat on a
+loading skeleton for ever with the Retry button unreachable. Every test passed
+while that was true; `/me/fairs/fair-99` in a browser showed it immediately.
+Error is now checked first, and a spec covers it.
+
+**A verification result that was wrong.** The first end-to-end check registered
+for a fair, navigated to the list with `page.goto`, and counted two registered
+cards instead of three — which looks like the write not reaching the list.
+`page.goto` reloads the app, and the mock database is in memory, so it reseeds:
+the "2" was the seeded state, not the outcome. Redone with in-app navigation,
+the count goes 2 → 3.
+
+**Mutation-checked.** Restoring the skeleton-before-error ordering, and
+replacing `isOpenForSignup` with a plain status check, each fail exactly the
+test written for them.
+
+## J2 — the detail shell (as planned)
 
 Route `/me/fairs/:fairId`, built as a routed shell with `mat-tab-nav-bar` +
 `mat-tab-nav-panel` + `router-outlet` — the same structure as the staff fair

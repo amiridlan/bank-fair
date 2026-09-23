@@ -1,0 +1,102 @@
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--fo-space-4);
+  align-items: start;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-3);
+  height: 100%;
+  padding: var(--fo-space-4);
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-md);
+  background: var(--fo-surface-raised);
+}
+
+.about {
+  color: var(--fo-text);
+  max-width: 70ch; // prose, not a layout column
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--fo-space-4) var(--fo-space-5);
+  margin: 0;
+}
+
+.facts--tight {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-1);
+
+  dt,
+  dd {
+    margin: 0;
+  }
+}
+
+/* A two-day range is about twice as wide as the other three figures, so on an
+   even grid it wrapped between the two dates — "24/09 –" then "25/09 2026".
+   Giving it two tracks costs nothing: the row has four. */
+.fact--wide {
+  grid-column: span 2;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.where {
+  margin: 0;
+
+  dt,
+  dd {
+    margin: 0;
+  }
+
+  dd {
+    font-weight: 500;
+    color: var(--fo-ink);
+  }
+}
+
+// Icon and sentence as well as colour: no state in this app is carried by
+// colour alone (docs/03, WCAG 1.4.1).
+.state {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--fo-space-2);
+  padding: var(--fo-space-3);
+  border-radius: var(--fo-radius-sm);
+}
+
+.state--ok {
+  background: var(--fo-success-subtle);
+  color: var(--fo-success);
+}
+
+.state--shut {
+  background: var(--fo-muted-subtle);
+  color: var(--fo-text-muted);
+}
+
+.state__icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  flex: none;
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: 3fr 2fr;
+  }
+}

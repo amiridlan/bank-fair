@@ -1,0 +1,50 @@
+<!-- Error first. A failed load clears `loadedId`, so `!isCurrent()` stays
+     true afterwards — with the skeleton tested first, a fair that 404s sat on
+     a loading skeleton for ever and the error state was unreachable. -->
+@if (store.hasError()) {
+  <app-error-state
+    heading="Couldn't load this fair"
+    [error]="store.error()"
+    (retry)="retry()"
+  />
+} @else if (store.isLoading() || !isCurrent()) {
+  <app-skeleton [count]="1" [height]="72" label="Loading fair" />
+  <app-skeleton [count]="3" [height]="96" label="" />
+} @else if (store.fair(); as fair) {
+  <app-page-header [title]="fair.name" [description]="fair.venue + ', ' + fair.city">
+    <div slot="actions" class="actions">
+      <app-status-chip kind="fair" [status]="fair.status" />
+    </div>
+  </app-page-header>
+
+  <nav mat-tab-nav-bar [tabPanel]="tabPanel" aria-label="Fair sections">
+    <a
+      mat-tab-link
+      [routerLink]="['/me/fairs', fair.id, 'employers']"
+      routerLinkActive
+      #employers="routerLinkActive"
+      [active]="employers.isActive"
+    >
+      Employers ({{ store.exhibitorCount() }})
+    </a>
+    <a
+      mat-tab-link
+      [routerLink]="['/me/fairs', fair.id, 'details']"
+      routerLinkActive
+      #details="routerLinkActive"
+      [active]="details.isActive"
+    >
+      Details
+    </a>
+  </nav>
+
+  <mat-tab-nav-panel #tabPanel class="tab">
+    <router-outlet />
+  </mat-tab-nav-panel>
+} @else {
+  <app-empty-state
+    icon="search_off"
+    heading="Fair not found"
+    message="The link may be out of date, or the fair may have been removed."
+  />
+}
