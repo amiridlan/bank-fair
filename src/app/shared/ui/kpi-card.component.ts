@@ -6,6 +6,10 @@ import { MatIconModule } from '@angular/material/icon';
  * Dashboard KPI: muted caption label, large display number, then an optional
  * delta with direction (docs/03 "KPI card").
  *
+ * The number uses the shared `.fo-figure` treatment rather than restating six
+ * utilities here, so the fair stat strip and any future figure match it by
+ * construction (docs/10 item 5).
+ *
  * The delta shows an arrow icon as well as colour, so the direction survives
  * for anyone who cannot distinguish green from red.
  */
@@ -22,13 +26,11 @@ import { MatIconModule } from '@angular/material/icon';
       class="flex h-full flex-col gap-1 rounded-md border border-border bg-raised p-4"
     >
       <p class="kpi__label fo-caption m-0">{{ label() }}</p>
-      <p
-        class="kpi__value fo-tabular m-0 font-brand text-display font-bold tracking-tight text-ink"
-      >
+      <p class="kpi__value fo-figure m-0">
         @if (prefix(); as text) {
-          <span class="text-h2 font-semibold">{{ text }}</span>
+          <span class="fo-figure__unit">{{ text }}</span>
         }{{ value() | number: format() }}@if (suffix(); as text) {
-          <span class="text-h2 font-semibold">{{ text }}</span>
+          <span class="fo-figure__unit">{{ text }}</span>
         }
       </p>
       @if (deltaPct(); as delta) {

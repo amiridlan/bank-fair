@@ -196,3 +196,107 @@ html {
     animation-duration: 2.4s;
   }
 }
+
+// Dialog chrome, shared by every modal in the app.
+//
+// One contract rather than per-dialog styles, because the two dialogs had
+// drifted into opposite shapes: one right-aligned its actions in a row, the
+// other stretched a full-bleed button down a column, and their section labels
+// used different cases. docs/10 finding 2.
+//
+// Unlayered like the other `.fo-*` helpers, and declared after `mat.theme()`
+// so it beats Material's own equal-specificity rules on the same elements.
+
+// Both of these are qualified with the Material class they sit on, and that is
+// load-bearing rather than decorative. Material's component CSS is injected
+// into <head> at runtime, so it lands AFTER this stylesheet: at equal
+// specificity `.mat-mdc-dialog-title` beats a bare `.fo-dialog-head` on source
+// order alone, and the header silently stayed `display: block` — which put the
+// close button on its own line under the title. Naming both classes wins on
+// specificity instead of hoping for an order that is not ours to control.
+
+// The header is flex so the close button can sit opposite the title, and it
+// must be `flex-start` rather than `space-between`: Material's own
+// `.mat-mdc-dialog-title::before` (display: block, width: 0, height: 40px)
+// becomes a zero-width flex item, and `space-between` then distributes the
+// free space *around* the title instead of pushing it left. That indented
+// every dialog title by 196px — it looked centred and was not. docs/10
+// finding 1. Left alone, the pseudo-element is harmless.
+.mat-mdc-dialog-title.fo-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  // No gap: the pseudo-element above is a real flex item, so a gap would sit
+  // between it and the title and push the title in by that much — 12px of the
+  // same phantom indent, in miniature. The close button is separated by the
+  // title's own flex-grow instead.
+  gap: 0;
+}
+
+.fo-dialog-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+// A real heading, not a whispered label. These mark up `h3` elements, so they
+// should read as headings rather than as uppercase form scaffolding.
+.fo-dialog-section {
+  margin: 0 0 var(--fo-space-2);
+  font-size: var(--fo-body-size);
+  line-height: var(--fo-body-line);
+  font-weight: 600;
+  color: var(--fo-ink);
+}
+
+// Material already lays `mat-dialog-actions` out as a right-aligned row, which
+// is the contract we want — so this only adds the rule and the spacing, and
+// does not restate the layout. Qualified for the same reason as the header.
+.mat-mdc-dialog-actions.fo-dialog-foot {
+  gap: var(--fo-space-2);
+  padding: var(--fo-space-4);
+  border-top: 1px solid var(--fo-border);
+}
+
+// Status text that belongs in the footer beside the actions sits at the far
+// left, with the buttons still trailing.
+.fo-dialog-foot__lead {
+  margin-inline-end: auto;
+}
+
+// Figures.
+//
+// This is an operations portal: the numbers are the product, and until now
+// every one of them was either body text or a Tailwind utility stack retyped
+// per component. Naming the treatment makes it a system decision rather than
+// six utilities that drift (docs/10, "the one conviction choice").
+//
+// Brand face because a figure is a headline, not prose. Tabular so a column of
+// them aligns. Negative tracking because display sizes set too loose at the
+// default.
+.fo-figure {
+  font-family: var(--fo-font-brand);
+  font-size: var(--fo-display-size);
+  line-height: var(--fo-display-line);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fo-ink);
+}
+
+// For strips and rows that carry several figures side by side, where the full
+// display size would shout over the page heading above it.
+.fo-figure--sm {
+  font-size: var(--fo-h1-size);
+  line-height: var(--fo-h1-line);
+}
+
+// `RM`, `%`, `/40` — scaffolding around the number, not the number. Sized off
+// the figure it sits beside and muted to 7.6:1, so the digits read first and
+// the unit still passes AA.
+.fo-figure__unit {
+  font-size: 0.6em;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--fo-text-muted);
+}

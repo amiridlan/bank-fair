@@ -1,8 +1,12 @@
 # 10 — UI/UX review
 
 A heuristic review of BankFair as it stands after S1–S4 and A1–A3, plus the
-visual direction for the fixes. Written before any code changed, so the
-findings can be argued with.
+visual direction for the fixes.
+
+The findings were written and agreed **before any code changed**, so they can
+be argued with on their own terms. "What was built" at the end records what was
+then done, what the implementation turned up that the review had missed, and
+what was deliberately left alone.
 
 ## Evidence basis — read this first
 
@@ -152,9 +156,25 @@ and `employer-fairs-page.component.html`. One class each.
 `Monash University M…`. Skills is the column an employer scans; it is the one
 cut shortest.
 
-**Fix:** render up to three skills as chips plus `+N`, and give the column the
-width freed by dropping `Qualification` (which is `Degree` for nearly every row
-and earns no space).
+**Correction — the first version of this finding was wrong twice.** It proposed
+chips plus `+N`, and it proposed freeing width by dropping a `Qualification`
+column. There is no `Qualification` column in that table (it appears in the
+candidate dialog, not the list), and chips there were already tried and
+rejected on measured evidence: docs/07 UX-3 records that they wrapped to a
+second row, took rows to 96px, and left about 70px of text per chip so they
+read `M…` and `Signal…`. Repeating a rejected experiment is worse than leaving
+the column alone.
+
+**The actual cause** is that the column widths still budget for a layout that
+no longer exists. They were tuned when the candidate profile was a drawer
+taking half the row, so every column was sized against roughly 600px. The
+profile is a modal now and the table always has the full width — but `Skills`
+was left on 15% while the year and the actions kept width they have no content
+for.
+
+**Fix:** rebalance the percentages. `Skills` 15% → 21%, taken from `fullName`,
+`fieldOfStudy`, `graduationYear`, `cgpa` and `actions`, with the year and CGPA
+keeping enough to stay whole at the table's 960px floor.
 
 **7. `THE EMPLOYER` / `THIS APPLICATION` are stilted.**
 *Microcopy.*
@@ -282,6 +302,51 @@ Six fixes, ordered by value per unit of risk. Roughly one session.
 
 Items 1–5 are safe to do now. **Item 6 needs a decision** (option a or b) before
 any code moves.
+
+---
+
+## What was built
+
+All six items, plus the two defects the work itself uncovered. Verified in
+Chromium at 1440x1000 and 390x844, with axe-core clean at both widths on every
+changed surface.
+
+| # | Change | Result |
+|---|---|---|
+| 1 | Shared dialog header | Title at x=364 = dialog edge + its 24px padding. The 196px indent is gone, exactly. |
+| 2 | Shared dialog footer, note field moved into the content | `Add to shortlist` 686px -> **156px**, right-aligned. Both dialogs now row/flex-end with a rule above. Section labels sentence case in both. |
+| 3 | `mt-auto` on card actions | Seeker fair cards: buttons were at y=367 and y=397 in the same row, now both at y=415. |
+| 4 | Talent pool column rebalance | `Skills` 180px -> 238px, showing six skills where it showed one and a half. Row height still 56px, so docs/07 UX-3 holds. |
+| 5 | `.fo-figure` / `.fo-figure--sm` / `.fo-figure__unit` | One named treatment; the KPI card's six-utility stack and the fair stat strip now share it. |
+| 6 | Fair Overview given content | Last content pixel y=317 -> **y=708**. Stat strip, booth-fill and check-in meters, this fair's pending queue with inline decisions, recent decisions scoped by a join on the fair's application ids. |
+
+### Two things the implementation found that the review had not
+
+**Material's component CSS is injected at runtime, so it lands after
+`styles.scss`.** The shared `.fo-dialog-head` and `.fo-dialog-foot` tie with
+`.mat-mdc-dialog-title` / `.mat-mdc-dialog-actions` at 0-1-0 specificity and
+therefore *lost on source order* — silently. The header stayed `display:
+block`, which dropped the close button onto its own line under the title. Both
+are now qualified with the Material class they sit on
+(`.mat-mdc-dialog-title.fo-dialog-head`), which wins on specificity rather than
+on an order that is not ours to control. This is the same hazard as finding 1,
+one layer down: CLAUDE.md's rule about not fighting Material internals has a
+corollary — *cooperating* with one still needs the specificity checked rather
+than assumed.
+
+**The pseudo-element is a flex item, so `gap` applies to it too.** After the
+`flex-start` fix the title sat at x=376, not 364 — a 12px `gap` between the
+zero-width `::before` and the title. The same phantom indent in miniature. The
+container now has `gap: 0` and the close button is pushed out by the title's
+own `flex: 1 1 auto`.
+
+### Deliberately not done
+
+- **Retiring `font-mono` from dates and money** (cosmetic finding 10). It is a
+  system-wide decision recorded in docs/07, not a local one, and item 5 as
+  approved was the figure token rather than the mono retirement.
+- **Re-colouring the `Live` chip** (cosmetic finding 9). Still worth doing; it
+  was not in the approved set.
 
 ## What would change this review
 

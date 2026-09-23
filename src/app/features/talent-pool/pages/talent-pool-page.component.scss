@@ -39,28 +39,37 @@ table {
 }
 
 // Material generates .mat-column-<name> on both the header and the body cell.
-// These sum to 100%; at the 960px floor that is 106px for the year and 86px
-// for the CGPA, both comfortably wider than their content.
+// These sum to 100%; at the 960px floor that is 96px for the year and 77px for
+// the CGPA, both comfortably wider than their content.
+//
+// Rebalanced in docs/10 finding 6. The earlier split was tuned when the
+// profile was a drawer taking half the row, so every column was budgeted
+// against ~600px. The profile is a modal now and the table always has the full
+// width, which left Skills — the column an employer actually scans — on 15%
+// and ellipsising after about 20 characters while the year and the actions
+// held width they had no content for. Skills takes that slack: 15% -> 21% is
+// roughly 70px more text at 1200px. The year and CGPA keep enough to stay
+// whole at the 960px floor, which is what their old widths were protecting.
 .mat-column-fullName {
-  width: 22%;
+  width: 20%;
 }
 .mat-column-university {
   width: 18%;
 }
 .mat-column-fieldOfStudy {
-  width: 15%;
+  width: 14%;
 }
 .mat-column-graduationYear {
-  width: 11%;
+  width: 10%;
 }
 .mat-column-cgpa {
-  width: 9%;
+  width: 8%;
 }
 .mat-column-skills {
-  width: 15%;
+  width: 21%;
 }
 .mat-column-actions {
-  width: 10%;
+  width: 9%;
 }
 
 // `truncate` needs a block box to measure against; a table cell's anonymous
@@ -90,8 +99,3 @@ table {
   color: var(--fo-border-strong);
 }
 
-@media (max-width: 1279px) {
-  .pool {
-    flex-direction: column;
-  }
-}

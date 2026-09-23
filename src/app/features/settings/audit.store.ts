@@ -36,6 +36,9 @@ export class AuditStore {
    */
   private readonly _knownEntities = signal<readonly AuditEntity[]>([]);
 
+  private readonly _recent = signal<readonly AuditEntry[]>([]);
+  private readonly _recentStatus = signal<LoadStatus>('idle');
+
   readonly entries = this._entries.asReadonly();
   readonly status = this._status.asReadonly();
   readonly error = this._error.asReadonly();
@@ -49,6 +52,17 @@ export class AuditStore {
 
   /** The entity kinds the log holds, so the filter offers no dead options. */
   readonly availableEntities = this._knownEntities.asReadonly();
+
+  /**
+   * A second, always-unfiltered slice, read by the fair Overview tab.
+   *
+   * Deliberately separate from `entries`: this store is a root singleton, so
+   * if the Overview called `load()` it would overwrite whichever filter the
+   * Settings page was showing, and vice versa. Two readers with different
+   * questions get two slices rather than fighting over one.
+   */
+  readonly recent = this._recent.asReadonly();
+  readonly recentStatus = this._recentStatus.asReadonly();
 
   async load(entity: EntityFilter = this._entity()): Promise<void> {
     this._entity.set(entity);
@@ -69,6 +83,28 @@ export class AuditStore {
     } catch (err: unknown) {
       this._error.set(toApiError(err));
       this._status.set('error');
+    }
+  }
+
+  /**
+   * The newest entries, whatever kind. Never touches the filtered slice, so a
+   * fair Overview opening in one tab cannot change what Settings is showing.
+   *
+   * Failure is silent here on purpose: this feeds a secondary panel next to
+   * the work the page is actually for, and an error banner over a fair's
+   * overview because a demo audit log would not load is worse than the panel
+   * simply having nothing to show.
+   */
+  async loadRecent(): Promise<void> {
+    this._recentStatus.set('loading');
+
+    try {
+      const page = await firstValueFrom(this.api.getList<AuditEntry>('/audit-entries'));
+      this._recent.set(page.data);
+      this._recentStatus.set('success');
+    } catch {
+      this._recent.set([]);
+      this._recentStatus.set('error');
     }
   }
 }

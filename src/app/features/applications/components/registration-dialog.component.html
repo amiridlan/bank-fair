@@ -1,5 +1,5 @@
-<div class="head" mat-dialog-title>
-  <h2 class="head__title">
+<div class="fo-dialog-head" mat-dialog-title>
+  <h2 class="fo-dialog-title">
     {{ application()?.employerName ?? 'Application' }}
   </h2>
   <button matIconButton type="button" aria-label="Close application detail" (click)="close()">
@@ -14,7 +14,7 @@
     <p class="m-0">Loading the application…</p>
   } @else if (application(); as application) {
     <section aria-labelledby="application-heading">
-      <h3 id="application-heading" class="body__section">This application</h3>
+      <h3 id="application-heading" class="fo-dialog-section">Application</h3>
 
       <dl class="facts">
         <div class="fact">
@@ -46,7 +46,7 @@
     </section>
 
     <section aria-labelledby="employer-heading">
-      <h3 id="employer-heading" class="body__section">The employer</h3>
+      <h3 id="employer-heading" class="fo-dialog-section">Employer</h3>
 
       @switch (store.employerStatus()) {
         @case ('loading') {
@@ -126,7 +126,7 @@
 <!-- Outside the scrolling content, so the decision stays reachable without
      scrolling to the bottom of a long record. -->
 @if (isPending()) {
-  <mat-dialog-actions class="foot">
+  <mat-dialog-actions class="fo-dialog-foot">
     <button matButton type="button" (click)="decide('reject')">Turn down</button>
     <button matButton="filled" type="button" (click)="decide('approve')">Approve</button>
   </mat-dialog-actions>

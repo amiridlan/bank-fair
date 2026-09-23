@@ -1,33 +1,192 @@
 @if (store.selected(); as fair) {
-  <dl class="stats">
-    <div class="stat">
-      <dt class="fo-caption">Dates</dt>
-      <dd>
-        {{ fair.startDate | date: 'dd/MM/yyyy' }}
-        @if (isMultiDay()) {
-          – {{ fair.endDate | date: 'dd/MM/yyyy' }}
+  <div class="overview">
+    <dl class="stats">
+      <div class="stat">
+        <dt class="fo-caption">Dates</dt>
+        <!-- The dash travels with the end date. Loose, it wrapped to the end
+             of the first line in a 140px cell and sat there as an orphan. -->
+        <dd class="stat__value fo-figure fo-figure--sm">
+          {{ fair.startDate | date: 'dd/MM' }}
+          @if (isMultiDay()) {
+            <span class="nowrap">
+              <span class="fo-figure__unit">–</span> {{ fair.endDate | date: 'dd/MM' }}
+            </span>
+          }
+          <span class="fo-figure__unit">{{ fair.startDate | date: 'yyyy' }}</span>
+        </dd>
+      </div>
+      <div class="stat">
+        <dt class="fo-caption">Booths assigned</dt>
+        <dd class="stat__value fo-figure fo-figure--sm">
+          {{ fair.boothAssigned }}<span class="fo-figure__unit">/{{ fair.boothTotal }}</span>
+        </dd>
+      </div>
+      <div class="stat">
+        <dt class="fo-caption">Registrations</dt>
+        <dd class="stat__value fo-figure fo-figure--sm">{{ fair.registrations | number }}</dd>
+      </div>
+      <div class="stat">
+        <dt class="fo-caption">Check-ins</dt>
+        <dd class="stat__value fo-figure fo-figure--sm">{{ fair.checkIns | number }}</dd>
+      </div>
+    </dl>
+
+    <!-- A fraction tells you the numbers; a bar tells you where the fair
+         stands without arithmetic, which is the question this tab is for. -->
+    <section class="panel" aria-labelledby="progress-heading">
+      <h2 id="progress-heading" class="text-h2">Where this fair stands</h2>
+
+      <div class="meter">
+        <div class="meter__head">
+          <span class="meter__label">Booth fill</span>
+          <span class="meter__figure fo-tabular">
+            {{ fillRate() | percent: '1.0-0' }}
+            <span class="fo-caption">
+              · {{ boothsFree() }} of {{ fair.boothTotal }} still free
+            </span>
+          </span>
+        </div>
+        <!-- role + aria-value* because the bar is the value: a div with a
+             width is invisible to a screen reader otherwise. -->
+        <div
+          class="meter__track"
+          role="progressbar"
+          aria-label="Booth fill"
+          [attr.aria-valuenow]="fair.boothAssigned"
+          aria-valuemin="0"
+          [attr.aria-valuemax]="fair.boothTotal"
+          [attr.aria-valuetext]="fair.boothAssigned + ' of ' + fair.boothTotal + ' booths assigned'"
+        >
+          <div class="meter__fill" [style.inline-size.%]="fillRate() * 100"></div>
+        </div>
+      </div>
+
+      @if (hasStarted() && fair.registrations > 0) {
+        <div class="meter">
+          <div class="meter__head">
+            <span class="meter__label">Check-ins</span>
+            <span class="meter__figure fo-tabular">
+              {{ checkInRate() | percent: '1.0-0' }}
+              <span class="fo-caption">
+                · {{ fair.checkIns | number }} of {{ fair.registrations | number }} arrived
+              </span>
+            </span>
+          </div>
+          <div
+            class="meter__track"
+            role="progressbar"
+            aria-label="Check-ins"
+            [attr.aria-valuenow]="fair.checkIns"
+            aria-valuemin="0"
+            [attr.aria-valuemax]="fair.registrations"
+            [attr.aria-valuetext]="
+              fair.checkIns + ' of ' + fair.registrations + ' registrations checked in'
+            "
+          >
+            <div class="meter__fill meter__fill--alt" [style.inline-size.%]="checkInRate() * 100"></div>
+          </div>
+        </div>
+      }
+
+      @if (boothsFree() > 0) {
+        <div class="mt-auto flex justify-end">
+          <button matButton type="button" (click)="goToFloorPlan()">
+            <mat-icon aria-hidden="true">grid_view</mat-icon>
+            Open the floor plan
+          </button>
+        </div>
+      }
+    </section>
+
+    <section class="panel" aria-labelledby="queue-heading">
+      <div class="panel__head">
+        <h2 id="queue-heading" class="text-h2">Waiting on you</h2>
+        @if (pending().length > 0) {
+          <span class="count fo-tabular">{{ pending().length }}</span>
         }
-      </dd>
-    </div>
-    <div class="stat">
-      <dt class="fo-caption">Booths assigned</dt>
-      <dd class="fo-tabular">
-        {{ fair.boothAssigned }}/{{ fair.boothTotal }}
-        <span class="fo-caption">({{ fillRate() | percent: '1.0-0' }})</span>
-      </dd>
-    </div>
-    <div class="stat">
-      <dt class="fo-caption">Registrations</dt>
-      <dd class="fo-tabular">{{ fair.registrations | number }}</dd>
-    </div>
-    <div class="stat">
-      <dt class="fo-caption">Check-ins</dt>
-      <dd class="fo-tabular">
-        {{ fair.checkIns | number }}
-        @if (fair.registrations > 0) {
-          <span class="fo-caption">({{ checkInRate() | percent: '1.0-0' }})</span>
-        }
-      </dd>
-    </div>
-  </dl>
+      </div>
+
+      @if (applications.isLoading()) {
+        <p class="fo-caption m-0">Loading applications…</p>
+      } @else if (pending().length === 0) {
+        <p class="quiet fo-caption m-0">
+          <mat-icon class="quiet__icon" aria-hidden="true">check_circle</mat-icon>
+          Every application for this fair has been decided.
+        </p>
+      } @else {
+        <ul class="queue">
+          @for (application of pending(); track application.id) {
+            <li class="queue__row">
+              <div class="min-w-0">
+                <h3 class="m-0 text-body font-semibold">
+                  <button class="link" type="button" (click)="openDetail(application)">
+                    {{ application.employerName }}
+                  </button>
+                </h3>
+                <p class="fo-caption m-0">
+                  Applied
+                  <span class="fo-tabular font-mono">
+                    {{ application.appliedAt | date: 'dd/MM/yyyy' }}
+                  </span>
+                </p>
+              </div>
+
+              <div class="queue__actions">
+                <button
+                  matButton
+                  type="button"
+                  [disabled]="applications.busyId() === application.id"
+                  (click)="reject(application)"
+                >
+                  <app-busy-label [busy]="applications.isBusy(application.id, 'rejected')">
+                    Turn down
+                  </app-busy-label>
+                </button>
+                <button
+                  matButton="filled"
+                  type="button"
+                  [disabled]="applications.busyId() === application.id"
+                  (click)="approve(application)"
+                >
+                  <app-busy-label [busy]="applications.isBusy(application.id, 'approved')">
+                    Approve
+                  </app-busy-label>
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="panel" aria-labelledby="decisions-heading">
+      <h2 id="decisions-heading" class="text-h2">Recent decisions</h2>
+      <p class="fo-caption m-0">
+        Approvals and turn-downs on this fair's applications, newest first.
+      </p>
+
+      @if (recentDecisions().length === 0) {
+        <p class="quiet fo-caption m-0">
+          <mat-icon class="quiet__icon" aria-hidden="true">history</mat-icon>
+          Nothing decided in this session yet. The log is kept in the browser, so it starts
+          empty after a reload.
+        </p>
+      } @else {
+        <ol class="decisions">
+          @for (entry of recentDecisions(); track entry.id) {
+            <li class="decisions__row">
+              <span class="decisions__what">
+                <strong>{{ decisionLabel(entry) }}</strong>
+                {{ entry.entityLabel }}
+              </span>
+              <span class="fo-caption">
+                {{ entry.actorName }} ·
+                <span class="fo-tabular font-mono">{{ entry.at | date: 'h:mm a' }}</span>
+              </span>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+  </div>
 }

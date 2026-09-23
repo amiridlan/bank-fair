@@ -1,14 +1,3 @@
-.head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--fo-space-3);
-}
-
-.head__title {
-  margin: 0;
-}
-
 // The dialog's own scrolling region. A max-height keeps a long profile from
 // pushing the dialog past a short viewport; Material handles the scroll.
 .body {
@@ -20,12 +9,6 @@
 .body__headline {
   margin: 0;
   color: var(--fo-text-muted);
-}
-
-.body__section {
-  margin: 0 0 var(--fo-space-2);
-  font-size: var(--fo-body-size);
-  line-height: var(--fo-body-line);
 }
 
 .body__error {
@@ -92,19 +75,6 @@
 
 .locked__masked {
   font-family: var(--fo-font-mono);
-}
-
-// mat-dialog-actions lays its children out in a row, which is right for two
-// buttons and wrong for a note field above one. Set on the element this
-// component owns rather than through a utility, which would lose to
-// Material's unlayered styles (CLAUDE.md).
-.foot {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--fo-space-2);
-  padding: var(--fo-space-4);
-  border-top: 1px solid var(--fo-border);
 }
 
 .note {

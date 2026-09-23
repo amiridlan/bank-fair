@@ -1,7 +1,7 @@
 <!-- mat-dialog-title carries the accessible name for the dialog, so Material
      wires aria-labelledby itself rather than this naming it by hand. -->
-<div class="head" mat-dialog-title>
-  <h2 class="head__title">
+<div class="fo-dialog-head" mat-dialog-title>
+  <h2 class="fo-dialog-title">
     @if (store.selected(); as candidate) {
       {{ candidate.fullName }}
     } @else {
@@ -48,7 +48,7 @@
     </dl>
 
     <section aria-labelledby="skills-heading">
-      <h3 id="skills-heading" class="body__section">Skills</h3>
+      <h3 id="skills-heading" class="fo-dialog-section">Skills</h3>
       <ul class="skills">
         @for (skill of candidate.skills; track skill) {
           <li class="skill">{{ skill }}</li>
@@ -57,7 +57,7 @@
     </section>
 
     <section aria-labelledby="contact-heading">
-      <h3 id="contact-heading" class="body__section">Contact</h3>
+      <h3 id="contact-heading" class="fo-dialog-section">Contact</h3>
       @if (candidate.isContactVisible) {
         <dl class="facts">
           <div class="fact">
@@ -78,6 +78,16 @@
       }
     </section>
 
+    @if (!isShortlisted(candidate.id) && hasActiveFair()) {
+      <section aria-labelledby="note-heading">
+        <h3 id="note-heading" class="fo-dialog-section">Note</h3>
+        <mat-form-field appearance="outline" class="note">
+          <mat-label>Why this candidate? (optional)</mat-label>
+          <textarea matInput rows="2" [value]="note()" (input)="onNote($event)"></textarea>
+          <mat-hint>Saved with the shortlist entry. Only your team sees it.</mat-hint>
+        </mat-form-field>
+      </section>
+    }
   }
 </mat-dialog-content>
 
@@ -85,9 +95,9 @@
      the profile. At 390px the button sat below the fold and reaching the
      primary action meant scrolling the dialog first. -->
 @if (store.selected(); as candidate) {
-  <mat-dialog-actions class="foot">
+  <mat-dialog-actions class="fo-dialog-foot">
     @if (isShortlisted(candidate.id)) {
-      <p class="shortlisted fo-caption">
+      <p class="shortlisted fo-dialog-foot__lead fo-caption">
         <mat-icon class="shortlisted__icon" aria-hidden="true">check_circle</mat-icon>
         On your shortlist
       </p>
@@ -95,12 +105,10 @@
         Remove from shortlist
       </button>
     } @else if (!hasActiveFair()) {
-      <p class="fo-caption">Choose an active fair in the top bar to shortlist candidates.</p>
+      <p class="fo-dialog-foot__lead fo-caption">
+        Choose an active fair in the top bar to shortlist candidates.
+      </p>
     } @else {
-      <mat-form-field appearance="outline" class="note">
-        <mat-label>Note (optional)</mat-label>
-        <textarea matInput rows="2" [value]="note()" (input)="onNote($event)"></textarea>
-      </mat-form-field>
       <button matButton="filled" type="button" [disabled]="saving()" (click)="addToShortlist()">
         <app-busy-label [busy]="saving()">Add to shortlist</app-busy-label>
       </button>

@@ -1,7 +1,23 @@
+// Two columns above 1024px: the stat strip and the progress panel stack down
+// the left, the queue and the decisions down the right. Below that it is one
+// column, in the order the markup is already in.
+.overview {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--fo-space-4);
+  align-items: start;
+}
+
+// minmax(140px) rather than a rounder number, measured against a 390px
+// viewport: the panel's own 16px padding leaves 326px, and 140 x 2 + a 16px
+// gap is 296, so the four figures land in two columns rather than one. At the
+// old 160px/24px they stacked into a single column ~340px tall, which pushed
+// "Waiting on you" — the only panel with an action in it — most of a screen
+// down the page.
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--fo-space-5);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--fo-space-4) var(--fo-space-5);
   margin: 0;
   padding: var(--fo-space-4);
   background: var(--fo-surface-raised);
@@ -17,12 +33,213 @@
   dt {
     margin: 0;
   }
+}
 
-  dd {
-    margin: 0;
-    font-family: var(--fo-font-brand);
-    font-size: var(--fo-h2-size);
-    font-weight: 600;
-    color: var(--fo-ink);
+.stat__value {
+  margin: 0;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-3);
+  padding: var(--fo-space-4);
+  background: var(--fo-surface-raised);
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-md);
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  gap: var(--fo-space-2);
+}
+
+// The queue length, beside its heading rather than inside it, so the heading
+// text a screen reader announces stays "Waiting on you".
+.count {
+  padding: 0 var(--fo-space-2);
+  border-radius: var(--fo-radius-full, 9999px);
+  background: var(--fo-primary-subtle);
+  color: var(--fo-primary);
+  font-size: var(--fo-caption-size);
+  line-height: 20px;
+  font-weight: 600;
+}
+
+// ------------------------------------------------------------------- meters
+
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-2);
+}
+
+.meter__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--fo-space-2);
+}
+
+.meter__label {
+  font-weight: 500;
+  color: var(--fo-ink);
+}
+
+.meter__figure {
+  font-weight: 600;
+  color: var(--fo-ink);
+}
+
+.meter__track {
+  block-size: 10px;
+  border-radius: var(--fo-radius-full, 9999px);
+  background: var(--fo-slate-100);
+  overflow: hidden;
+}
+
+.meter__fill {
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--fo-primary);
+  // Only the width animates, and it collapses to 0ms under the
+  // prefers-reduced-motion block in _tokens.scss.
+  transition: inline-size var(--fo-motion-base) var(--fo-motion-easing);
+}
+
+// Check-ins are a different measure from booth fill, so they are a different
+// colour — two identical bars stacked read as one measure split in half.
+.meter__fill--alt {
+  background: var(--fo-teal-400);
+}
+
+// -------------------------------------------------------------------- queue
+
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.queue__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fo-space-3);
+  padding: var(--fo-space-3);
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-sm);
+}
+
+.queue__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fo-space-2);
+}
+
+// A heading that is also a link to the full record. Styled as a link rather
+// than a button because that is what it behaves like.
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--fo-primary);
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ---------------------------------------------------------------- decisions
+
+.decisions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.decisions__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--fo-space-2);
+  padding-block-end: var(--fo-space-2);
+  border-block-end: 1px solid var(--fo-border);
+
+  &:last-child {
+    padding-block-end: 0;
+    border-block-end: 0;
+  }
+}
+
+.decisions__what {
+  min-width: 0;
+}
+
+// An empty panel still has to say something. Icon as well as text, like every
+// other state in the app.
+.quiet {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--fo-space-2);
+}
+
+.quiet__icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  flex: none;
+  color: var(--fo-text-muted);
+}
+
+@media (min-width: 1024px) {
+  .overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  // The figures span the full width; the three panels fill the two columns
+  // below them.
+  .stats {
+    grid-column: 1 / -1;
+  }
+
+  // Placement is explicit rather than left to auto-flow. Auto-flow puts the
+  // three panels at 1-2-1, which leaves the right column half empty under a
+  // short "Waiting on you". The queue is the panel that grows — it is the
+  // work — so it takes the right column for both rows and the two read-only
+  // panels stack on the left.
+  //
+  // Source order stays orientation-then-action, which is also the order the
+  // single-column layout below this breakpoint reads in.
+  .panel:nth-of-type(1) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .panel:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+  }
+
+  .panel:nth-of-type(3) {
+    grid-column: 1;
+    grid-row: 3;
   }
 }

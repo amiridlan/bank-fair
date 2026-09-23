@@ -91,7 +91,24 @@ describe('KpiCardComponent', () => {
     });
   });
 
-  it('uses tabular figures so columns of KPIs align', () => {
-    expect(render().querySelector('.kpi__value')?.classList).toContain('fo-tabular');
+  // `.fo-figure` is the shared figure treatment and carries
+  // `font-variant-numeric: tabular-nums` itself, which is what makes a column
+  // of KPIs align. Asserting the class rather than the computed property
+  // because the global stylesheet is not loaded under jsdom — so this holds
+  // the card to using the shared treatment, which is the actual requirement.
+  it('uses the shared figure treatment, so columns of KPIs align', () => {
+    const value = render().querySelector('.kpi__value');
+
+    expect(value?.classList).toContain('fo-figure');
+  });
+
+  it('renders the unit apart from the number, so the digits read first', () => {
+    const value = render({ prefix: 'RM ', value: 1234 }).querySelector('.kpi__value');
+    const unit = value?.querySelector('.fo-figure__unit');
+
+    expect(unit?.textContent?.trim()).toBe('RM');
+    // The number itself must not be inside the unit span, or it would be
+    // shrunk and muted along with it.
+    expect(value?.textContent).toContain('1,234');
   });
 });
