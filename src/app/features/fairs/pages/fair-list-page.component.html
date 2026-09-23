@@ -54,9 +54,23 @@
     />
   }
 } @else {
-  <div class="grid">
-    @for (fair of store.fairs(); track fair.id) {
-      <app-fair-card [fair]="fair" />
+  <!-- Three groups rather than one list, each hidden when it has nothing in
+       it — a filtered view should not show empty headings. The groups are
+       derived, not filters: every loaded fair lands in exactly one. -->
+  @for (group of groups(); track group.id) {
+    @if (group.fairs.length > 0) {
+      <section class="group" [attr.aria-labelledby]="group.id + '-heading'">
+        <div class="group__head">
+          <h2 [id]="group.id + '-heading'" class="text-h2">{{ group.label }}</h2>
+          <p class="fo-caption m-0">{{ group.hint }}</p>
+        </div>
+
+        <div class="grid">
+          @for (fair of group.fairs; track fair.id) {
+            <app-fair-card [fair]="fair" />
+          }
+        </div>
+      </section>
     }
-  </div>
+  }
 }

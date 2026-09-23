@@ -17,9 +17,9 @@ import { StatusChipComponent } from '../../../shared/ui/status-chip.component';
   template: `
     <article class="card">
       <div class="card__head">
-        <h2 class="card__title">
+        <h3 class="card__title">
           <a class="card__link" [routerLink]="['/staff/fairs', fair().id]">{{ fair().name }}</a>
-        </h2>
+        </h3>
         <app-status-chip kind="fair" [status]="fair().status" />
       </div>
 

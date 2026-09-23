@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { Router } from '@angular/router';
 
-import type { FairStatus } from '../../../core/models';
+import type { Fair, FairStatus } from '../../../core/models';
 import { FairsStore } from '../fairs.store';
 import { FairCardComponent } from '../components/fair-card.component';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
@@ -15,8 +15,16 @@ import { SkeletonComponent } from '../../../shared/ui/skeleton.component';
 
 const STATUSES: readonly FairStatus[] = ['draft', 'open', 'live', 'completed'];
 
+interface FairGroup {
+  readonly id: string;
+  readonly label: string;
+  readonly hint: string;
+  readonly fairs: readonly Fair[];
+}
+
 /**
- * Fair list with status and city filters.
+ * Fair list, grouped into Current, Past and Complete, with status and city
+ * filters.
  *
  * Filters live in the URL query string, so a filtered view can be shared or
  * survive a refresh. `withComponentInputBinding()` feeds them straight into
@@ -48,6 +56,31 @@ export default class FairListPageComponent {
   /** Bound from `?status=` and `?city=`. */
   readonly status = input<string | undefined>(undefined);
   readonly city = input<string | undefined>(undefined);
+
+  /**
+   * Fixed order, so the page reads the same every time: what is happening,
+   * then what needs closing out, then the archive.
+   */
+  protected readonly groups = computed<readonly FairGroup[]>(() => [
+    {
+      id: 'current',
+      label: 'Current',
+      hint: 'Happening now or still to come. Live fairs first.',
+      fairs: this.store.currentFairs(),
+    },
+    {
+      id: 'past',
+      label: 'Past',
+      hint: 'The dates have passed but the fair was never closed out.',
+      fairs: this.store.pastFairs(),
+    },
+    {
+      id: 'complete',
+      label: 'Complete',
+      hint: 'Closed out by the team.',
+      fairs: this.store.completeFairs(),
+    },
+  ]);
 
   constructor() {
     effect(() => {

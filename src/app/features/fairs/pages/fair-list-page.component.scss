@@ -16,3 +16,16 @@
     grid-template-columns: 1fr;
   }
 }
+
+// Groups are separated by space and a heading rather than a rule: three rules
+// down a page of cards reads as chrome, and the headings already do the work.
+.group + .group {
+  margin-top: var(--fo-space-7);
+}
+
+.group__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--fo-space-4);
+}
