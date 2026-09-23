@@ -57,6 +57,9 @@ describe('SeekerFairDetailsTabComponent', () => {
     const detailDone = detail.load(String(fairRow['id']));
     http.expectOne(`/fairs/${fairRow['id']}`).flush({ data: fairRow });
     http.expectOne(`/fairs/${fairRow['id']}/exhibitors`).flush({ data: [] });
+    http
+      .expectOne((request) => request.url === `/fairs/${fairRow['id']}/job-openings`)
+      .flush({ data: [] });
     await detailDone;
 
     const seekerDone = seeker.load('cand-001');

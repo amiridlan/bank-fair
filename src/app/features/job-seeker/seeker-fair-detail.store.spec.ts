@@ -44,10 +44,18 @@ describe('SeekerFairDetailStore', () => {
 
   afterEach(() => http.verify());
 
-  async function load(exhibitors: readonly ReturnType<typeof exhibitor>[] = []) {
+  async function load(
+    exhibitors: readonly ReturnType<typeof exhibitor>[] = [],
+    openings: readonly Record<string, unknown>[] = [],
+  ) {
     const done = store.load('fair-01');
     http.expectOne('/fairs/fair-01').flush({ data: FAIR });
     http.expectOne('/fairs/fair-01/exhibitors').flush({ data: exhibitors });
+    // A predicate, not a string: `expectOne(string)` matches `urlWithParams`,
+    // and this request carries `per_page`.
+    http
+      .expectOne((request) => request.url === '/fairs/fair-01/job-openings')
+      .flush({ data: openings });
     await done;
   }
 
@@ -68,13 +76,19 @@ describe('SeekerFairDetailStore', () => {
     await load([exhibitor('emp-001', 1)]);
 
     const done = store.load('fair-99');
-    http.expectOne('/fairs/fair-99').flush({ message: 'Fair not found.' }, { status: 404, statusText: 'Not Found' });
+    http
+      .expectOne('/fairs/fair-99')
+      .flush({ message: 'Fair not found.' }, { status: 404, statusText: 'Not Found' });
     http.expectOne('/fairs/fair-99/exhibitors').flush({ data: [] });
+    http
+      .expectOne((request) => request.url === '/fairs/fair-99/job-openings')
+      .flush({ data: [] });
     await done;
 
     expect(store.hasError()).toBe(true);
     expect(store.fair()).toBeNull();
     expect(store.exhibitors()).toEqual([]);
+    expect(store.openings()).toEqual([]);
     // Null rather than 'fair-01': the shell uses this to tell whether what it
     // holds matches the URL, and leaving the old id would say yes wrongly.
     expect(store.loadedId()).toBeNull();
@@ -84,6 +98,9 @@ describe('SeekerFairDetailStore', () => {
     const done = store.load('fair-01');
     http.expectOne('/fairs/fair-01').flush({ data: FAIR });
     http.expectOne('/fairs/fair-01/exhibitors').flush({ data: [] });
+    http
+      .expectOne((request) => request.url === '/fairs/fair-01/job-openings')
+      .flush({ data: [] });
     await done;
 
     // `/employers` is staff-only and carries deal values and contact details.

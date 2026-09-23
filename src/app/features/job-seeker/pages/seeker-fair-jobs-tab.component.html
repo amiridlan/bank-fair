@@ -1,0 +1,98 @@
+@if (store.openings().length === 0) {
+  <app-empty-state
+    icon="work_off"
+    heading="No roles listed yet"
+    message="Employers add their vacancies as the fair fills up. The Employers tab shows who has booked a stand."
+  />
+} @else {
+  <div class="filters" role="group" aria-label="Filter roles">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__search">
+      <mat-label>Search roles</mat-label>
+      <input
+        matInput
+        type="search"
+        [value]="search()"
+        (input)="onSearch($event)"
+        placeholder="Title, employer or skill"
+      />
+      <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Field</mat-label>
+      <mat-select [value]="jobFunction()" (valueChange)="jobFunction.set($event)">
+        <mat-option value="all">Every field</mat-option>
+        @for (option of store.functions(); track option) {
+          <mat-option [value]="option">{{ option }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__narrow">
+      <mat-label>Type</mat-label>
+      <mat-select [value]="type()" (valueChange)="type.set($event)">
+        @for (option of typeOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__narrow">
+      <mat-label>Level</mat-label>
+      <mat-select [value]="level()" (valueChange)="level.set($event)">
+        @for (option of levelOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (canMatch()) {
+      <!-- A toggle rather than a fourth select: it is the one filter about the
+           viewer rather than the role, and aria-pressed says which it is. -->
+      <button
+        matButton
+        type="button"
+        class="match-toggle"
+        [class.match-toggle--on]="matchingOnly()"
+        [attr.aria-pressed]="matchingOnly()"
+        (click)="toggleMatching()"
+      >
+        <mat-icon aria-hidden="true">check_circle</mat-icon>
+        Matches my skills ({{ matchCount() }})
+      </button>
+    }
+
+    @if (hasFilters()) {
+      <button matButton type="button" (click)="clearFilters()">Clear filters</button>
+    }
+  </div>
+
+  @if (!canMatch()) {
+    <p class="hint fo-caption m-0">
+      <mat-icon class="hint__icon" aria-hidden="true">info</mat-icon>
+      Add skills to your profile and this list will show which roles already match them.
+    </p>
+  }
+
+  @if (visible().length === 0) {
+    <app-empty-state
+      icon="search_off"
+      heading="No roles match those filters"
+      message="Try a broader field, or clear the filters to see everything at this fair."
+      actionLabel="Clear filters"
+      (action)="clearFilters()"
+    />
+  } @else {
+    <p class="count fo-caption m-0" aria-live="polite">
+      Showing {{ visible().length }} of {{ store.openings().length }} roles
+    </p>
+
+    <ul class="grid">
+      @for (opening of visible(); track opening.id) {
+        <li>
+          <app-job-opening-card [opening]="opening" [matchedSkills]="matchesFor(opening)" />
+        </li>
+      }
+    </ul>
+  }
+}

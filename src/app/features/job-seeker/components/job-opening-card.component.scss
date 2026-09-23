@@ -1,0 +1,142 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-3);
+  height: 100%;
+  padding: var(--fo-space-4);
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-md);
+  background: var(--fo-surface-raised);
+}
+
+// A matched role gets a left edge rather than a different background: the
+// card stays legible, and the marker survives next to an unmatched card
+// without the grid looking like two kinds of thing.
+.card--matched {
+  border-inline-start: 3px solid var(--fo-success);
+}
+
+.card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--fo-space-2);
+}
+
+.card__title {
+  margin: 0;
+  font-size: var(--fo-h2-size);
+  line-height: var(--fo-h2-line);
+  font-weight: 600;
+  color: var(--fo-ink);
+}
+
+.booth {
+  font-family: var(--fo-font-mono);
+  color: var(--fo-primary);
+  font-weight: 600;
+}
+
+.headcount {
+  flex: none;
+  padding: 2px var(--fo-space-2);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-surface);
+  color: var(--fo-text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tags,
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fo-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px var(--fo-space-2);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-primary-subtle);
+  color: var(--fo-primary);
+  font-size: var(--fo-caption-size);
+  line-height: var(--fo-caption-line);
+  font-weight: 500;
+}
+
+// Location is context, not a category worth its own colour.
+.tag--plain {
+  background: none;
+  color: var(--fo-text-muted);
+  padding-inline: 0 var(--fo-space-1);
+}
+
+.tag__icon {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+}
+
+// Flex with a gap rather than whitespace between the spans. Angular collapses
+// template whitespace, so the markup's newlines vanished and the figure
+// rendered as "RM3,500–4,700/ month" — one run-on token.
+.salary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.28em;
+  font-family: var(--fo-font-brand);
+  font-size: var(--fo-h2-size);
+  line-height: var(--fo-h2-line);
+  font-weight: 600;
+  color: var(--fo-ink);
+}
+
+.salary--none {
+  font-family: var(--fo-font-plain);
+  font-weight: 400;
+}
+
+.match {
+  display: flex;
+  align-items: center;
+  gap: var(--fo-space-1);
+  color: var(--fo-success);
+  font-weight: 500;
+}
+
+.match__icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  flex: none;
+}
+
+// mt-auto equivalent: the skills sit on the bottom edge so the rows line up
+// across a grid of cards whose titles wrap to different heights.
+.skills {
+  margin-top: auto;
+}
+
+.skill {
+  padding: 2px var(--fo-space-2);
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-sm);
+  background: var(--fo-surface);
+  font-size: var(--fo-caption-size);
+  line-height: var(--fo-caption-line);
+  color: var(--fo-text-muted);
+}
+
+.skill--matched {
+  border-color: var(--fo-success);
+  background: var(--fo-success-subtle);
+  color: var(--fo-success);
+  font-weight: 500;
+}

@@ -22,10 +22,13 @@ const routes: Routes = [
         title: 'Fair details · BankFair',
         loadComponent: () => import('./pages/seeker-fair-details-tab.component'),
       },
-      // Employers is the landing tab for now. J3 puts the Jobs tab here
-      // instead, which replaces this one line and breaks no URL that works
-      // today (docs/11 J-D4).
-      { path: '', redirectTo: 'employers', pathMatch: 'full' },
+      {
+        // The landing tab: someone opens a fair asking what work is here,
+        // not which companies are (docs/11 J-D4).
+        path: '',
+        title: 'Roles at this fair · BankFair',
+        loadComponent: () => import('./pages/seeker-fair-jobs-tab.component'),
+      },
     ],
   },
   {

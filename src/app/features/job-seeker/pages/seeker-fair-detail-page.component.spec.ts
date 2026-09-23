@@ -77,6 +77,9 @@ describe('SeekerFairDetailPageComponent', () => {
       http.expectOne(`/fairs/${id}`).flush({ data: row });
     }
     http.expectOne(`/fairs/${id}/exhibitors`).flush({ data: [] });
+    http
+      .expectOne((request) => request.url === `/fairs/${id}/job-openings`)
+      .flush({ data: [] });
     if (alsoSeeker) {
       http.expectOne('/fairs').flush({ data: [] });
       http.expectOne('/fair-registrations').flush({ data: [] });
@@ -108,7 +111,7 @@ describe('SeekerFairDetailPageComponent', () => {
 
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('National Career Fair');
-    expect(el.textContent).toContain('Employers (0)');
+    expect(el.textContent).toContain('Roles (0)');
   });
 
   it('does not show one fair under another fair\'s heading', async () => {

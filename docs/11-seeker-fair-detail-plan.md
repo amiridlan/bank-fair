@@ -158,7 +158,62 @@ page rather than a modal: there is far more here than a modal should hold.
 
 The fair card on `/me/fairs` gains a link into this page.
 
-## J3 — Jobs tab
+## J3 — done
+
+The Jobs tab is the landing tab at `/me/fairs/:fairId`. 401 tests, lint clean,
+initial bundle unchanged at 640.69 kB, axe-core clean on all four new states at
+1440px and 390px.
+
+Filters: search, field, employment type, experience level, and "matches my
+skills". All of them run client-side over one fully-loaded list rather than
+being split with the server. The endpoint's `function`/`type`/`level` filters
+are real and tested, and another caller should use them — but "matches my
+skills" cannot be a server filter here, because the server has no notion of
+whose skills. Filtering a server-returned page again on the client would report
+a count for the page rather than the fair. At a scale where loading the list
+stopped being reasonable, the skill match is what should move server-side, not
+the pagination.
+
+**Three defects the browser found that the tests did not.**
+
+Salary rendered as `RM3,500–4,700/ month`. Angular collapses template
+whitespace, so the newlines between the adjacent spans vanished and the figure
+came out as one run-on token. The line is a flex row with a gap now, which is
+layout rather than content and survives the collapsing.
+
+Searching "intern" returned nothing while the Type filter beside it held 19
+internships, because the haystack covered title, employer, field and skills but
+not the type. That reads as "there are none here" rather than "use the other
+control". The type and level labels are searchable now: "intern" returns 14 of
+87.
+
+And the three existing spec files broke in a way that looked much worse than it
+was. Adding the openings request meant they flushed two of three requests, so
+`http.verify()` threw — and a failed verify leaves the TestBed instantiated,
+which made *unrelated* spec files fail with "Cannot configure the test module
+when the test module has already been instantiated". The actual cause was
+narrow: `expectOne(string)` matches `urlWithParams`, and this request carries
+`per_page`. A predicate matcher fixes it, which is the pattern
+`fair-employers-tab.component.spec.ts` already used for the same reason.
+
+**A verification of mine that was wrong again.** The first check reported no
+salary figures rendering at all. The regex was `/RM\s/`, and at that point the
+spans had no whitespace between them — so the check failed for the same reason
+the display was wrong, and I nearly read it as "salaries are missing". Counting
+the rendered lines directly showed 52 of 87 with figures and 35 without, which
+is the ~60% disclosure rate the seed is built for.
+
+**Mutation-checked.** Replacing the profile-overlap match with "every skill
+matches" fails all three of the tests written for it.
+
+**Worth knowing about the demo data.** The seeded job seeker is an electrical
+engineering student, and only 2 of fair-01's 87 roles overlap their skills. The
+match feature is correct but looks thin. That is honest seed data rather than a
+bug, and rigging it would make the feature look better than it is — but if the
+demo needs the marker to show up more, the fix is to give the seeded candidate
+a broader skill set, not to loosen the match.
+
+## J3 — Jobs tab (as planned)
 
 - `SeekerFairJobsTabComponent` — filters for function, employment type,
   experience level, and "matching my skills"

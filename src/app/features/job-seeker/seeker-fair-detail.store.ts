@@ -3,7 +3,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { type ApiError, toApiError } from '../../core/http/api-error';
 import { ApiService } from '../../core/http/api.service';
-import type { Fair, FairExhibitor } from '../../core/models';
+import type { Fair, FairExhibitor, FairJobOpening } from '../../core/models';
 
 export type LoadStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -28,6 +28,7 @@ export class SeekerFairDetailStore {
 
   private readonly _fair = signal<Fair | null>(null);
   private readonly _exhibitors = signal<readonly FairExhibitor[]>([]);
+  private readonly _openings = signal<readonly FairJobOpening[]>([]);
   private readonly _status = signal<LoadStatus>('idle');
   private readonly _error = signal<ApiError | null>(null);
   /** Which fair the current contents belong to, so a stale render is visible. */
@@ -35,6 +36,7 @@ export class SeekerFairDetailStore {
 
   readonly fair = this._fair.asReadonly();
   readonly exhibitors = this._exhibitors.asReadonly();
+  readonly openings = this._openings.asReadonly();
   readonly status = this._status.asReadonly();
   readonly error = this._error.asReadonly();
   readonly loadedId = this._loadedId.asReadonly();
@@ -49,6 +51,13 @@ export class SeekerFairDetailStore {
     this._exhibitors().reduce((sum, exhibitor) => sum + exhibitor.openingCount, 0),
   );
 
+  /** Every distinct job family at this fair, for the filter. */
+  readonly functions = computed(() =>
+    [...new Set(this._openings().map((opening) => opening.jobFunction))].sort((a, b) =>
+      a.localeCompare(b),
+    ),
+  );
+
   /**
    * Both in parallel, under one status.
    *
@@ -61,18 +70,38 @@ export class SeekerFairDetailStore {
     this._error.set(null);
 
     try {
-      const [fair, exhibitors] = await Promise.all([
+      const [fair, exhibitors, openings] = await Promise.all([
         firstValueFrom(this.api.get<Fair>(`/fairs/${fairId}`)),
         firstValueFrom(this.api.getList<FairExhibitor>(`/fairs/${fairId}/exhibitors`)),
+        // The whole list in one request rather than a page at a time.
+        //
+        // The endpoint paginates, and should — a real backend cannot assume a
+        // caller wants everything. But the Jobs tab filters by whether an
+        // opening matches the viewer's own skills, and the server has no
+        // notion of "my skills" here. Filtering a server-side page again on
+        // the client would report counts for the page rather than the fair,
+        // so all the filtering happens in one place, over one list. A fair
+        // caps at 40 stands and the busiest in the seed carries 87 roles,
+        // which is a fraction of the talent pool this app already renders.
+        //
+        // At a scale where this stopped being true, the skill match is what
+        // would move to the server, not the pagination.
+        firstValueFrom(
+          this.api.getList<FairJobOpening>(`/fairs/${fairId}/job-openings`, {
+            per_page: 500,
+          }),
+        ),
       ]);
 
       this._fair.set(fair);
       this._exhibitors.set(exhibitors.data);
+      this._openings.set(openings.data);
       this._loadedId.set(fairId);
       this._status.set('success');
     } catch (err: unknown) {
       this._fair.set(null);
       this._exhibitors.set([]);
+      this._openings.set([]);
       this._loadedId.set(null);
       this._error.set(toApiError(err));
       this._status.set('error');

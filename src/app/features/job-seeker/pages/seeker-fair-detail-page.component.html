@@ -20,6 +20,16 @@
   <nav mat-tab-nav-bar [tabPanel]="tabPanel" aria-label="Fair sections">
     <a
       mat-tab-link
+      [routerLink]="['/me/fairs', fair.id]"
+      routerLinkActive
+      #jobs="routerLinkActive"
+      [routerLinkActiveOptions]="{ exact: true }"
+      [active]="jobs.isActive"
+    >
+      Roles ({{ store.openings().length }})
+    </a>
+    <a
+      mat-tab-link
       [routerLink]="['/me/fairs', fair.id, 'employers']"
       routerLinkActive
       #employers="routerLinkActive"

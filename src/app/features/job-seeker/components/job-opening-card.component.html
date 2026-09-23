@@ -1,0 +1,66 @@
+<article class="card" [class.card--matched]="matchedSkills().length > 0">
+  <div class="card__head">
+    <div class="min-w-0">
+      <h3 class="card__title">{{ opening().title }}</h3>
+      <p class="fo-caption m-0">
+        {{ opening().employerName }} ·
+        <span class="booth fo-tabular">{{ opening().boothCode }}</span>
+      </p>
+    </div>
+
+    @if (opening().headcount > 1) {
+      <span class="headcount fo-caption" [attr.aria-label]="opening().headcount + ' positions'">
+        ×{{ opening().headcount }}
+      </span>
+    }
+  </div>
+
+  <ul class="tags">
+    <li class="tag">{{ typeLabel() }}</li>
+    <li class="tag">{{ levelLabel() }}</li>
+    <li class="tag tag--plain">
+      <mat-icon class="tag__icon" aria-hidden="true">place</mat-icon>
+      {{ opening().location }}
+    </li>
+  </ul>
+
+  <p class="salary m-0">
+    @if (hasSalary()) {
+      <span class="fo-figure__unit">RM</span>
+      <span class="fo-tabular">{{ opening().salaryMinMyr | number: '1.0-0' }}</span>
+      <span class="fo-figure__unit">–</span>
+      <span class="fo-tabular">{{ opening().salaryMaxMyr | number: '1.0-0' }}</span>
+      <span class="fo-figure__unit">/ month</span>
+    } @else {
+      <!-- Said plainly rather than left blank: an empty line where a figure
+           belongs reads as a rendering fault, not as a choice the employer
+           made. -->
+      <span class="salary--none fo-caption">Salary not disclosed</span>
+    }
+  </p>
+
+  @if (matchedSkills().length > 0) {
+    <p class="match fo-caption m-0">
+      <mat-icon class="match__icon" aria-hidden="true">check_circle</mat-icon>
+      @if (matchedSkills().length === 1) {
+        Matches 1 skill on your profile
+      } @else {
+        Matches {{ matchedSkills().length }} skills on your profile
+      }
+    </p>
+  }
+
+  <ul class="skills">
+    @for (skill of opening().skills; track skill) {
+      <!-- A matched skill is marked with text as well as a tint, so the
+           signal survives for anyone who cannot distinguish the two
+           backgrounds (WCAG 1.4.1). -->
+      <li class="skill" [class.skill--matched]="isMatched(skill)">
+        {{ skill }}
+        @if (isMatched(skill)) {
+          <span class="fo-sr-only">(on your profile)</span>
+        }
+      </li>
+    }
+  </ul>
+</article>
