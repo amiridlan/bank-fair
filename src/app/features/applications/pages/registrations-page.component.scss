@@ -28,3 +28,20 @@
   font-size: 16px;
   flex: none;
 }
+
+// The employer's name opens the detail. A button styled as a link rather than
+// an anchor, because it is an in-app navigation the component owns; the focus
+// ring comes from the global :focus-visible rule.
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}

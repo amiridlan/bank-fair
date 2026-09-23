@@ -55,7 +55,14 @@
     @for (application of visible(); track application.id) {
       <li class="flex flex-col gap-3 rounded-md border border-border bg-raised p-4">
         <div class="min-w-0">
-          <h2 class="m-0 text-h2">{{ application.employerName }}</h2>
+          <!-- A button, not a click handler on the card: the card also holds
+               Approve and Turn down, and a clickable card wrapping buttons
+               makes it ambiguous what a click does. -->
+          <h2 class="m-0 text-h2">
+            <button class="link" type="button" (click)="openDetail(application)">
+              {{ application.employerName }}
+            </button>
+          </h2>
           <p class="fo-caption m-0">{{ fairName(application.fairId) }}</p>
         </div>
 
@@ -124,3 +131,7 @@
     }
   </ul>
 }
+
+<!-- The detail modal is a child route, so its URL is shareable. The routed
+     component renders nothing here. -->
+<router-outlet />
