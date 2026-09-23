@@ -91,11 +91,13 @@ describe('fairs', () => {
   beforeEach(() => (db = buildMockDb(NOW)));
 
   it('lists all fairs', () => {
-    expect(data<unknown[]>(call(db, 'GET', '/fairs'))).toHaveLength(5);
+    expect(data<unknown[]>(call(db, 'GET', '/fairs'))).toHaveLength(7);
   });
 
   it('filters by status and city', () => {
-    expect(data<unknown[]>(call(db, 'GET', '/fairs?status=open'))).toHaveLength(2);
+    // Three open: two still ahead, and one whose dates passed without
+    // anybody closing it out.
+    expect(data<unknown[]>(call(db, 'GET', '/fairs?status=open'))).toHaveLength(3);
     expect(data<unknown[]>(call(db, 'GET', '/fairs?city=George Town'))).toHaveLength(1);
   });
 

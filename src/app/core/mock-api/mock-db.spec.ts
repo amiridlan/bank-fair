@@ -74,8 +74,8 @@ describe('buildMockDb', () => {
 
     // Farah (staff), Daniel and Priya (employer), and one job seeker.
     expect(db.users).toHaveLength(4);
-    expect(db.fairs).toHaveLength(5);
-    expect(db.booths).toHaveLength(200); // 40 per fair
+    expect(db.fairs).toHaveLength(7);
+    expect(db.booths).toHaveLength(280); // 40 per fair
     expect(db.employers).toHaveLength(60);
     expect(db.candidates).toHaveLength(300);
     expect(db.shortlists).toHaveLength(6);

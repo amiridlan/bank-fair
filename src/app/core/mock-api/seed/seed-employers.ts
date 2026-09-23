@@ -42,13 +42,20 @@ const STAGES_WITH_VALUE: ReadonlySet<EmployerStage> = new Set<EmployerStage>([
 
 /**
  * Per-fair attendance likelihood. fair-04 is a draft with nothing sold yet, so
- * it never appears; fair-05 is the completed one, which sold out.
+ * it never appears; fair-05 and fair-07 are the completed ones, which sold out.
+ *
+ * The historical fairs need entries here or they render with no booths at all:
+ * `boothAssigned` is derived from the booth rows, not from the number in
+ * seed-fairs, and a completed fair showing 1,980 check-ins against 0 booths is
+ * not a coherent example.
  */
 const FAIR_ATTENDANCE: readonly (readonly [string, number])[] = [
   ['fair-01', 1], // live, busiest
   ['fair-02', 0.7],
-  ['fair-03', 0.4], // regional, thinnest
+  ['fair-03', 0.65], // regional, thinnest
   ['fair-05', 1], // completed, sold out
+  ['fair-06', 0.6], // ran, never closed out
+  ['fair-07', 1], // completed, sold out
 ];
 
 function pickFairs(random: SeededRandom, scale: number): string[] {

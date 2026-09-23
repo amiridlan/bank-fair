@@ -73,5 +73,37 @@ export function seedFairs(now: number): Fair[] {
       registrations: 3120,
       checkIns: 2244,
     },
+    {
+      // Ended eight days ago and still marked open: nobody closed it out.
+      // This is the case that makes "Past" worth separating from "Complete" —
+      // it is a fair needing attention, not an archived one. Without it in the
+      // seed the Past group would never appear.
+      id: 'fair-06',
+      name: 'Sarawak Digital Careers Fair',
+      venue: 'Borneo Convention Centre Kuching',
+      city: 'Kuching',
+      startDate: klTimestamp(-8, 9, 0, now),
+      endDate: klTimestamp(-7, 18, 0, now),
+      status: 'open',
+      boothTotal: 40,
+      boothAssigned: 31, // ~78%
+      registrations: 1450,
+      checkIns: 1102,
+    },
+    {
+      // A second completed fair, so the Complete group is a group rather than
+      // a single card.
+      id: 'fair-07',
+      name: 'KL Engineering Careers Fair',
+      venue: 'Kuala Lumpur Convention Centre',
+      city: 'Kuala Lumpur',
+      startDate: klTimestamp(-180, 9, 0, now),
+      endDate: klTimestamp(-179, 18, 0, now),
+      status: 'completed',
+      boothTotal: 40,
+      boothAssigned: 40, // 100%
+      registrations: 2680,
+      checkIns: 1980,
+    },
   ];
 }
