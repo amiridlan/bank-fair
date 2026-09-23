@@ -223,6 +223,33 @@ describe('App routing', () => {
     expect(document.querySelector('mat-dialog-container')).toBeNull();
   });
 
+  it('opens an application detail from a deep link', async () => {
+    // Same contract as the candidate profile: a modal, but still a route, so
+    // one organiser can send another a link to the exact application.
+    auth.switchUser('u-staff-1');
+    const fixture = TestBed.createComponent(AppComponent);
+
+    await router.navigate(['/staff/registrations']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const id = (fixture.nativeElement as HTMLElement)
+      .querySelector('ul.grid > li h2 button')
+      ?.textContent?.trim();
+    expect(id).toBeTruthy();
+
+    await router.navigate(['/staff/registrations', 'app-seed-emp-003']);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const dialog = document.querySelector('mat-dialog-container');
+    expect(dialog).not.toBeNull();
+    // The employer record, not just the application.
+    expect(dialog?.textContent).toContain('Pipeline stage');
+  });
+
   it('renders the interview slot grid for the active fair', async () => {
     auth.switchUser('u-emp-1');
     auth.setActiveFair('fair-01');
