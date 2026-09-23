@@ -7,10 +7,11 @@ const routes: Routes = [
     loadComponent: () => import('./pages/talent-pool-page.component'),
     children: [
       {
-        // The profile drawer renders into the page's outlet, so its URL is
-        // deep-linkable and survives a refresh.
+        // The profile is a modal, but still a child route: the URL carries the
+        // candidate id, so it is deep-linkable and survives a refresh. The
+        // routed component renders nothing — it opens the dialog.
         path: ':candidateId',
-        loadComponent: () => import('./pages/candidate-drawer.component'),
+        loadComponent: () => import('./pages/candidate-route.component'),
       },
     ],
   },

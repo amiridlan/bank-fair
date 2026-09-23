@@ -1,13 +1,13 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
-import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
 
 import { AuthStore } from '../../../core/auth/auth.store';
 import { SkeletonComponent } from '../../../shared/ui/skeleton.component';
@@ -15,24 +15,30 @@ import { ShortlistStore } from '../../shortlist/shortlist.store';
 import { TalentPoolStore } from '../talent-pool.store';
 import { BusyLabelComponent } from '../../../shared/ui/busy-label.component';
 
+export interface CandidateDialogData {
+  readonly candidateId: string;
+}
+
 /**
- * Candidate profile, shown as a right-hand drawer over the talent pool.
+ * Candidate profile, shown as a modal over the talent pool.
  *
- * A child route rather than a dialog, so the URL carries the candidate id:
- * the drawer survives a refresh and the link can be shared, which is what
- * "deep-linkable" in docs/02 asks for.
+ * Opened by `CandidateRouteComponent`, which is the child route — so the URL
+ * still carries the candidate id and the profile survives a refresh and can be
+ * linked. A dialog opened straight from a table row would have lost that,
+ * which docs/02 asks for explicitly.
  *
  * Contact details are shown only when the API says they are visible. That
  * flag comes from the server, which masks the values themselves — the UI is
  * reflecting a decision, not making one.
  */
 @Component({
-  selector: 'app-candidate-drawer',
+  selector: 'app-candidate-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TitleCasePipe,
     FormsModule,
     MatButtonModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -40,11 +46,12 @@ import { BusyLabelComponent } from '../../../shared/ui/busy-label.component';
   
     BusyLabelComponent,
   ],
-  templateUrl: './candidate-drawer.component.html',
-  styleUrl: './candidate-drawer.component.scss',
+  templateUrl: './candidate-dialog.component.html',
+  styleUrl: './candidate-dialog.component.scss',
 })
-export default class CandidateDrawerComponent {
-  private readonly router = inject(Router);
+export class CandidateDialogComponent {
+  private readonly dialogRef =
+    inject<MatDialogRef<CandidateDialogComponent>>(MatDialogRef);
   private readonly snackBar = inject(MatSnackBar);
   private readonly auth = inject(AuthStore);
   private readonly announcer = inject(LiveAnnouncer);
@@ -55,7 +62,12 @@ export default class CandidateDrawerComponent {
   protected readonly note = signal('');
   protected readonly saving = signal(false);
 
-  readonly candidateId = input.required<string>();
+  /**
+   * Writable rather than an `input`, because a dialog is created once and the
+   * route param can still change underneath it — someone editing the URL, or
+   * a link followed from elsewhere. The route component pushes the new id in.
+   */
+  readonly candidateId = signal(inject<CandidateDialogData>(MAT_DIALOG_DATA).candidateId);
 
   constructor() {
     effect(() => {
@@ -64,9 +76,9 @@ export default class CandidateDrawerComponent {
     });
   }
 
+  /** Closing is the route component's job: it owns the URL. */
   protected close(): void {
-    this.store.clearSelection();
-    void this.router.navigate(['/hiring/talent-pool'], { queryParamsHandling: 'preserve' });
+    this.dialogRef.close();
   }
 
   protected onNote(event: Event): void {

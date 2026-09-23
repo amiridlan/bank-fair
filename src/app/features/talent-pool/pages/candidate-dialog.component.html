@@ -1,0 +1,109 @@
+<!-- mat-dialog-title carries the accessible name for the dialog, so Material
+     wires aria-labelledby itself rather than this naming it by hand. -->
+<div class="head" mat-dialog-title>
+  <h2 class="head__title">
+    @if (store.selected(); as candidate) {
+      {{ candidate.fullName }}
+    } @else {
+      Candidate
+    }
+  </h2>
+  <button matIconButton type="button" aria-label="Close candidate profile" (click)="close()">
+    <mat-icon aria-hidden="true">close</mat-icon>
+  </button>
+</div>
+
+<!-- tabindex so the profile can be scrolled with the keyboard once it is tall
+     enough to scroll, which it is at phone width (axe:
+     scrollable-region-focusable). The table wrapper on the list does the same. -->
+<mat-dialog-content class="body" tabindex="0">
+  @if (store.selectedStatus() === 'loading') {
+    <app-skeleton [count]="5" [height]="48" label="Loading candidate" />
+  } @else if (store.selectedStatus() === 'error') {
+    <p class="body__error" role="alert">Couldn’t load this candidate.</p>
+  } @else if (store.selected(); as candidate) {
+    <p class="body__headline">{{ candidate.headline }}</p>
+
+    <dl class="facts">
+      <div class="fact">
+        <dt class="fo-caption">University</dt>
+        <dd>{{ candidate.university }}</dd>
+      </div>
+      <div class="fact">
+        <dt class="fo-caption">Field of study</dt>
+        <dd>{{ candidate.fieldOfStudy }}</dd>
+      </div>
+      <div class="fact">
+        <dt class="fo-caption">Qualification</dt>
+        <dd>{{ candidate.qualification | titlecase }}</dd>
+      </div>
+      <div class="fact">
+        <dt class="fo-caption">Graduating</dt>
+        <dd class="fo-tabular">{{ candidate.graduationYear }}</dd>
+      </div>
+      <div class="fact">
+        <dt class="fo-caption">CGPA</dt>
+        <dd class="fo-tabular">{{ candidate.cgpa ?? 'Not supplied' }}</dd>
+      </div>
+    </dl>
+
+    <section aria-labelledby="skills-heading">
+      <h3 id="skills-heading" class="body__section">Skills</h3>
+      <ul class="skills">
+        @for (skill of candidate.skills; track skill) {
+          <li class="skill">{{ skill }}</li>
+        }
+      </ul>
+    </section>
+
+    <section aria-labelledby="contact-heading">
+      <h3 id="contact-heading" class="body__section">Contact</h3>
+      @if (candidate.isContactVisible) {
+        <dl class="facts">
+          <div class="fact">
+            <dt class="fo-caption">Email</dt>
+            <dd>{{ candidate.email }}</dd>
+          </div>
+          <div class="fact">
+            <dt class="fo-caption">Phone</dt>
+            <dd>{{ candidate.phone ?? 'Not supplied' }}</dd>
+          </div>
+        </dl>
+      } @else {
+        <p class="locked fo-caption">
+          <mat-icon class="locked__icon" aria-hidden="true">lock</mat-icon>
+          Contact details unlock once this candidate is on your shortlist.
+          <span class="locked__masked">{{ candidate.email }}</span>
+        </p>
+      }
+    </section>
+
+  }
+</mat-dialog-content>
+
+<!-- Outside mat-dialog-content on purpose, so it does not scroll away with
+     the profile. At 390px the button sat below the fold and reaching the
+     primary action meant scrolling the dialog first. -->
+@if (store.selected(); as candidate) {
+  <mat-dialog-actions class="foot">
+    @if (isShortlisted(candidate.id)) {
+      <p class="shortlisted fo-caption">
+        <mat-icon class="shortlisted__icon" aria-hidden="true">check_circle</mat-icon>
+        On your shortlist
+      </p>
+      <button matButton type="button" (click)="removeFromShortlist()">
+        Remove from shortlist
+      </button>
+    } @else if (!hasActiveFair()) {
+      <p class="fo-caption">Choose an active fair in the top bar to shortlist candidates.</p>
+    } @else {
+      <mat-form-field appearance="outline" class="note">
+        <mat-label>Note (optional)</mat-label>
+        <textarea matInput rows="2" [value]="note()" (input)="onNote($event)"></textarea>
+      </mat-form-field>
+      <button matButton="filled" type="button" [disabled]="saving()" (click)="addToShortlist()">
+        <app-busy-label [busy]="saving()">Add to shortlist</app-busy-label>
+      </button>
+    }
+  </mat-dialog-actions>
+}

@@ -1,40 +1,34 @@
-.drawer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--fo-space-4);
-  width: var(--fo-drawer-width);
-  max-width: 100%;
-  height: 100%;
-  padding: var(--fo-space-4);
-  background: var(--fo-surface-raised);
-  border-left: 1px solid var(--fo-border);
-  box-sizing: border-box;
-  overflow-y: auto;
-}
-
-.drawer__head {
+.head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--fo-space-3);
 }
 
-.drawer__title {
+.head__title {
   margin: 0;
 }
 
-.drawer__headline {
+// The dialog's own scrolling region. A max-height keeps a long profile from
+// pushing the dialog past a short viewport; Material handles the scroll.
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fo-space-4);
+}
+
+.body__headline {
   margin: 0;
   color: var(--fo-text-muted);
 }
 
-.drawer__section {
+.body__section {
   margin: 0 0 var(--fo-space-2);
   font-size: var(--fo-body-size);
   line-height: var(--fo-body-line);
 }
 
-.drawer__error {
+.body__error {
   color: var(--fo-error);
 }
 
@@ -100,12 +94,16 @@
   font-family: var(--fo-font-mono);
 }
 
-.drawer__foot {
+// mat-dialog-actions lays its children out in a row, which is right for two
+// buttons and wrong for a note field above one. Set on the element this
+// component owns rather than through a utility, which would lose to
+// Material's unlayered styles (CLAUDE.md).
+.foot {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: var(--fo-space-2);
-  margin-top: auto;
-  padding-top: var(--fo-space-4);
+  padding: var(--fo-space-4);
   border-top: 1px solid var(--fo-border);
 }
 
@@ -130,5 +128,14 @@
 @media (max-width: 767px) {
   .facts {
     grid-template-columns: 1fr;
+  }
+}
+
+// The facts grid was two columns inside a drawer roughly half the viewport.
+// A modal is wider, so three columns fit above the table breakpoint without
+// the cells becoming stripes.
+@media (min-width: 768px) {
+  .facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

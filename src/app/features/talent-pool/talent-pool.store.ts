@@ -47,7 +47,7 @@ export class TalentPoolStore {
   private readonly _error = signal<ApiError | null>(null);
   private readonly _filters = signal<TalentFilters>(DEFAULT_FILTERS);
 
-  /** The candidate whose profile drawer is open, loaded by deep link. */
+  /** The candidate whose profile modal is open, loaded by deep link. */
   private readonly _selected = signal<Candidate | null>(null);
   private readonly _selectedStatus = signal<LoadStatus>('idle');
 
@@ -112,7 +112,7 @@ export class TalentPoolStore {
   }
 
   /**
-   * Loads one candidate for the profile drawer.
+   * Loads one candidate for the profile modal.
    *
    * Always fetched rather than read from the current page, so a deep link
    * works on a cold load and the contact details reflect the latest shortlist

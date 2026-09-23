@@ -119,7 +119,7 @@ describe('TalentPoolStore', () => {
     expect(store.hasActiveFilters()).toBe(false);
   });
 
-  describe('profile drawer', () => {
+  describe('profile modal', () => {
     it('always fetches, so a deep link works on a cold load', async () => {
       const loading = store.loadOne('cand-007');
       http.expectOne('/candidates/cand-007').flush({ data: candidateRow('cand-007') });
@@ -166,7 +166,7 @@ describe('TalentPoolStore', () => {
       expect(store.candidates()[1].isContactVisible).toBe(false);
     });
 
-    it('also updates the open drawer when it is the same candidate', async () => {
+    it('also updates the open modal when it is the same candidate', async () => {
       const loading = store.loadOne('cand-001');
       http.expectOne('/candidates/cand-001').flush({ data: candidateRow('cand-001') });
       await loading;

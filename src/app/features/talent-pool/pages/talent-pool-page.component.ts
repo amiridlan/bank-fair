@@ -221,7 +221,7 @@ export default class TalentPoolPageComponent {
   }
 
   protected openCandidate(candidateId: string): void {
-    // Query params are preserved so closing the drawer returns to the same
+    // Query params are preserved so closing the profile returns to the same
     // filtered page.
     void this.router.navigate(['/hiring/talent-pool', candidateId], {
       queryParamsHandling: 'preserve',
@@ -242,7 +242,7 @@ export default class TalentPoolPageComponent {
   }
 
   /**
-   * Adds or removes from the row, without opening the drawer first.
+   * Adds or removes from the row, without opening the profile first.
    *
    * `stopPropagation` matters: the row itself opens the profile, so without it
    * every shortlist click would also navigate.
