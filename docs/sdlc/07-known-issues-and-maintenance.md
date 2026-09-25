@@ -29,7 +29,7 @@ not impact on the demo.
 | [KI-07](#ki-07) | Low | Skill matching barely visible in the demo |
 | [KI-08](#ki-08) | Low | No deployment or operations documentation |
 | [KI-09](#ki-09) | Low | `Live` chip borrows warning semantics |
-| [KI-10](#ki-10) | Low | Profile form hints overlap the next field's label |
+| ~~KI-10~~ | ~~Low~~ | ~~Profile form hints overlap the next field's label~~ — **closed 25/09/2026** |
 
 ---
 
@@ -228,16 +228,41 @@ and should be added as documents 08 and 09 in this set.
 ---
 
 <a id="ki-10"></a>
-## KI-10 — Profile form hints overlap the next field's label · Low
+## KI-10 — Profile form hints overlap the next field's label · **CLOSED 25/09/2026**
 
-On `/me/profile`, the hint under *Headline* ("One line. Employers see this
-first.") overlaps the *Field of study* label below it, and the hint under
-*CGPA* overlaps *Skills*. Found by looking at the page during V3; it affects
-only the left column and only where a hint wraps to two lines.
+On `/me/profile`, the hint under *Headline* overlapped the *Field of study*
+label below it, and the hint under *CGPA* overlapped *Skills*. Found by looking
+at the page during V3.
 
-**Resolution.** The form grid gives each row a fixed height that does not
-account for a two-line subscript. Either let the rows size to content or give
-the hint a single line.
+**Two causes, and neither fix worked alone** — which is why the first attempt
+did not close it.
+
+1. Material's default `subscriptSizing` is `fixed`: it reserves exactly one
+   line for the hint and positions the subscript absolutely, so a hint that
+   wraps to two lines spills out of the form field's own box entirely.
+   `subscriptSizing="dynamic"` makes the box grow to contain it — the Headline
+   field went from 52px to 88px.
+2. That alone still overlapped, because **Material's floating label renders
+   about 7px above its field's box**. Measured: the University field's box top
+   was 323 while its label's top was 316. A 4px row gap does not clear a 7px
+   overhang.
+
+**Resolution.** `subscriptSizing="dynamic"` on all ten fields, plus a full
+`gap-4` row gap in place of `gap-x-4` alone. Verified by measuring every
+`mat-hint` against every `mat-label` at 1440px and 390px: zero intersecting
+boxes, where there were two before.
+
+The CGPA hint was also shortened — "Optional — never imported from LinkedIn."
+says the same thing on one line.
+
+**Checked, and not systemic.** The employer form dialog also carries a hint
+that wraps to two lines and does not overlap anything; the bug was specific to
+this form's tight grid.
+
+> **Not unit-tested, deliberately.** jsdom has no layout, so a test asserting
+> these boxes do not intersect would pass whatever the CSS said. It is verified
+> by browser measurement, like the other layout requirements listed in
+> SRS §7 as having no automated coverage.
 
 ---
 

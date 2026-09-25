@@ -36,8 +36,17 @@
           </p>
         }
 
-        <div class="grid grid-cols-1 gap-x-4 md:grid-cols-2">
-          <mat-form-field appearance="outline">
+        <!-- Two things are needed here and neither is sufficient alone.
+             `subscriptSizing="dynamic"` below makes each field's own box grow
+             to contain a hint that wraps — with Material's default `fixed` the
+             subscript is absolutely positioned and a two-line hint spills out
+             of the field entirely.
+             The row gap is the other half: Material's floating label renders
+             about 7px ABOVE its field's box, so a row gap smaller than that
+             leaves the next row's label sitting on the previous row's hint.
+             Measured at 4px, where it still overlapped. -->
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Full name</mat-label>
             <input matInput formControlName="fullName" autocomplete="name" />
             @if (errorFor('fullName'); as message) {
@@ -45,7 +54,7 @@
             }
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Headline</mat-label>
             <input matInput formControlName="headline" />
             <mat-hint>One line. Employers see this first.</mat-hint>
@@ -54,7 +63,7 @@
             }
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>University</mat-label>
             <input matInput formControlName="university" />
             @if (errorFor('university'); as message) {
@@ -62,7 +71,7 @@
             }
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Field of study</mat-label>
             <input matInput formControlName="fieldOfStudy" />
             @if (errorFor('fieldOfStudy'); as message) {
@@ -70,7 +79,7 @@
             }
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Qualification</mat-label>
             <mat-select formControlName="qualification">
               @for (option of qualifications; track option.value) {
@@ -82,7 +91,7 @@
             }
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Graduating in</mat-label>
             <input matInput formControlName="graduationYear" type="number" inputmode="numeric" />
             @if (errorFor('graduationYear'); as message) {
@@ -90,17 +99,17 @@
             }
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>CGPA</mat-label>
             <input matInput formControlName="cgpa" inputmode="decimal" placeholder="3.50" />
-            <mat-hint>Optional. LinkedIn does not carry this, so it is never imported.</mat-hint>
+            <mat-hint>Optional — never imported from LinkedIn.</mat-hint>
             @if (errorFor('cgpa'); as message) {
               <mat-error>{{ message }}</mat-error>
             }
           </mat-form-field>
         </div>
 
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>Skills</mat-label>
           <textarea matInput formControlName="skills" rows="2"></textarea>
           <mat-hint>Separated by commas. Up to 20.</mat-hint>
@@ -119,7 +128,7 @@
         <!-- Editable here and only here, and unmasked here and only here: a
              person is not a third party to their own record. -->
         <div class="grid grid-cols-1 gap-x-4">
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Email</mat-label>
             <input matInput formControlName="email" type="email" autocomplete="email" />
             @if (errorFor('email'); as message) {
@@ -127,7 +136,7 @@
             }
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Phone</mat-label>
             <input matInput formControlName="phone" type="tel" autocomplete="tel" />
             <mat-hint>Optional.</mat-hint>
