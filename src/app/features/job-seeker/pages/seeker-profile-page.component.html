@@ -140,13 +140,15 @@
         <p class="notice fo-caption m-0 flex items-start gap-2">
           <mat-icon class="notice__icon" aria-hidden="true">lock</mat-icon>
           Employers cannot see your email or phone number until they add you to their shortlist.
+          Everything else on this page — including your CGPA — is visible to the employers
+          exhibiting at the fairs you have registered for.
         </p>
 
         <div>
           <h3 class="fo-caption m-0">Visible to employers at</h3>
           @if (visibleAt().length === 0) {
             <p class="m-0 mt-2">
-              No fairs yet — your profile is not visible to any employer.
+              No fairs yet — <strong>your profile is not visible to any employer</strong>.
               <a routerLink="/me/fairs">Register for a fair</a> to change that.
             </p>
           } @else {
@@ -158,6 +160,13 @@
                 </li>
               }
             </ul>
+            <!-- The reassuring half of the rule, and one the system now
+                 actually keeps: before docs/11 V1 every employer could see
+                 every candidate regardless of this list. -->
+            <p class="fo-caption m-0 mt-2">
+              Employers at any other fair cannot see you. Withdraw from a fair to remove
+              yourself from it.
+            </p>
           }
         </div>
 

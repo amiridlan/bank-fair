@@ -328,3 +328,48 @@ says why.
 > on its own rather than removed by analogy.
 
 **V3** (consent and profile copy) is the last item.
+
+
+---
+
+## V3 — done (25/09/2026)
+
+Copy, and one thing that turned out not to be copy at all.
+
+**The consent notice named five fields; an employer sees eight.** It listed
+name, university, field of study, graduation year and skills. The talent pool
+table and the candidate dialog between them also show **CGPA, qualification and
+the profile headline**. Consent that omits a field is not informed consent for
+that field, and CGPA is the one a person is least likely to assume is shared.
+That is a PDPA problem rather than a wording problem, and it is the reason V3
+was worth doing rather than skipping.
+
+The notice now lists all eight, and says the converse — *employers at other
+fairs cannot see you* — which only became true with V1. Before that, the
+promise this dialog made was not one the system kept.
+
+**A test pins the notice to the API.** `handlers.spec.ts` asserts that a
+candidate row carries exactly the fields the dialog names, plus contact details
+and plumbing. Adding any other key fails it by name. A copy review cannot catch
+a field added to the API six months from now; this can.
+
+**Elsewhere:** the profile page states that everything except email and phone —
+including CGPA — is visible to employers at the fairs listed, and that
+employers at any other fair cannot see you. The employer's talent pool now says
+its list is scoped to the fairs they are exhibiting at, which both informs the
+employer and makes the privacy rule visible from the other side.
+
+**One rendering defect in the new markup.** Tailwind's preflight strips list
+markers, so the field list rendered as four orphan indented lines rather than a
+list. `list-style: disc` restored, because the reader is meant to see four
+separate things being shared.
+
+### Found while verifying, not fixed here
+
+The seeker profile form's field hints overlap the labels beneath them — "One
+line. Employers see this first." runs into *Field of study*, and "Optional.
+LinkedIn does not carry this…" runs into *Skills*. Pre-existing, in the left
+column, untouched by V3. Worth a small fix to the form grid's row sizing; left
+alone rather than widened into this change.
+
+**V1, V2 and V3 are complete.** KI-04 is closed.

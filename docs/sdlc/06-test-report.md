@@ -24,8 +24,8 @@
 
 | Metric | Value |
 |---|---|
-| Automated tests | **415** |
-| Passing | **415 (100%)** |
+| Automated tests | **416** |
+| Passing | **416 (100%)** |
 | Failing | 0 |
 | Skipped | 0 |
 | Spec files | 32 |
@@ -41,7 +41,7 @@
 
 ```bash
 npm ci                       # npm 10 cannot resolve this graph; ci is unaffected
-npm test -- --watch=false    # 415 tests
+npm test -- --watch=false    # 416 tests
 npm run lint                 # zero warnings
 npm run build                # bundle report
 ```

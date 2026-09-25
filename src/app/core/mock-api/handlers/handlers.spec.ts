@@ -1823,3 +1823,44 @@ describe('candidate visibility', () => {
     expect(row.email).not.toContain('***');
   });
 });
+
+/**
+ * The consent notice names the fields an employer will see. If the API starts
+ * returning a field the notice does not mention, the consent stops being
+ * informed for that field — which is the failure V3 was written to close, and
+ * is not something a copy review would catch on its own.
+ */
+describe('consent covers what is actually shared', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  it('exposes exactly the candidate fields the consent dialog lists', () => {
+    const [row] = data<Record<string, unknown>[]>(
+      call(db, 'GET', '/candidates?per_page=1', { user: HM_ONE }),
+    );
+
+    // Named in the dialog, in order: name + headline, university, course,
+    // qualification, graduation year, CGPA, skills.
+    const named = [
+      'fullName',
+      'headline',
+      'university',
+      'fieldOfStudy',
+      'qualification',
+      'graduationYear',
+      'cgpa',
+      'skills',
+    ];
+    for (const field of named) {
+      expect(Object.keys(row)).toContain(field);
+    }
+
+    // Everything else the row carries is either contact detail the dialog
+    // covers separately, or plumbing with nothing personal in it. A new key
+    // outside this list means the notice needs a new line.
+    const allowed = new Set([...named, 'id', 'email', 'phone', 'isContactVisible', 'fairIds']);
+    const unexpected = Object.keys(row).filter((key) => !allowed.has(key));
+
+    expect(unexpected).toEqual([]);
+  });
+});

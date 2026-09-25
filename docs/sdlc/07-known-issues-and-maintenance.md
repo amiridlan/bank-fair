@@ -29,6 +29,7 @@ not impact on the demo.
 | [KI-07](#ki-07) | Low | Skill matching barely visible in the demo |
 | [KI-08](#ki-08) | Low | No deployment or operations documentation |
 | [KI-09](#ki-09) | Low | `Live` chip borrows warning semantics |
+| [KI-10](#ki-10) | Low | Profile form hints overlap the next field's label |
 
 ---
 
@@ -46,10 +47,16 @@ not impact on the demo.
 > it fell to 269 and a search for them returned zero rows. Four mutations of
 > the rule each failed the test written for them.
 >
-> **V2 is done too** (25/09/2026): staff get a Candidates tab on each fair,
-> listing its registrants with contact details masked. It needed no API change
-> — the `fair_id` filter was already there and already tested. **V3** (consent
-> and profile copy) is the last item, and is wording rather than behaviour.
+> **V2 and V3 are done too** (25/09/2026). V2 gave staff a Candidates tab on
+> each fair, listing its registrants with contact details masked; it needed no
+> API change. V3 corrected the consent notice, which named five of the eight
+> fields an employer can actually see — CGPA, qualification and the profile
+> headline were shared without being mentioned, which is an informed-consent
+> gap rather than a wording one. A test now pins the notice to the API's field
+> set, so a field added later fails the build rather than quietly widening what
+> people agreed to.
+>
+> **All of V1–V3 are complete.**
 >
 > The original entry follows, unedited, because it explains why this mattered.
 
@@ -217,6 +224,20 @@ is "push to main" would be ceremony.
 **This changes the moment Laravel exists.** At that point a Deployment Plan
 (with migration and rollback steps) and a Runbook become genuinely necessary
 and should be added as documents 08 and 09 in this set.
+
+---
+
+<a id="ki-10"></a>
+## KI-10 — Profile form hints overlap the next field's label · Low
+
+On `/me/profile`, the hint under *Headline* ("One line. Employers see this
+first.") overlaps the *Field of study* label below it, and the hint under
+*CGPA* overlaps *Skills*. Found by looking at the page during V3; it affects
+only the left column and only where a hint wraps to two lines.
+
+**Resolution.** The form grid gives each row a fixed height that does not
+account for a two-line subscript. Either let the rows size to content or give
+the hint a single line.
 
 ---
 
