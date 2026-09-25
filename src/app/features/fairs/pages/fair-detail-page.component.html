@@ -43,6 +43,15 @@
     >
       Employers
     </a>
+    <a
+      mat-tab-link
+      [routerLink]="['/staff/fairs', fair.id, 'candidates']"
+      routerLinkActive
+      #candidates="routerLinkActive"
+      [active]="candidates.isActive"
+    >
+      Candidates
+    </a>
   </nav>
 
   <mat-tab-nav-panel #tabPanel class="tab">

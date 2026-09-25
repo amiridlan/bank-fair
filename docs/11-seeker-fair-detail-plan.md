@@ -291,3 +291,40 @@ exactly the test written for them — at both the handler and the wire level.
 - **`Fair.description` touches staff surfaces.** Adding a field to a shared
   model means the staff fair detail and the fair list both see it. Neither has
   to show it, but both have to keep compiling.
+
+
+---
+
+## V2 — done (25/09/2026)
+
+A Candidates tab on the staff fair detail, at
+`/staff/fairs/:fairId/candidates`. Reads `GET /candidates?fair_id=X`, which
+already existed and was already tested — V2 needed no API change at all.
+
+Contact details arrive masked and stay that way (V-D3). The table has **no
+contact column**: every value would be the same masked string, so it would be
+25 identical cells taking width from the fields staff actually read. The rule
+is stated once above the table with an example instead, so a reader knows the
+masking is deliberate rather than missing data.
+
+**Two things the screenshot showed that the numbers did not.** A column of 25
+identical `a***@example.com` cells, and a headline that wrapped to two or three
+lines and made every row a different height — which is exactly what docs/07
+UX-3 established makes a table unscannable. Rows are a uniform 48px now.
+
+**A guard that did not survive mutation, and was removed rather than kept.**
+The tab first carried an `isCurrent` check — "do these rows belong to the fair
+in the URL" — mirroring the seeker fair shell. Deleting it broke no test, twice,
+including one written specifically for it. The reason is that `load()` sets its
+status synchronously before the template is evaluated, so `isLoading()` already
+covers every frame in which a stale list could appear. Shipping provably
+unreachable code with a comment claiming it prevents something is worse than
+not having it, so it and the store field behind it are gone and the template
+says why.
+
+> **Worth checking:** `SeekerFairDetailPageComponent` carries the same
+> `isCurrent` pattern, added in J2. Its test passes, but by the same reasoning
+> it may also be unreachable. Not changed here — it should be mutation-tested
+> on its own rather than removed by analogy.
+
+**V3** (consent and profile copy) is the last item.

@@ -46,9 +46,10 @@ not impact on the demo.
 > it fell to 269 and a search for them returned zero rows. Four mutations of
 > the rule each failed the test written for them.
 >
-> **V2** (the staff Candidates tab at `/staff/fairs/:fairId/candidates`) and
-> **V3** (consent and profile copy) remain open. Neither is a correctness
-> defect — the `fair_id` filter V2 needs already exists and is tested.
+> **V2 is done too** (25/09/2026): staff get a Candidates tab on each fair,
+> listing its registrants with contact details masked. It needed no API change
+> — the `fair_id` filter was already there and already tested. **V3** (consent
+> and profile copy) is the last item, and is wording rather than behaviour.
 >
 > The original entry follows, unedited, because it explains why this mattered.
 

@@ -28,6 +28,11 @@ const routes: Routes = [
         title: 'Fair employers · BankFair',
         loadComponent: () => import('./pages/fair-employers-tab.component'),
       },
+      {
+        path: 'candidates',
+        title: 'Registered candidates · BankFair',
+        loadComponent: () => import('./pages/fair-candidates-tab.component'),
+      },
     ],
   },
 ];

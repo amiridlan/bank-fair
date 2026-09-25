@@ -24,11 +24,11 @@
 
 | Metric | Value |
 |---|---|
-| Automated tests | **409** |
-| Passing | **409 (100%)** |
+| Automated tests | **415** |
+| Passing | **415 (100%)** |
 | Failing | 0 |
 | Skipped | 0 |
-| Spec files | 31 |
+| Spec files | 32 |
 | Suite runtime | ~23s |
 | Lint | Clean, zero warnings |
 | Production build | Succeeds, zero warnings |
@@ -41,7 +41,7 @@
 
 ```bash
 npm ci                       # npm 10 cannot resolve this graph; ci is unaffected
-npm test -- --watch=false    # 409 tests
+npm test -- --watch=false    # 415 tests
 npm run lint                 # zero warnings
 npm run build                # bundle report
 ```

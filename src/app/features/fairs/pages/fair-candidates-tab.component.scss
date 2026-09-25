@@ -1,0 +1,64 @@
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fo-space-3);
+  margin-bottom: var(--fo-space-4);
+}
+
+.summary__text {
+  margin: 0;
+  color: var(--fo-text-muted);
+}
+
+// tabindex on the wrapper makes the horizontal scroll reachable by keyboard
+// when the table is wider than the viewport.
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--fo-border);
+  border-radius: var(--fo-radius-md);
+}
+
+.table {
+  width: 100%;
+  background: var(--fo-surface-raised);
+}
+
+.table__number {
+  text-align: right;
+}
+
+.cell__name {
+  display: block;
+}
+
+.cell__meta {
+  display: block;
+  color: var(--fo-text-muted);
+}
+
+.masked {
+  display: flex;
+  align-items: center;
+  gap: var(--fo-space-1);
+}
+
+.masked__icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  flex: none;
+}
+
+// The headline varies from four words to a dozen, and a table whose rows are
+// each a different height is one nobody can scan down (docs/07 UX-3). One
+// line, ellipsised, with the full text on hover and in the DOM for assistive
+// technology.
+.cell__meta {
+  display: block;
+  max-width: 42ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
