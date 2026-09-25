@@ -14,6 +14,62 @@ type SortField = 'fullName' | 'university' | 'graduationYear' | 'cgpa';
 const SORT_FIELDS: readonly SortField[] = ['fullName', 'university', 'graduationYear', 'cgpa'];
 
 /**
+ * Whether this viewer may see this candidate at all (docs/11 V1, V-D1).
+ *
+ * Distinct from masking, and prior to it: masking decides which *fields* of a
+ * visible candidate are readable, this decides whether the candidate is
+ * visible in the first place. Both are enforced here rather than in the UI.
+ *
+ * The rule follows the consent. A job seeker registers for a named fair, and
+ * what they agree to is that employers *at that fair* may see their profile.
+ * An employer attending no fair the candidate registered for was never
+ * consented to, so showing them that candidate makes the consent record
+ * decorative — which is the substantive failure under the PDPA, not a
+ * cosmetic one.
+ *
+ * "Attending" here means tagged to the fair **and** commercially committed —
+ * `confirmed` or `paid`. Deliberately not the booth-holding rule ADR-011 uses
+ * for the exhibitor list a job seeker reads: that question is "where is their
+ * stand", and a stand is what a visitor walks to. This question is "have they
+ * been accepted for this fair", and an employer approved but not yet seated
+ * has been. In the seed that difference is 16 employer-fair pairs, so it is
+ * not academic.
+ *
+ * Staff see every registrant, masked. They run the fairs; a staff member who
+ * cannot see who registered cannot run one.
+ */
+export function canViewCandidate(candidate: Candidate, db: MockDb, viewer: User): boolean {
+  // Your own record, always. A viewer is not a third party to themselves.
+  if (viewer.candidateId === candidate.id) {
+    return true;
+  }
+
+  switch (viewer.role) {
+    case 'staff':
+      return true;
+
+    case 'job_seeker':
+      // A job seeker has no business browsing other job seekers.
+      return false;
+
+    case 'employer': {
+      const employer = db.employers.find((entry) => entry.id === viewer.employerId);
+      if (!employer) {
+        return false;
+      }
+      // A lead who was never accepted is not attending anything.
+      if (employer.stage !== 'confirmed' && employer.stage !== 'paid') {
+        return false;
+      }
+      return candidate.fairIds.some((fairId) => employer.fairIds.includes(fairId));
+    }
+
+    default:
+      return false;
+  }
+}
+
+/**
  * Masks contact details unless this employer has shortlisted the candidate.
  *
  * Doing it here rather than in the UI is the point: an unmasked value never
@@ -80,6 +136,12 @@ export const listCandidates: MockHandler = ({ db, query, currentUser }) => {
   const fairId = query.get('fair_id');
 
   let results = db.candidates.filter((candidate) => {
+    // Visibility first, and separately from the query filters: a filter is
+    // something the caller asked for, this is something they are not allowed
+    // to override by leaving a parameter off.
+    if (!canViewCandidate(candidate, db, currentUser)) {
+      return false;
+    }
     if (university && candidate.university !== university) {
       return false;
     }
@@ -122,7 +184,15 @@ export const listCandidates: MockHandler = ({ db, query, currentUser }) => {
 
 export const getCandidate: MockHandler = ({ db, params, currentUser }) => {
   const candidate = db.candidates.find((entry) => entry.id === params['id']);
-  return candidate ? ok(maskForViewer(candidate, db, currentUser)) : notFound('Candidate not found.');
+
+  // 404 for both "no such candidate" and "not yours to see", so the response
+  // does not confirm a record exists to someone who may not read it — the
+  // same answer the rest of this API gives a refusal.
+  if (!candidate || !canViewCandidate(candidate, db, currentUser)) {
+    return notFound('Candidate not found.');
+  }
+
+  return ok(maskForViewer(candidate, db, currentUser));
 };
 
 const QUALIFICATIONS: readonly Qualification[] = ['diploma', 'degree', 'masters', 'phd'];

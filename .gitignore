@@ -42,3 +42,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Artefact of a verification script run without its output directory set.
+undefined/

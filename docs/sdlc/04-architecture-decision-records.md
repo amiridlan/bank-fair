@@ -328,7 +328,15 @@ a consumer must never see them.
 
 Two candidate definitions existed. `Employer.fairIds` is the tag the pipeline
 uses; a booth assignment is what the floor plan uses. They disagree, because
-`fairIds` includes leads who were never accepted.
+`fairIds` is carried by employers who have not committed.
+
+> **Correction, 25/09/2026.** This ADR originally said `fairIds` "includes
+> leads who were never accepted". Measured against the seed while implementing
+> V1, that is wrong about which stage: leads (15) and lost deals (3) carry no
+> `fairIds` at all. It is the 12 employers at **proposal** — in a sales
+> conversation, not yet committed — who are fair-tagged without having booked.
+> The decision is unchanged and still correct; the stated reason named the
+> wrong stage.
 
 ### Decision
 
@@ -336,7 +344,7 @@ For anything a job seeker sees, attending means holding a booth at that fair.
 
 ### Consequences
 
-- A seeker is never shown a company that is not coming.
+- A seeker is never shown a company that is not coming — in the seed that means the 12 proposal-stage employers are excluded.
 - It matches what the rest of the app already means: the fair card counts `boothAssigned` as "employers attending".
 - A booth carries a code, which is the thing a visitor actually uses on the day.
 - **Cost:** an employer approved but not yet seated does not appear until a booth is assigned. Acceptable — an exhibitor with no stand has nowhere for a visitor to go.

@@ -36,6 +36,13 @@ function emailLocalPart(fullName: string): string {
 }
 
 /** 300 candidates — enough for pagination and filters to mean something. */
+/**
+ * The demo job seeker's name, shared with `DEMO_USERS` so the two cannot drift.
+ * Declared here rather than imported from the auth store, because the mock
+ * database already imports that store and the reverse would be a cycle.
+ */
+export const SEEKER_NAME = 'Ahmad Zaki Abdullah Sani';
+
 export function seedCandidates(random: SeededRandom, now: number): Candidate[] {
   const currentYear = klYear(now);
   const candidates: Candidate[] = [];
@@ -75,6 +82,40 @@ export function seedCandidates(random: SeededRandom, now: number): Candidate[] {
       isContactVisible: true,
       fairIds: random.sample(['fair-01', 'fair-02', 'fair-03'], random.int(1, 3)),
     });
+  }
+
+  // cand-001 is the record the demo job seeker owns, so its name must match
+  // the name `DEMO_USERS` shows in the top bar. Forced rather than trusted:
+  // the generated name comes from the shared random stream, so it moved when
+  // two fairs were added to the seed, and the hard-coded user name silently
+  // stopped matching. Someone signed in as the job seeker saw one name in the
+  // chrome and a different one on their own profile.
+  //
+  // Same pattern as seed-employers.ts pinning emp-001 and emp-002: overwrite
+  // after generation, which changes no draw and so shifts nothing downstream.
+  const [given, ...rest] = SEEKER_NAME.toLowerCase().split(' ');
+  candidates[0] = {
+    ...candidates[0],
+    fullName: SEEKER_NAME,
+    email: `${given}.${rest[rest.length - 1]}@example.com`,
+  };
+
+  // The generator can independently produce the same name — across 300 draws
+  // from these lists it does. Duplicate names elsewhere are realistic and are
+  // left alone, but a second person called exactly what the demo job seeker is
+  // called makes the demo unreadable: a search for them returns two rows and
+  // it is not obvious which is "you".
+  //
+  // Renamed by index rather than by a random draw, so no number is consumed
+  // and nothing downstream shifts.
+  for (let index = 1; index < candidates.length; index++) {
+    if (candidates[index].fullName === SEEKER_NAME) {
+      const family = FAMILY_NAMES[(index + 1) % FAMILY_NAMES.length];
+      candidates[index] = {
+        ...candidates[index],
+        fullName: `${candidates[index].fullName.split(' ')[0]} ${family}`,
+      };
+    }
   }
 
   return candidates;

@@ -21,7 +21,7 @@ not impact on the demo.
 | ID | Severity | Summary |
 |---|---|---|
 | [KI-01](#ki-01) | Critical (for production) | No authentication |
-| [KI-04](#ki-04) | **High** | Talent pool has no fair scoping |
+| ~~KI-04~~ | ~~High~~ | ~~Talent pool has no fair scoping~~ — **closed 25/09/2026, see below** |
 | [KI-05](#ki-05) | High (for production) | No right to erasure |
 | [KI-02](#ki-02) | Medium | Pipeline permits any stage transition |
 | [KI-06](#ki-06) | Medium | PDF import never tested against a real export |
@@ -33,7 +33,26 @@ not impact on the demo.
 ---
 
 <a id="ki-04"></a>
-## KI-04 — Talent pool has no fair scoping · **High**
+## KI-04 — Talent pool has no fair scoping · **CLOSED 25/09/2026**
+
+> **Fixed by V1.** `canViewCandidate` now gates both `listCandidates` and
+> `getCandidate`. An employer sees only candidates registered for a fair that
+> employer is attending — tagged to it **and** at stage `confirmed` or `paid`.
+> A job seeker sees their own record and no other. Staff see every registrant,
+> masked (V-D3).
+>
+> Verified end to end in a browser: the demo employer's pool went from 300 to
+> 270 candidates, and after the demo job seeker withdrew from both their fairs
+> it fell to 269 and a search for them returned zero rows. Four mutations of
+> the rule each failed the test written for them.
+>
+> **V2** (the staff Candidates tab at `/staff/fairs/:fairId/candidates`) and
+> **V3** (consent and profile copy) remain open. Neither is a correctness
+> defect — the `fair_id` filter V2 needs already exists and is tested.
+>
+> The original entry follows, unedited, because it explains why this mattered.
+
+---
 
 **The most significant outstanding defect.** Not a scope decision — a genuine
 hole with an agreed plan that has not been executed.
@@ -80,6 +99,8 @@ Work:
 
 **V1 should be done before anything else on this list.** It is the only open
 item where the system's behaviour contradicts a promise it makes to a user.
+
+*Done, 25/09/2026. See the note at the top of this entry.*
 
 ---
 
@@ -244,6 +265,8 @@ Each of these cost real time at least once.
 | **`expectOne(string)` matches `urlWithParams`** | A request carrying query params silently fails to match; `verify()` then throws and leaves the TestBed instantiated, making *unrelated* spec files fail with a misleading message. | Use a predicate matcher for any request with parameters. |
 | **`page.goto` reseeds the mock database** | A full page load rebuilds the in-memory DB, so a write made before it appears to have been lost. | Verify multi-step flows with in-app navigation. |
 | **Zoneless signal inputs in tests** | Setting a plain host field does not drive a signal input. | Drive it with a `signal()` in the host component. |
+| **The mock database is module state** | It persists across tests in a file, so one test's write changes the next test's fixture. A shortlist made by one routing test silently unlocked contact details for the next. | `resetMockDb()` in `beforeEach` for any spec driving the real app. |
+| **`per_page` is capped at 100** | Asking for 500 returns 100 with no error, so a test that assumes it got everything asserts against an arbitrary first page. | Page through using `meta.lastPage`. |
 | **`tsc --noEmit` is not the build** | It passes where `ng build` fails, because it does not compile templates. | Verify with `npm run build`. |
 
 ---
@@ -263,5 +286,5 @@ and confirm 401 tests pass and the bundle is under 650 kB. That is the baseline.
 2. Field-level protection is enforced server-side, never in a template (ADR-010).
 3. A passing test suite is not verification — open the page.
 
-**Highest-value work, in order:** V1 (KI-04), then the Laravel backend the API
-contract in SRS §5.1 was designed for, then KI-05 and KI-02.
+**Highest-value work, in order:** the Laravel backend the API contract in
+SRS §5.1 was designed for, then KI-05, then KI-02. V1 (KI-04) is done.

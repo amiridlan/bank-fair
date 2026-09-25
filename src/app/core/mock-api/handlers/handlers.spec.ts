@@ -1661,3 +1661,165 @@ describe('through the engine, as the interceptor calls it', () => {
     expect(rows[0]['booth_code']).toBeTruthy();
   });
 });
+
+describe('candidate visibility', () => {
+  let db: MockDb;
+  beforeEach(() => (db = buildMockDb(NOW)));
+
+  /** The fairs a given employer is committed to. */
+  function fairsFor(employerId: string): readonly string[] {
+    return db.employers.find((entry) => entry.id === employerId)?.fairIds ?? [];
+  }
+
+  /**
+   * Every candidate this user can see, paged through.
+   *
+   * `readPageRequest` caps per_page at 100, so a single request cannot answer
+   * "what is the whole set" — asking for 500 silently returns 100, which made
+   * the first version of these tests assert against an arbitrary first page.
+   */
+  function listFor(user: User): { id: string; fairIds: string[] }[] {
+    const rows: { id: string; fairIds: string[] }[] = [];
+    for (let page = 1; ; page++) {
+      const result = call(db, 'GET', `/candidates?per_page=100&page=${page}`, { user });
+      const batch = data<{ id: string; fairIds: string[] }[]>(result);
+      rows.push(...batch);
+      const meta = (result.body as { meta: { lastPage: number } }).meta;
+      if (page >= meta.lastPage || batch.length === 0) {
+        return rows;
+      }
+    }
+  }
+
+  it('shows an employer only candidates registered for a fair they attend', () => {
+    const rows = listFor(HM_ONE);
+    const theirFairs = fairsFor('emp-001');
+
+    expect(rows.length).toBeGreaterThan(0);
+    expect(
+      rows.every((row) => row.fairIds.some((fairId) => theirFairs.includes(fairId))),
+    ).toBe(true);
+  });
+
+  it('hides candidates registered only for fairs this employer is not at', () => {
+    const theirFairs = fairsFor('emp-001');
+    const elsewhere = db.candidates.filter(
+      (candidate) => !candidate.fairIds.some((fairId) => theirFairs.includes(fairId)),
+    );
+    // The seed must actually contain this case, or the test proves nothing.
+    expect(elsewhere.length).toBeGreaterThan(0);
+
+    const visible = new Set(listFor(HM_ONE).map((row) => row.id));
+    for (const candidate of elsewhere) {
+      expect(visible.has(candidate.id)).toBe(false);
+    }
+  });
+
+  it('404s a candidate an employer may not see, rather than masking them', () => {
+    const theirFairs = fairsFor('emp-001');
+    const elsewhere = db.candidates.find(
+      (candidate) => !candidate.fairIds.some((fairId) => theirFairs.includes(fairId)),
+    )!;
+
+    const result = call(db, 'GET', `/candidates/${elsewhere.id}`, { user: HM_ONE });
+
+    // 404, not a masked record: a masked record still confirms the person
+    // exists and leaks their name, university, course and skills.
+    expect(result.status).toBe(404);
+    expect(message(result)).toBe('Candidate not found.');
+  });
+
+  it('withdrawing from every fair removes a seeker from the pool entirely', () => {
+    // The defect this whole change exists for: a job seeker who withdrew from
+    // everything stayed visible to employers while their own profile told them
+    // they were visible to nobody.
+    const candidate = db.candidates.find((entry) => entry.fairIds.length > 0)!;
+    const seeker: User = {
+      id: 'u-seeker-x',
+      name: candidate.fullName,
+      role: 'job_seeker',
+      employerId: null,
+      candidateId: candidate.id,
+    };
+
+    expect(new Set(listFor(HM_ONE).map((row) => row.id)).has(candidate.id)).toBe(true);
+
+    for (const registration of db.fairRegistrations.filter(
+      (entry) => entry.candidateId === candidate.id,
+    )) {
+      expect(call(db, 'DELETE', `/fair-registrations/${registration.id}`, { user: seeker }).status)
+        .toBe(204);
+    }
+
+    expect(new Set(listFor(HM_ONE).map((row) => row.id)).has(candidate.id)).toBe(false);
+    expect(call(db, 'GET', `/candidates/${candidate.id}`, { user: HM_ONE }).status).toBe(404);
+    // But they can still read their own record.
+    expect(call(db, 'GET', `/candidates/${candidate.id}`, { user: seeker }).status).toBe(200);
+  });
+
+  it('shows an employer still at proposal nothing, though they are fair-tagged', () => {
+    // This is the case `fairIds` alone would let through. In the seed, leads
+    // and lost deals carry no fairIds at all — it is the 12 employers at
+    // `proposal` who are tagged to fairs without having committed to one.
+    // Nobody consented to a company that has not booked.
+    const proposal = db.employers.find(
+      (entry) => entry.stage === 'proposal' && entry.fairIds.length > 0,
+    )!;
+    expect(proposal).toBeDefined();
+
+    const user: User = {
+      id: 'u-proposal',
+      name: 'Proposal Rep',
+      role: 'employer',
+      employerId: proposal.id,
+      candidateId: null,
+    };
+
+    expect(listFor(user)).toHaveLength(0);
+  });
+
+  it('lets staff see every registrant, masked', () => {
+    const rows = listFor(STAFF) as unknown as { isContactVisible: boolean }[];
+
+    expect(rows).toHaveLength(db.candidates.length);
+    // Staff run the fairs, but that is not a reason to hand them contact
+    // details (docs/11 V-D3).
+    expect(rows.every((row) => row.isContactVisible === false)).toBe(true);
+  });
+
+  it('shows a job seeker their own record and nobody else', () => {
+    const own = db.candidates[0];
+    const other = db.candidates[1];
+    const seeker: User = {
+      id: 'u-seeker-y',
+      name: own.fullName,
+      role: 'job_seeker',
+      employerId: null,
+      candidateId: own.id,
+    };
+
+    expect(listFor(seeker).map((row) => row.id)).toEqual([own.id]);
+    expect(call(db, 'GET', `/candidates/${own.id}`, { user: seeker }).status).toBe(200);
+    expect(call(db, 'GET', `/candidates/${other.id}`, { user: seeker }).status).toBe(404);
+  });
+
+  it('still unmasks a shortlisted candidate the employer may see', () => {
+    // Visibility and masking are separate gates; this proves the new one did
+    // not swallow the old one.
+    const theirFairs = fairsFor('emp-001');
+    const reachable = db.candidates.find((candidate) =>
+      candidate.fairIds.some((fairId) => theirFairs.includes(fairId)),
+    )!;
+
+    call(db, 'POST', '/shortlists', {
+      user: HM_ONE,
+      body: { candidateId: reachable.id, fairId: theirFairs[0], note: null },
+    });
+
+    const row = data<{ isContactVisible: boolean; email: string }>(
+      call(db, 'GET', `/candidates/${reachable.id}`, { user: HM_ONE }),
+    );
+    expect(row.isContactVisible).toBe(true);
+    expect(row.email).not.toContain('***');
+  });
+});

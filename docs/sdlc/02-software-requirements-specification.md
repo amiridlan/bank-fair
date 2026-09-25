@@ -194,9 +194,15 @@ Priority is MoSCoW. Verified-by names the spec file holding the test.
 | FR-54 | Removing a shortlist entry shall re-mask that candidate's contact details. | Must | `shortlist.store.spec.ts` |
 | FR-55 | A candidate profile shall be reachable at its own URL as a modal over the list. | Should | `talent-pool.store.spec.ts` |
 
-> **FR-50 has no fair scoping.** A candidate registered for no fair still
-> appears in every employer's talent pool. This is the most significant
-> outstanding defect; see KI-04.
+| FR-56 | The system shall show an employer only candidates registered for a fair that employer is attending — tagged to it **and** at stage `confirmed` or `paid`. | Must | `handlers.spec.ts` |
+| FR-57 | The system shall answer 404, not a masked record, for a candidate the viewer may not see. | Must | `handlers.spec.ts` |
+| FR-58 | A job seeker shall see their own record and no other candidate. | Must | `handlers.spec.ts` |
+| FR-59 | Staff shall see every registrant, with contact details masked. | Must | `handlers.spec.ts` |
+
+> **FR-56 to FR-59 were added on 25/09/2026 (V1).** Before that the talent
+> pool had no fair scoping at all and `getCandidate` had no visibility check —
+> a candidate registered for nothing still appeared to every employer. That was
+> KI-04, and it is now closed.
 
 ### 3.7 Interviews (employer)
 

@@ -1,5 +1,6 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { resetMockDb } from './core/mock-api/mock-db';
 
 import { AppComponent } from './app.component';
 import { appConfig } from './app.config';
@@ -26,6 +27,12 @@ describe('App routing', () => {
   beforeEach(async () => {
     // AuthStore persists to sessionStorage, which outlives a TestBed.
     sessionStorage.clear();
+    // So does the mock database, which is module state. Without this the
+    // shortlist test below leaves cand-001 shortlisted and the deep-link test
+    // that follows sees contact details unlocked. The coupling was always
+    // there; it only started failing when cand-001's name changed and it
+    // became the first row that test clicks.
+    resetMockDb();
     TestBed.configureTestingModule({
       providers: [...appConfig.providers],
     });
@@ -107,8 +114,11 @@ describe('App routing', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Talent pool');
     expect(text).toContain('University');
-    // 300 seeded candidates, 20 per page.
-    expect(text).toContain('300');
+    // 270 of the 300 seeded candidates, not all of them: the pool is scoped to
+    // the fairs this employer is attending (docs/11 V1). The 30 missing are
+    // registered only for fairs emp-001 is not at, and were never consented to
+    // being shown here. Asserting 300 would assert the bug.
+    expect(text).toContain('270 candidates');
   });
 
   it('shortlists from the table row without opening the profile', async () => {

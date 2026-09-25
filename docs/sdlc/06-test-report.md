@@ -24,8 +24,8 @@
 
 | Metric | Value |
 |---|---|
-| Automated tests | **401** |
-| Passing | **401 (100%)** |
+| Automated tests | **409** |
+| Passing | **409 (100%)** |
 | Failing | 0 |
 | Skipped | 0 |
 | Spec files | 31 |
@@ -41,7 +41,7 @@
 
 ```bash
 npm ci                       # npm 10 cannot resolve this graph; ci is unaffected
-npm test -- --watch=false    # 401 tests
+npm test -- --watch=false    # 409 tests
 npm run lint                 # zero warnings
 npm run build                # bundle report
 ```
@@ -202,12 +202,12 @@ Outstanding defects are in `docs/sdlc/07-known-issues-and-maintenance.md`.
 
 | ID | Severity | Summary | Status |
 |---|---|---|---|
-| KI-04 | **High** | Talent pool has no fair scoping — a candidate registered for no fair still appears to every employer | Open, analysed, plan agreed |
 | KI-02 | Medium | Employer pipeline permits any stage transition, including `paid → lead` | Open |
 | KI-06 | Medium | PDF import never run against a genuine LinkedIn export | Open |
 | KI-05 | Medium | No right-to-erasure implementation | Open — blocks real personal data |
 
-No critical defects open. Full detail and reasoning in document 07.
+No critical defects open. **KI-04 was closed on 25/09/2026** — the talent pool
+is now scoped to the fairs a candidate consented to. Full detail in document 07.
 
 ---
 
@@ -235,8 +235,8 @@ which is a deliberate scope decision rather than a defect:
 1. No authentication (ADR-003).
 2. No persistence — all state resets on reload.
 3. No right to erasure (KI-05), which PDPA 2010 requires before real personal data.
-4. The talent pool's missing fair scoping (KI-04) would expose candidates to employers they never consented to.
+~~4. The talent pool's missing fair scoping (KI-04).~~ **Closed 25/09/2026.**
 
 Items 1 and 2 are resolved by building the Laravel backend the API contract was
-designed for. Items 3 and 4 are work in their own right, and 4 should be done
-regardless — the plan is already agreed.
+designed for. Item 3 is work in its own right and blocks any real personal
+data.
