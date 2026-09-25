@@ -195,6 +195,18 @@ Each finding is recorded in `docs/06-build-plan.md`, `docs/07`, `docs/08` or `do
 
 ---
 
+## Documentation
+
+| Set | What it is |
+|---|---|
+| [`docs/sdlc/`](docs/sdlc/) | Formal lifecycle documents — charter, requirements with a traceability matrix, design, twelve ADRs, coding standards, test report, and known issues. Written retrospectively; sections this project does not really have are marked N/A rather than invented. |
+| `docs/01`–`docs/11` | The working plans written *during* the build, one per workstream, each recording what was decided and what the implementation then turned up. |
+| [`docs/diagrams/`](docs/diagrams/) | Architecture, the write-request path, the data model, and entity lifecycles. |
+
+Taking this over? [`docs/sdlc/07-known-issues-and-maintenance.md`](docs/sdlc/07-known-issues-and-maintenance.md) is the one to read first — what is not done, what would break, and the traps in the code that each cost a session to find.
+
+---
+
 ## Roadmap
 
 | Phase | Item | Notes |
